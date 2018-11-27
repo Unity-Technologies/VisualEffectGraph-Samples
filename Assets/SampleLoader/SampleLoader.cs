@@ -20,7 +20,6 @@ public class SampleLoader : MonoBehaviour
     [Header("Debug")]
     public Text FramerateText;
 
-
     int index = 0;
     bool fading;
     bool loading;
@@ -45,6 +44,9 @@ public class SampleLoader : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+            Application.Quit();
+
         UpdateDebug();
 
         fadeTTL -= Time.unscaledDeltaTime;
