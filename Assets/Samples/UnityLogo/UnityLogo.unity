@@ -318,6 +318,8 @@ MonoBehaviour:
     bloom: {fileID: 4800000, guid: c1e1d3119c6fd4646aea0b4b74cacc1a, type: 3}
     copy: {fileID: 4800000, guid: cdbdb71de5f9c454b980f6d0e87f0afb, type: 3}
     copyStd: {fileID: 4800000, guid: 4bf4cff0d0bac3d43894e2e8839feb40, type: 3}
+    copyStdFromTexArray: {fileID: 0}
+    copyStdFromDoubleWide: {fileID: 0}
     discardAlpha: {fileID: 4800000, guid: 5ab0816423f0dfe45841cab3b05ec9ef, type: 3}
     depthOfField: {fileID: 4800000, guid: 0ef78d24e85a44f4da9d5b5eaa00e50b, type: 3}
     finalPass: {fileID: 4800000, guid: f75014305794b3948a3c6d5ccd550e05, type: 3}
@@ -530,8 +532,8 @@ VisualEffect:
       - m_Value:
           serializedVersion: 2
           key0: {r: 0, g: 0, b: 0, a: 0}
-          key1: {r: 0.31681028, g: 0.28125, b: 0.75, a: 0.8}
-          key2: {r: 0.50990355, g: 0.21604672, b: 0.8161765, a: 0.7019608}
+          key1: {r: 0.31681028, g: 0.28125, b: 0.75, a: 1}
+          key2: {r: 0.50990355, g: 0.21604672, b: 0.8161765, a: 0.8862745}
           key3: {r: 0.83823526, g: 0.17257786, b: 0.37916112, a: 0.03529412}
           key4: {r: 0, g: 0, b: 0, a: 0}
           key5: {r: 0, g: 0, b: 0, a: 0}
@@ -546,7 +548,7 @@ VisualEffect:
           ctime6: 0
           ctime7: 0
           atime0: 0
-          atime1: 3687
+          atime1: 4525
           atime2: 55143
           atime3: 65535
           atime4: 0
@@ -557,7 +559,7 @@ VisualEffect:
           m_NumColorKeys: 5
           m_NumAlphaKeys: 4
         m_Name: Color Over Life
-        m_Overridden: 0
+        m_Overridden: 1
       - m_Value:
           serializedVersion: 2
           key0: {r: 0.966178, g: 0.033822007, b: 0.46985337, a: 1}
@@ -593,7 +595,7 @@ VisualEffect:
       m_Array:
       - m_Value: {fileID: 11700000, guid: 500adb08ae2ef274c9095ec1e41fde84, type: 2}
         m_Name: VectorField
-        m_Overridden: 1
+        m_Overridden: 0
     m_Bool:
       m_Array: []
 --- !u!4 &1692057710
@@ -836,6 +838,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   stopNaNPropagation: 1
+  finalBlitToCameraTarget: 1
   antialiasingMode: 0
   temporalAntialiasing:
     jitterSpread: 0.75
@@ -935,6 +938,8 @@ MonoBehaviour:
     runLightListAsync: 1
     runSSRAsync: 1
     runSSAOAsync: 1
+    runContactShadowsAsync: 1
+    runVolumeVoxelizationAsync: 1
     lightLoopSettings:
       overrides: 0
       enableTileAndCluster: 1

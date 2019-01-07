@@ -6,11 +6,21 @@ There are also pre-built binaries for Windows and macOS available.
 
 ### Changelog
 
-#### First Release (rev1 - 2018-11-27)
+- #### Second Release ( 4.6.0-preview rev1 - 2019-01-07 )
 
-* **Base Project**
+  - **New Samples**
+    - **GrassWind** : Grass quads on terrain reacting to player movement and wind
+    - **Volumetric** : Lit Particles reacting to volumetric lighting and transmission
+    - **Portal** : Magic portal reminiscing of a strange doctor....
+  - **Fixes:**
+    - Fixed Butterflies Bodies set to Opaque
+    - Fixed Missing references to VectorField and Texture in UnityLogo template
+    - Removed unused HDRP Resources file (now using default one)
 
-- **Unity Logo** : around 750k particles driven by vector fields
-- **Butterflies** : Procedurally animated and simulated butterflies
-- **Morphing Face** : Simulation-less face of cubes with masking and material animation
+- #### First Release ( 4.3.0-preview rev1 - 2018-11-27 )
+
+  - **Base Project** and 3 Samples
+    - **Unity Logo** : around 750k particles driven by vector fields
+    - **Butterflies** : Procedurally animated and simulated butterflies
+    - **Morphing Face** : Simulation-less face of cubes with masking and material animation
 
