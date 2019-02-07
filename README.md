@@ -6,6 +6,18 @@ There are also pre-built binaries for Windows and macOS available.
 
 ### Changelog
 
+- #### Third Release ( 4.9.0-preview rev1 - 2019-02-07 )
+
+  - **New Samples**
+    - Genie: Magic flow gushing out of the Magic lantern and taking the shape of a Genie
+    - AR Radar : Lines and Dots that form a Radar Grid with multiple Targets
+    - Voxelized Terrain : Interactive Terrain 
+  - **Fixes and General Improvements:**
+    - Simplified Sample Loader Script
+    - GrassWind : Fixed the sample to reflect the fixes in ConnectTarget
+    - GrassWind : Reworked the Camera Control (now works with cinemachine)
+    - GrassWind : Added Ethan Body Diffuse texture
+
 - #### Second Release ( 4.6.0-preview rev1 - 2019-01-07 )
 
   - **New Samples**
