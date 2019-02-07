@@ -2087,6 +2087,7 @@ MonoBehaviour:
   m_UISuperCollapsed: 0
   m_InputSlots:
   - {fileID: 114926654708411120}
+  - {fileID: 8926484042661614676}
   - {fileID: 114261901100468408}
   - {fileID: 114576587064744242}
   m_OutputSlots: []
@@ -3001,6 +3002,7 @@ MonoBehaviour:
   m_UISuperCollapsed: 0
   m_InputSlots:
   - {fileID: 114498882693218620}
+  - {fileID: 8926484042661614677}
   - {fileID: 114065247053088154}
   - {fileID: 114198710432536522}
   m_OutputSlots: []
@@ -3557,8 +3559,7 @@ VisualEffectResource:
       64\n#define VFX_USE_POSITION_CURRENT 1\n#define VFX_USE_PARTICLEID_CURRENT 1\n#define
       VFX_USE_COLOR_CURRENT 1\n#define VFX_USE_ANGLEX_CURRENT 1\n#define VFX_USE_SEED_CURRENT
       1\n#define VFX_USE_ANGLEZ_CURRENT 1\n#define VFX_USE_SCALEY_CURRENT 1\n#define
-      VFX_USE_AGE_CURRENT 1\n#define VFX_USE_LIFETIME_CURRENT 1\n#define VFX_LOCAL_SPACE
-      1\n\n\nCBUFFER_START(parameters)\n    float4 Scale_e;\nCBUFFER_END\nTexture2D
+      VFX_LOCAL_SPACE 1\n\n\nCBUFFER_START(parameters)\n    float4 Scale_e;\nCBUFFER_END\nTexture2D
       attributeMap_a;\nSamplerState samplerattributeMap_a;\nTexture2D attributeMap_b;\nSamplerState
       samplerattributeMap_b;\n\n\n#include \"Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.cginc\"\n#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.cginc\"\n\n\n\nRWByteAddressBuffer
@@ -3571,17 +3572,17 @@ VisualEffectResource:
       fetch deadList count but Unity API currently prevent from copying to CB\n#endif\n\n#if
       VFX_USE_SPAWNER_FROM_GPU\nStructuredBuffer<uint> eventList;\nByteAddressBuffer
       inputAdditional;\n#endif\n\nvoid AttributeFromMap_6F6C36D5(inout float3 position,
-      uint particleId, VFXSampler2D attributeMap, float3 valueBias, float3 valueScale)
-      /*attribute:position Composition:Overwrite SampleMode:RandomConstantPerParticle
+      uint particleId, VFXSampler2D attributeMap, uint Seed, float3 valueBias, float3
+      valueScale) /*attribute:position Composition:Overwrite SampleMode:RandomConstantPerParticle
       channels:XYZ */\n{\n    \n    uint width, height;\n    attributeMap.t.GetDimensions(width,
-      height);\n    uint count = width * height;\n    uint id = clamp(uint(FIXED_RAND(0x8ef09666)
+      height);\n    uint count = width * height;\n    uint id = clamp(uint(FIXED_RAND(Seed)
       * count), 0, count - 1);\n    float3 value = (float3)attributeMap.t.Load(int3(id
       % width, id / width,0));\n    value = (value  + valueBias) * valueScale;\n    position
       = value;\n}\nvoid AttributeFromMap_9AACC55(inout float3 color, uint particleId,
-      VFXSampler2D attributeMap, float3 valueBias, float3 valueScale) /*attribute:color
+      VFXSampler2D attributeMap, uint Seed, float3 valueBias, float3 valueScale) /*attribute:color
       Composition:Overwrite SampleMode:RandomConstantPerParticle channels:XYZ */\n{\n
       \   \n    uint width, height;\n    attributeMap.t.GetDimensions(width, height);\n
-      \   uint count = width * height;\n    uint id = clamp(uint(FIXED_RAND(0x8ef09666)
+      \   uint count = width * height;\n    uint id = clamp(uint(FIXED_RAND(Seed)
       * count), 0, count - 1);\n    float3 value = (float3)attributeMap.t.Load(int3(id
       % width, id / width,0));\n    value = (value  + valueBias) * valueScale;\n    color
       = value;\n}\nvoid SetAttribute_48A7C213(inout float angleX, inout uint seed,
@@ -3589,10 +3590,10 @@ VisualEffectResource:
       channels:X */\n{\n    angleX = lerp(Min.x,Max.x,RAND);\n}\nvoid SetAttribute_48A7C211(inout
       float angleZ, inout uint seed, float Min, float Max) /*attribute:angle Composition:Overwrite
       Source:Slot Random:Uniform channels:Z */\n{\n    angleZ = lerp(Min.x,Max.x,RAND);\n}\nvoid
-      AttributeFromCurve_5E96E8EC(inout float scaleY, float age, float lifetime, uint
-      particleId, float4 Scale) /*attribute:scale Composition:Overwrite AlphaComposition:Overwrite
-      SampleMode:RandomUniformPerParticle Mode:PerComponent ColorMode:ColorAndAlpha
-      channels:Y */\n{\n    float t = FIXED_RAND(0x34634bc2);\n    float value = 0.0f;\n
+      AttributeFromCurve_5E96E8EC(inout float scaleY, uint particleId, float4 Scale,
+      uint Seed) /*attribute:scale Composition:Overwrite AlphaComposition:Overwrite
+      SampleMode:RandomConstantPerParticle Mode:PerComponent ColorMode:ColorAndAlpha
+      channels:Y */\n{\n    float t = FIXED_RAND(Seed);\n    float value = 0.0f;\n
       \   value = SampleCurve(Scale, t);\n    scaleY = value.x;\n}\n\n\n\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\nvoid
       CSMain(uint3 groupId          : SV_GroupID,\n            uint3 groupThreadId
       \   : SV_GroupThreadID)\n{\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\n#if
@@ -3614,30 +3615,31 @@ VisualEffectResource:
       \           }\n        }\n        */\n        \n\n#endif\n        float3 position
       = float3(0,0,0);\n        uint particleId = (uint)0;\n        float3 color =
       float3(1,1,1);\n        float angleX = (float)0;\n        uint seed = (uint)0;\n
-      \       float angleZ = (float)0;\n        float scaleY = (float)1;\n        float
-      age = (float)0;\n        float lifetime = (float)0;\n        \n\n#if VFX_USE_PARTICLEID_CURRENT\n
-      \        particleId = particleIndex;\n#endif\n#if VFX_USE_SEED_CURRENT\n        seed
-      = WangHash(particleIndex ^ systemSeed);\n#endif\n        \n        {\n            AttributeFromMap_6F6C36D5(
-      /*inout */position, particleId, GetVFXSampler(attributeMap_a, samplerattributeMap_a),
-      float3(-0.5,0,-3.2), float3(1,1,1));\n        }\n        {\n            AttributeFromMap_9AACC55(
+      \       float angleZ = (float)0;\n        float scaleY = (float)1;\n        \n\n#if
+      VFX_USE_PARTICLEID_CURRENT\n         particleId = particleIndex;\n#endif\n#if
+      VFX_USE_SEED_CURRENT\n        seed = WangHash(particleIndex ^ systemSeed);\n#endif\n
+      \       \n        {\n            AttributeFromMap_6F6C36D5( /*inout */position,
+      particleId, GetVFXSampler(attributeMap_a, samplerattributeMap_a), (uint)0, float3(-0.5,0,-3.2),
+      float3(1,1,1));\n        }\n        {\n            AttributeFromMap_9AACC55(
       /*inout */color, particleId, GetVFXSampler(attributeMap_b, samplerattributeMap_b),
-      float3(0,0,0), float3(1,1,1));\n        }\n        {\n            SetAttribute_48A7C213(
+      (uint)0, float3(0,0,0), float3(1,1,1));\n        }\n        {\n            SetAttribute_48A7C213(
       /*inout */angleX,  /*inout */seed, (float)-45, (float)45);\n        }\n        {\n
       \           SetAttribute_48A7C211( /*inout */angleZ,  /*inout */seed, (float)-45,
-      (float)45);\n        }\n        AttributeFromCurve_5E96E8EC( /*inout */scaleY,
-      age, lifetime, particleId, Scale_e);\n        \n\n\n#if VFX_USE_ALIVE_CURRENT\n
-      \       if (alive)\n        {\n\t\t\tuint deadIndex = deadListIn.DecrementCounter();\n
-      \           uint index = deadListIn[deadIndex];\n            attributeBuffer.Store3((index
-      * 0xC + 0x0) << 2,asuint(position));\n            attributeBuffer.Store3((index
-      * 0xC + 0x4) << 2,asuint(color));\n            attributeBuffer.Store((index
-      * 0xC + 0x3) << 2,asuint(angleX));\n            attributeBuffer.Store((index
-      * 0xC + 0x7) << 2,asuint(angleZ));\n            attributeBuffer.Store((index
-      * 0xC + 0x8) << 2,asuint(scaleY));\n            \n\n        }\n#else\n        uint
-      index = particleIndex;\n        attributeBuffer.Store3((index * 0xC + 0x0) <<
-      2,asuint(position));\n        attributeBuffer.Store3((index * 0xC + 0x4) <<
-      2,asuint(color));\n        attributeBuffer.Store((index * 0xC + 0x3) << 2,asuint(angleX));\n
-      \       attributeBuffer.Store((index * 0xC + 0x7) << 2,asuint(angleZ));\n        attributeBuffer.Store((index
-      * 0xC + 0x8) << 2,asuint(scaleY));\n        \n\n#endif\n    }\n}\n"
+      (float)45);\n        }\n        {\n            AttributeFromCurve_5E96E8EC(
+      /*inout */scaleY, particleId, Scale_e, (uint)0);\n        }\n        \n\n\n#if
+      VFX_USE_ALIVE_CURRENT\n        if (alive)\n        {\n\t\t\tuint deadIndex =
+      deadListIn.DecrementCounter();\n            uint index = deadListIn[deadIndex];\n
+      \           attributeBuffer.Store3((index * 0xC + 0x0) << 2,asuint(position));\n
+      \           attributeBuffer.Store3((index * 0xC + 0x4) << 2,asuint(color));\n
+      \           attributeBuffer.Store((index * 0xC + 0x3) << 2,asuint(angleX));\n
+      \           attributeBuffer.Store((index * 0xC + 0x7) << 2,asuint(angleZ));\n
+      \           attributeBuffer.Store((index * 0xC + 0x8) << 2,asuint(scaleY));\n
+      \           \n\n        }\n#else\n        uint index = particleIndex;\n        attributeBuffer.Store3((index
+      * 0xC + 0x0) << 2,asuint(position));\n        attributeBuffer.Store3((index
+      * 0xC + 0x4) << 2,asuint(color));\n        attributeBuffer.Store((index * 0xC
+      + 0x3) << 2,asuint(angleX));\n        attributeBuffer.Store((index * 0xC + 0x7)
+      << 2,asuint(angleZ));\n        attributeBuffer.Store((index * 0xC + 0x8) <<
+      2,asuint(scaleY));\n        \n\n#endif\n    }\n}\n"
   - compute: 0
     name: '[System 1]Lit Cube Output'
     source: "Shader \"Hidden/VFX/System 1/Lit Cube Output\"\n{\n\tSubShader\n\t{\t\n\t\tCull
@@ -3721,47 +3723,47 @@ VisualEffectResource:
       pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = (float)0.1;\n\t\t\t\t\t\tfloat
       scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   SetAttribute_D5151640( /*inout */scaleX,  /*inout */scaleZ, float2(0.5,0.5));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_w = color[0];\n\t\t\t\t    float tmp_x = color[1];\n\t\t\t\t    float
-      tmp_y = color[2];\n\t\t\t\t    float4 tmp_ba = float4(tmp_w, tmp_x, tmp_y, (float)1);\n\t\t\t\t
-      \   float4 tmp_bc = tmp_ba * float4(0.299,0.587,0.114,0);\n\t\t\t\t    float
-      tmp_bd = tmp_bc[3];\n\t\t\t\t    float tmp_be = tmp_bc[2];\n\t\t\t\t    float
-      tmp_bf = tmp_bd + tmp_be;\n\t\t\t\t    float tmp_bg = tmp_bc[1];\n\t\t\t\t    float
-      tmp_bh = tmp_bf + tmp_bg;\n\t\t\t\t    float tmp_bi = tmp_bc[0];\n\t\t\t\t    float
-      tmp_bj = tmp_bh + tmp_bi;\n\t\t\t\t    float3 tmp_bk = float3(tmp_bj, tmp_bj,
-      tmp_bj);\n\t\t\t\t    SetAttribute_545F0ED( /*inout */color, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_u = color[0];\n\t\t\t\t    float tmp_v = color[1];\n\t\t\t\t    float
+      tmp_w = color[2];\n\t\t\t\t    float4 tmp_y = float4(tmp_u, tmp_v, tmp_w, (float)1);\n\t\t\t\t
+      \   float4 tmp_ba = tmp_y * float4(0.299,0.587,0.114,0);\n\t\t\t\t    float
+      tmp_bb = tmp_ba[3];\n\t\t\t\t    float tmp_bc = tmp_ba[2];\n\t\t\t\t    float
+      tmp_bd = tmp_bb + tmp_bc;\n\t\t\t\t    float tmp_be = tmp_ba[1];\n\t\t\t\t    float
+      tmp_bf = tmp_bd + tmp_be;\n\t\t\t\t    float tmp_bg = tmp_ba[0];\n\t\t\t\t    float
+      tmp_bh = tmp_bf + tmp_bg;\n\t\t\t\t    float3 tmp_bi = float3(tmp_bh, tmp_bh,
+      tmp_bh);\n\t\t\t\t    SetAttribute_545F0ED( /*inout */color, tmp_bi);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   SetAttribute_545F0ED( /*inout */color, float3(0.4470588,0.6925617,1));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_w = position[1];\n\t\t\t\t    float tmp_x = tmp_w - uniform_b;\n\t\t\t\t
+      \   float tmp_y = abs(tmp_x);\n\t\t\t\t    float tmp_ba = tmp_y - (float)1;\n\t\t\t\t
+      \   float tmp_bc = tmp_ba / (float)6;\n\t\t\t\t    float tmp_be = max(tmp_bc,
+      (float)0);\n\t\t\t\t    float tmp_bf = min(tmp_be, (float)1);\n\t\t\t\t    float
+      tmp_bg = (float)2 * tmp_bf;\n\t\t\t\t    float tmp_bh = (float)3 - tmp_bg;\n\t\t\t\t
+      \   float tmp_bi = tmp_bh * tmp_bf;\n\t\t\t\t    float tmp_bj = tmp_bi * tmp_bf;\n\t\t\t\t
+      \   float tmp_bk = tmp_bj * (float)2;\n\t\t\t\t    float tmp_bm = tmp_bk + (float)-1;\n\t\t\t\t
+      \   SetAttribute_501D4123( /*inout */angleX, tmp_bm);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_w = position[1];\n\t\t\t\t    float tmp_x = tmp_w - uniform_b;\n\t\t\t\t
+      \   float tmp_y = abs(tmp_x);\n\t\t\t\t    float tmp_ba = tmp_y - (float)1;\n\t\t\t\t
+      \   float tmp_bc = tmp_ba / (float)6;\n\t\t\t\t    float tmp_be = max(tmp_bc,
+      (float)0);\n\t\t\t\t    float tmp_bf = min(tmp_be, (float)1);\n\t\t\t\t    float
+      tmp_bg = (float)2 * tmp_bf;\n\t\t\t\t    float tmp_bh = (float)3 - tmp_bg;\n\t\t\t\t
+      \   float tmp_bi = tmp_bh * tmp_bf;\n\t\t\t\t    float tmp_bj = tmp_bi * tmp_bf;\n\t\t\t\t
+      \   float tmp_bk = tmp_bj * (float)2;\n\t\t\t\t    float tmp_bm = tmp_bk + (float)-1;\n\t\t\t\t
+      \   SetAttribute_501D4121( /*inout */angleZ, tmp_bm);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_y = position[1];\n\t\t\t\t    float tmp_z = tmp_y - uniform_b;\n\t\t\t\t
-      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bc = tmp_ba - (float)1;\n\t\t\t\t
-      \   float tmp_be = tmp_bc / (float)6;\n\t\t\t\t    float tmp_bg = max(tmp_be,
-      (float)0);\n\t\t\t\t    float tmp_bh = min(tmp_bg, (float)1);\n\t\t\t\t    float
-      tmp_bi = (float)2 * tmp_bh;\n\t\t\t\t    float tmp_bj = (float)3 - tmp_bi;\n\t\t\t\t
-      \   float tmp_bk = tmp_bj * tmp_bh;\n\t\t\t\t    float tmp_bl = tmp_bk * tmp_bh;\n\t\t\t\t
-      \   float tmp_bm = tmp_bl * (float)2;\n\t\t\t\t    float tmp_bo = tmp_bm + (float)-1;\n\t\t\t\t
-      \   SetAttribute_501D4123( /*inout */angleX, tmp_bo);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bb = tmp_ba - (float)1;\n\t\t\t\t
+      \   float tmp_bd = tmp_bb / (float)6;\n\t\t\t\t    float tmp_bf = max(tmp_bd,
+      (float)0);\n\t\t\t\t    float tmp_bg = min(tmp_bf, (float)1);\n\t\t\t\t    float
+      tmp_bh = (float)2 * tmp_bg;\n\t\t\t\t    float tmp_bi = (float)3 - tmp_bh;\n\t\t\t\t
+      \   float tmp_bj = tmp_bi * tmp_bg;\n\t\t\t\t    float tmp_bk = tmp_bj * tmp_bg;\n\t\t\t\t
+      \   float tmp_bl = (float)1 - tmp_bk;\n\t\t\t\t    SetAttribute_18B2FD0( /*inout
+      */color, float3(0.3034359,0.3962264,0.2747419), tmp_bl);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_y = position[1];\n\t\t\t\t    float tmp_z = tmp_y - uniform_b;\n\t\t\t\t
-      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bc = tmp_ba - (float)1;\n\t\t\t\t
-      \   float tmp_be = tmp_bc / (float)6;\n\t\t\t\t    float tmp_bg = max(tmp_be,
-      (float)0);\n\t\t\t\t    float tmp_bh = min(tmp_bg, (float)1);\n\t\t\t\t    float
-      tmp_bi = (float)2 * tmp_bh;\n\t\t\t\t    float tmp_bj = (float)3 - tmp_bi;\n\t\t\t\t
-      \   float tmp_bk = tmp_bj * tmp_bh;\n\t\t\t\t    float tmp_bl = tmp_bk * tmp_bh;\n\t\t\t\t
-      \   float tmp_bm = tmp_bl * (float)2;\n\t\t\t\t    float tmp_bo = tmp_bm + (float)-1;\n\t\t\t\t
-      \   SetAttribute_501D4121( /*inout */angleZ, tmp_bo);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_ba = position[1];\n\t\t\t\t    float tmp_bb = tmp_ba - uniform_b;\n\t\t\t\t
-      \   float tmp_bc = abs(tmp_bb);\n\t\t\t\t    float tmp_bd = tmp_bc - (float)1;\n\t\t\t\t
-      \   float tmp_bf = tmp_bd / (float)6;\n\t\t\t\t    float tmp_bh = max(tmp_bf,
-      (float)0);\n\t\t\t\t    float tmp_bi = min(tmp_bh, (float)1);\n\t\t\t\t    float
-      tmp_bj = (float)2 * tmp_bi;\n\t\t\t\t    float tmp_bk = (float)3 - tmp_bj;\n\t\t\t\t
-      \   float tmp_bl = tmp_bk * tmp_bi;\n\t\t\t\t    float tmp_bm = tmp_bl * tmp_bi;\n\t\t\t\t
-      \   float tmp_bn = (float)1 - tmp_bm;\n\t\t\t\t    SetAttribute_18B2FD0( /*inout
-      */color, float3(0.3034359,0.3962264,0.2747419), tmp_bn);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_ba = position[1];\n\t\t\t\t    float tmp_bb = tmp_ba - uniform_b;\n\t\t\t\t
-      \   float tmp_bc = abs(tmp_bb);\n\t\t\t\t    float tmp_bd = tmp_bc - (float)1;\n\t\t\t\t
-      \   float tmp_bf = tmp_bd / (float)6;\n\t\t\t\t    float tmp_bh = max(tmp_bf,
-      (float)0);\n\t\t\t\t    float tmp_bi = min(tmp_bh, (float)1);\n\t\t\t\t    float
-      tmp_bj = (float)2 * tmp_bi;\n\t\t\t\t    float tmp_bk = (float)3 - tmp_bj;\n\t\t\t\t
-      \   float tmp_bl = tmp_bk * tmp_bi;\n\t\t\t\t    float tmp_bm = tmp_bl * tmp_bi;\n\t\t\t\t
-      \   float tmp_bn = (float)1 - tmp_bm;\n\t\t\t\t    SetAttribute_E0455985( /*inout
-      */scaleX,  /*inout */scaleY,  /*inout */scaleZ, float3(1,1,1), tmp_bn);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\t\t\n\t\t\t\tif
+      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bb = tmp_ba - (float)1;\n\t\t\t\t
+      \   float tmp_bd = tmp_bb / (float)6;\n\t\t\t\t    float tmp_bf = max(tmp_bd,
+      (float)0);\n\t\t\t\t    float tmp_bg = min(tmp_bf, (float)1);\n\t\t\t\t    float
+      tmp_bh = (float)2 * tmp_bg;\n\t\t\t\t    float tmp_bi = (float)3 - tmp_bh;\n\t\t\t\t
+      \   float tmp_bj = tmp_bi * tmp_bg;\n\t\t\t\t    float tmp_bk = tmp_bj * tmp_bg;\n\t\t\t\t
+      \   float tmp_bl = (float)1 - tmp_bk;\n\t\t\t\t    SetAttribute_E0455985( /*inout
+      */scaleX,  /*inout */scaleY,  /*inout */scaleZ, float3(1,1,1), tmp_bl);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\t\t\n\t\t\t\tif
       (!alive)\n\t\t\t\t\treturn o;\n\t\t\t\t\n\t\t\t\tfloat3 offsets = (float3)0;\n\t\t\t\toffsets.x
       = float(id & 1);\n\t\t\t\toffsets.y = float((id & 3) >> 1);\n\t\t\t\toffsets.z
       = float((id & 7) >> 2);\n\t\t\t\toffsets -= 0.5f;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tfloat3
@@ -3908,47 +3910,47 @@ VisualEffectResource:
       pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = (float)0.1;\n\t\t\t\t\t\tfloat
       scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   SetAttribute_D5151640( /*inout */scaleX,  /*inout */scaleZ, float2(0.5,0.5));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_w = color[0];\n\t\t\t\t    float tmp_x = color[1];\n\t\t\t\t    float
-      tmp_y = color[2];\n\t\t\t\t    float4 tmp_ba = float4(tmp_w, tmp_x, tmp_y, (float)1);\n\t\t\t\t
-      \   float4 tmp_bc = tmp_ba * float4(0.299,0.587,0.114,0);\n\t\t\t\t    float
-      tmp_bd = tmp_bc[3];\n\t\t\t\t    float tmp_be = tmp_bc[2];\n\t\t\t\t    float
-      tmp_bf = tmp_bd + tmp_be;\n\t\t\t\t    float tmp_bg = tmp_bc[1];\n\t\t\t\t    float
-      tmp_bh = tmp_bf + tmp_bg;\n\t\t\t\t    float tmp_bi = tmp_bc[0];\n\t\t\t\t    float
-      tmp_bj = tmp_bh + tmp_bi;\n\t\t\t\t    float3 tmp_bk = float3(tmp_bj, tmp_bj,
-      tmp_bj);\n\t\t\t\t    SetAttribute_545F0ED( /*inout */color, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_u = color[0];\n\t\t\t\t    float tmp_v = color[1];\n\t\t\t\t    float
+      tmp_w = color[2];\n\t\t\t\t    float4 tmp_y = float4(tmp_u, tmp_v, tmp_w, (float)1);\n\t\t\t\t
+      \   float4 tmp_ba = tmp_y * float4(0.299,0.587,0.114,0);\n\t\t\t\t    float
+      tmp_bb = tmp_ba[3];\n\t\t\t\t    float tmp_bc = tmp_ba[2];\n\t\t\t\t    float
+      tmp_bd = tmp_bb + tmp_bc;\n\t\t\t\t    float tmp_be = tmp_ba[1];\n\t\t\t\t    float
+      tmp_bf = tmp_bd + tmp_be;\n\t\t\t\t    float tmp_bg = tmp_ba[0];\n\t\t\t\t    float
+      tmp_bh = tmp_bf + tmp_bg;\n\t\t\t\t    float3 tmp_bi = float3(tmp_bh, tmp_bh,
+      tmp_bh);\n\t\t\t\t    SetAttribute_545F0ED( /*inout */color, tmp_bi);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   SetAttribute_545F0ED( /*inout */color, float3(0.4470588,0.6925617,1));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_w = position[1];\n\t\t\t\t    float tmp_x = tmp_w - uniform_b;\n\t\t\t\t
+      \   float tmp_y = abs(tmp_x);\n\t\t\t\t    float tmp_ba = tmp_y - (float)1;\n\t\t\t\t
+      \   float tmp_bc = tmp_ba / (float)6;\n\t\t\t\t    float tmp_be = max(tmp_bc,
+      (float)0);\n\t\t\t\t    float tmp_bf = min(tmp_be, (float)1);\n\t\t\t\t    float
+      tmp_bg = (float)2 * tmp_bf;\n\t\t\t\t    float tmp_bh = (float)3 - tmp_bg;\n\t\t\t\t
+      \   float tmp_bi = tmp_bh * tmp_bf;\n\t\t\t\t    float tmp_bj = tmp_bi * tmp_bf;\n\t\t\t\t
+      \   float tmp_bk = tmp_bj * (float)2;\n\t\t\t\t    float tmp_bm = tmp_bk + (float)-1;\n\t\t\t\t
+      \   SetAttribute_501D4123( /*inout */angleX, tmp_bm);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_w = position[1];\n\t\t\t\t    float tmp_x = tmp_w - uniform_b;\n\t\t\t\t
+      \   float tmp_y = abs(tmp_x);\n\t\t\t\t    float tmp_ba = tmp_y - (float)1;\n\t\t\t\t
+      \   float tmp_bc = tmp_ba / (float)6;\n\t\t\t\t    float tmp_be = max(tmp_bc,
+      (float)0);\n\t\t\t\t    float tmp_bf = min(tmp_be, (float)1);\n\t\t\t\t    float
+      tmp_bg = (float)2 * tmp_bf;\n\t\t\t\t    float tmp_bh = (float)3 - tmp_bg;\n\t\t\t\t
+      \   float tmp_bi = tmp_bh * tmp_bf;\n\t\t\t\t    float tmp_bj = tmp_bi * tmp_bf;\n\t\t\t\t
+      \   float tmp_bk = tmp_bj * (float)2;\n\t\t\t\t    float tmp_bm = tmp_bk + (float)-1;\n\t\t\t\t
+      \   SetAttribute_501D4121( /*inout */angleZ, tmp_bm);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_y = position[1];\n\t\t\t\t    float tmp_z = tmp_y - uniform_b;\n\t\t\t\t
-      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bc = tmp_ba - (float)1;\n\t\t\t\t
-      \   float tmp_be = tmp_bc / (float)6;\n\t\t\t\t    float tmp_bg = max(tmp_be,
-      (float)0);\n\t\t\t\t    float tmp_bh = min(tmp_bg, (float)1);\n\t\t\t\t    float
-      tmp_bi = (float)2 * tmp_bh;\n\t\t\t\t    float tmp_bj = (float)3 - tmp_bi;\n\t\t\t\t
-      \   float tmp_bk = tmp_bj * tmp_bh;\n\t\t\t\t    float tmp_bl = tmp_bk * tmp_bh;\n\t\t\t\t
-      \   float tmp_bm = tmp_bl * (float)2;\n\t\t\t\t    float tmp_bo = tmp_bm + (float)-1;\n\t\t\t\t
-      \   SetAttribute_501D4123( /*inout */angleX, tmp_bo);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bb = tmp_ba - (float)1;\n\t\t\t\t
+      \   float tmp_bd = tmp_bb / (float)6;\n\t\t\t\t    float tmp_bf = max(tmp_bd,
+      (float)0);\n\t\t\t\t    float tmp_bg = min(tmp_bf, (float)1);\n\t\t\t\t    float
+      tmp_bh = (float)2 * tmp_bg;\n\t\t\t\t    float tmp_bi = (float)3 - tmp_bh;\n\t\t\t\t
+      \   float tmp_bj = tmp_bi * tmp_bg;\n\t\t\t\t    float tmp_bk = tmp_bj * tmp_bg;\n\t\t\t\t
+      \   float tmp_bl = (float)1 - tmp_bk;\n\t\t\t\t    SetAttribute_18B2FD0( /*inout
+      */color, float3(0.3034359,0.3962264,0.2747419), tmp_bl);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_y = position[1];\n\t\t\t\t    float tmp_z = tmp_y - uniform_b;\n\t\t\t\t
-      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bc = tmp_ba - (float)1;\n\t\t\t\t
-      \   float tmp_be = tmp_bc / (float)6;\n\t\t\t\t    float tmp_bg = max(tmp_be,
-      (float)0);\n\t\t\t\t    float tmp_bh = min(tmp_bg, (float)1);\n\t\t\t\t    float
-      tmp_bi = (float)2 * tmp_bh;\n\t\t\t\t    float tmp_bj = (float)3 - tmp_bi;\n\t\t\t\t
-      \   float tmp_bk = tmp_bj * tmp_bh;\n\t\t\t\t    float tmp_bl = tmp_bk * tmp_bh;\n\t\t\t\t
-      \   float tmp_bm = tmp_bl * (float)2;\n\t\t\t\t    float tmp_bo = tmp_bm + (float)-1;\n\t\t\t\t
-      \   SetAttribute_501D4121( /*inout */angleZ, tmp_bo);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_ba = position[1];\n\t\t\t\t    float tmp_bb = tmp_ba - uniform_b;\n\t\t\t\t
-      \   float tmp_bc = abs(tmp_bb);\n\t\t\t\t    float tmp_bd = tmp_bc - (float)1;\n\t\t\t\t
-      \   float tmp_bf = tmp_bd / (float)6;\n\t\t\t\t    float tmp_bh = max(tmp_bf,
-      (float)0);\n\t\t\t\t    float tmp_bi = min(tmp_bh, (float)1);\n\t\t\t\t    float
-      tmp_bj = (float)2 * tmp_bi;\n\t\t\t\t    float tmp_bk = (float)3 - tmp_bj;\n\t\t\t\t
-      \   float tmp_bl = tmp_bk * tmp_bi;\n\t\t\t\t    float tmp_bm = tmp_bl * tmp_bi;\n\t\t\t\t
-      \   float tmp_bn = (float)1 - tmp_bm;\n\t\t\t\t    SetAttribute_18B2FD0( /*inout
-      */color, float3(0.3034359,0.3962264,0.2747419), tmp_bn);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_ba = position[1];\n\t\t\t\t    float tmp_bb = tmp_ba - uniform_b;\n\t\t\t\t
-      \   float tmp_bc = abs(tmp_bb);\n\t\t\t\t    float tmp_bd = tmp_bc - (float)1;\n\t\t\t\t
-      \   float tmp_bf = tmp_bd / (float)6;\n\t\t\t\t    float tmp_bh = max(tmp_bf,
-      (float)0);\n\t\t\t\t    float tmp_bi = min(tmp_bh, (float)1);\n\t\t\t\t    float
-      tmp_bj = (float)2 * tmp_bi;\n\t\t\t\t    float tmp_bk = (float)3 - tmp_bj;\n\t\t\t\t
-      \   float tmp_bl = tmp_bk * tmp_bi;\n\t\t\t\t    float tmp_bm = tmp_bl * tmp_bi;\n\t\t\t\t
-      \   float tmp_bn = (float)1 - tmp_bm;\n\t\t\t\t    SetAttribute_E0455985( /*inout
-      */scaleX,  /*inout */scaleY,  /*inout */scaleZ, float3(1,1,1), tmp_bn);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\t\t\n\t\t\t\tif
+      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bb = tmp_ba - (float)1;\n\t\t\t\t
+      \   float tmp_bd = tmp_bb / (float)6;\n\t\t\t\t    float tmp_bf = max(tmp_bd,
+      (float)0);\n\t\t\t\t    float tmp_bg = min(tmp_bf, (float)1);\n\t\t\t\t    float
+      tmp_bh = (float)2 * tmp_bg;\n\t\t\t\t    float tmp_bi = (float)3 - tmp_bh;\n\t\t\t\t
+      \   float tmp_bj = tmp_bi * tmp_bg;\n\t\t\t\t    float tmp_bk = tmp_bj * tmp_bg;\n\t\t\t\t
+      \   float tmp_bl = (float)1 - tmp_bk;\n\t\t\t\t    SetAttribute_E0455985( /*inout
+      */scaleX,  /*inout */scaleY,  /*inout */scaleZ, float3(1,1,1), tmp_bl);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\t\t\n\t\t\t\tif
       (!alive)\n\t\t\t\t\treturn o;\n\t\t\t\t\n\t\t\t\tfloat3 offsets = (float3)0;\n\t\t\t\toffsets.x
       = float(id & 1);\n\t\t\t\toffsets.y = float((id & 3) >> 1);\n\t\t\t\toffsets.z
       = float((id & 7) >> 2);\n\t\t\t\toffsets -= 0.5f;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tfloat3
@@ -3983,17 +3985,17 @@ VisualEffectResource:
       \   \n\t\t\t\t\t\t\t\t\t    smoothness = (float)0.7;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SMOOTHNESS
       = smoothness;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#if HDRP_MATERIAL_TYPE_STANDARD\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_METALLIC\n\t\t\t\t\t\t\t\t\tfloat metallic = (float)0;\n\t\t\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\t
-      \   float tmp_y = position[1];\n\t\t\t\t\t\t\t\t\t    float tmp_z = tmp_y -
-      uniform_b;\n\t\t\t\t\t\t\t\t\t    float tmp_ba = abs(tmp_z);\n\t\t\t\t\t\t\t\t\t
-      \   float tmp_bc = tmp_ba - (float)1;\n\t\t\t\t\t\t\t\t\t    float tmp_be =
-      tmp_bc / (float)6;\n\t\t\t\t\t\t\t\t\t    float tmp_bg = max(tmp_be, (float)0);\n\t\t\t\t\t\t\t\t\t
-      \   float tmp_bh = min(tmp_bg, (float)1);\n\t\t\t\t\t\t\t\t\t    float tmp_bi
-      = (float)2 * tmp_bh;\n\t\t\t\t\t\t\t\t\t    float tmp_bj = (float)3 - tmp_bi;\n\t\t\t\t\t\t\t\t\t
-      \   float tmp_bk = tmp_bj * tmp_bh;\n\t\t\t\t\t\t\t\t\t    float tmp_bl = tmp_bk
-      * tmp_bh;\n\t\t\t\t\t\t\t\t\t    float tmp_bm = tmp_bl * (float)2;\n\t\t\t\t\t\t\t\t\t
-      \   float tmp_bo = tmp_bm + (float)-1;\n\t\t\t\t\t\t\t\t\t    float tmp_bp =
-      max(tmp_bo, (float)0);\n\t\t\t\t\t\t\t\t\t    float tmp_bq = min(tmp_bp, (float)1);\n\t\t\t\t\t\t\t\t\t
-      \   \n\t\t\t\t\t\t\t\t\t    metallic = tmp_bq;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
+      \   float tmp_w = position[1];\n\t\t\t\t\t\t\t\t\t    float tmp_x = tmp_w -
+      uniform_b;\n\t\t\t\t\t\t\t\t\t    float tmp_y = abs(tmp_x);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_ba = tmp_y - (float)1;\n\t\t\t\t\t\t\t\t\t    float tmp_bc = tmp_ba
+      / (float)6;\n\t\t\t\t\t\t\t\t\t    float tmp_be = max(tmp_bc, (float)0);\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_bf = min(tmp_be, (float)1);\n\t\t\t\t\t\t\t\t\t    float tmp_bg
+      = (float)2 * tmp_bf;\n\t\t\t\t\t\t\t\t\t    float tmp_bh = (float)3 - tmp_bg;\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_bi = tmp_bh * tmp_bf;\n\t\t\t\t\t\t\t\t\t    float tmp_bj = tmp_bi
+      * tmp_bf;\n\t\t\t\t\t\t\t\t\t    float tmp_bk = tmp_bj * (float)2;\n\t\t\t\t\t\t\t\t\t
+      \   float tmp_bm = tmp_bk + (float)-1;\n\t\t\t\t\t\t\t\t\t    float tmp_bn =
+      max(tmp_bm, (float)0);\n\t\t\t\t\t\t\t\t\t    float tmp_bo = min(tmp_bn, (float)1);\n\t\t\t\t\t\t\t\t\t
+      \   \n\t\t\t\t\t\t\t\t\t    metallic = tmp_bo;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_METALLIC
       = metallic;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_SPECULAR\n\t\t\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_SPECULAR\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_SPECULAR
       = specularColor;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#elif HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\t\t\t\t\t\t#ifdef
@@ -4125,47 +4127,47 @@ VisualEffectResource:
       pivotZ = (float)0;\n\t\t\t\t\t\tfloat size = (float)0.1;\n\t\t\t\t\t\tfloat
       scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   SetAttribute_D5151640( /*inout */scaleX,  /*inout */scaleZ, float2(0.5,0.5));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_w = color[0];\n\t\t\t\t    float tmp_x = color[1];\n\t\t\t\t    float
-      tmp_y = color[2];\n\t\t\t\t    float4 tmp_ba = float4(tmp_w, tmp_x, tmp_y, (float)1);\n\t\t\t\t
-      \   float4 tmp_bc = tmp_ba * float4(0.299,0.587,0.114,0);\n\t\t\t\t    float
-      tmp_bd = tmp_bc[3];\n\t\t\t\t    float tmp_be = tmp_bc[2];\n\t\t\t\t    float
-      tmp_bf = tmp_bd + tmp_be;\n\t\t\t\t    float tmp_bg = tmp_bc[1];\n\t\t\t\t    float
-      tmp_bh = tmp_bf + tmp_bg;\n\t\t\t\t    float tmp_bi = tmp_bc[0];\n\t\t\t\t    float
-      tmp_bj = tmp_bh + tmp_bi;\n\t\t\t\t    float3 tmp_bk = float3(tmp_bj, tmp_bj,
-      tmp_bj);\n\t\t\t\t    SetAttribute_545F0ED( /*inout */color, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_u = color[0];\n\t\t\t\t    float tmp_v = color[1];\n\t\t\t\t    float
+      tmp_w = color[2];\n\t\t\t\t    float4 tmp_y = float4(tmp_u, tmp_v, tmp_w, (float)1);\n\t\t\t\t
+      \   float4 tmp_ba = tmp_y * float4(0.299,0.587,0.114,0);\n\t\t\t\t    float
+      tmp_bb = tmp_ba[3];\n\t\t\t\t    float tmp_bc = tmp_ba[2];\n\t\t\t\t    float
+      tmp_bd = tmp_bb + tmp_bc;\n\t\t\t\t    float tmp_be = tmp_ba[1];\n\t\t\t\t    float
+      tmp_bf = tmp_bd + tmp_be;\n\t\t\t\t    float tmp_bg = tmp_ba[0];\n\t\t\t\t    float
+      tmp_bh = tmp_bf + tmp_bg;\n\t\t\t\t    float3 tmp_bi = float3(tmp_bh, tmp_bh,
+      tmp_bh);\n\t\t\t\t    SetAttribute_545F0ED( /*inout */color, tmp_bi);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   SetAttribute_545F0ED( /*inout */color, float3(0.4470588,0.6925617,1));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_w = position[1];\n\t\t\t\t    float tmp_x = tmp_w - uniform_b;\n\t\t\t\t
+      \   float tmp_y = abs(tmp_x);\n\t\t\t\t    float tmp_ba = tmp_y - (float)1;\n\t\t\t\t
+      \   float tmp_bc = tmp_ba / (float)6;\n\t\t\t\t    float tmp_be = max(tmp_bc,
+      (float)0);\n\t\t\t\t    float tmp_bf = min(tmp_be, (float)1);\n\t\t\t\t    float
+      tmp_bg = (float)2 * tmp_bf;\n\t\t\t\t    float tmp_bh = (float)3 - tmp_bg;\n\t\t\t\t
+      \   float tmp_bi = tmp_bh * tmp_bf;\n\t\t\t\t    float tmp_bj = tmp_bi * tmp_bf;\n\t\t\t\t
+      \   float tmp_bk = tmp_bj * (float)2;\n\t\t\t\t    float tmp_bm = tmp_bk + (float)-1;\n\t\t\t\t
+      \   SetAttribute_501D4123( /*inout */angleX, tmp_bm);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_w = position[1];\n\t\t\t\t    float tmp_x = tmp_w - uniform_b;\n\t\t\t\t
+      \   float tmp_y = abs(tmp_x);\n\t\t\t\t    float tmp_ba = tmp_y - (float)1;\n\t\t\t\t
+      \   float tmp_bc = tmp_ba / (float)6;\n\t\t\t\t    float tmp_be = max(tmp_bc,
+      (float)0);\n\t\t\t\t    float tmp_bf = min(tmp_be, (float)1);\n\t\t\t\t    float
+      tmp_bg = (float)2 * tmp_bf;\n\t\t\t\t    float tmp_bh = (float)3 - tmp_bg;\n\t\t\t\t
+      \   float tmp_bi = tmp_bh * tmp_bf;\n\t\t\t\t    float tmp_bj = tmp_bi * tmp_bf;\n\t\t\t\t
+      \   float tmp_bk = tmp_bj * (float)2;\n\t\t\t\t    float tmp_bm = tmp_bk + (float)-1;\n\t\t\t\t
+      \   SetAttribute_501D4121( /*inout */angleZ, tmp_bm);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_y = position[1];\n\t\t\t\t    float tmp_z = tmp_y - uniform_b;\n\t\t\t\t
-      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bc = tmp_ba - (float)1;\n\t\t\t\t
-      \   float tmp_be = tmp_bc / (float)6;\n\t\t\t\t    float tmp_bg = max(tmp_be,
-      (float)0);\n\t\t\t\t    float tmp_bh = min(tmp_bg, (float)1);\n\t\t\t\t    float
-      tmp_bi = (float)2 * tmp_bh;\n\t\t\t\t    float tmp_bj = (float)3 - tmp_bi;\n\t\t\t\t
-      \   float tmp_bk = tmp_bj * tmp_bh;\n\t\t\t\t    float tmp_bl = tmp_bk * tmp_bh;\n\t\t\t\t
-      \   float tmp_bm = tmp_bl * (float)2;\n\t\t\t\t    float tmp_bo = tmp_bm + (float)-1;\n\t\t\t\t
-      \   SetAttribute_501D4123( /*inout */angleX, tmp_bo);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
+      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bb = tmp_ba - (float)1;\n\t\t\t\t
+      \   float tmp_bd = tmp_bb / (float)6;\n\t\t\t\t    float tmp_bf = max(tmp_bd,
+      (float)0);\n\t\t\t\t    float tmp_bg = min(tmp_bf, (float)1);\n\t\t\t\t    float
+      tmp_bh = (float)2 * tmp_bg;\n\t\t\t\t    float tmp_bi = (float)3 - tmp_bh;\n\t\t\t\t
+      \   float tmp_bj = tmp_bi * tmp_bg;\n\t\t\t\t    float tmp_bk = tmp_bj * tmp_bg;\n\t\t\t\t
+      \   float tmp_bl = (float)1 - tmp_bk;\n\t\t\t\t    SetAttribute_18B2FD0( /*inout
+      */color, float3(0.3034359,0.3962264,0.2747419), tmp_bl);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
       \   float tmp_y = position[1];\n\t\t\t\t    float tmp_z = tmp_y - uniform_b;\n\t\t\t\t
-      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bc = tmp_ba - (float)1;\n\t\t\t\t
-      \   float tmp_be = tmp_bc / (float)6;\n\t\t\t\t    float tmp_bg = max(tmp_be,
-      (float)0);\n\t\t\t\t    float tmp_bh = min(tmp_bg, (float)1);\n\t\t\t\t    float
-      tmp_bi = (float)2 * tmp_bh;\n\t\t\t\t    float tmp_bj = (float)3 - tmp_bi;\n\t\t\t\t
-      \   float tmp_bk = tmp_bj * tmp_bh;\n\t\t\t\t    float tmp_bl = tmp_bk * tmp_bh;\n\t\t\t\t
-      \   float tmp_bm = tmp_bl * (float)2;\n\t\t\t\t    float tmp_bo = tmp_bm + (float)-1;\n\t\t\t\t
-      \   SetAttribute_501D4121( /*inout */angleZ, tmp_bo);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_ba = position[1];\n\t\t\t\t    float tmp_bb = tmp_ba - uniform_b;\n\t\t\t\t
-      \   float tmp_bc = abs(tmp_bb);\n\t\t\t\t    float tmp_bd = tmp_bc - (float)1;\n\t\t\t\t
-      \   float tmp_bf = tmp_bd / (float)6;\n\t\t\t\t    float tmp_bh = max(tmp_bf,
-      (float)0);\n\t\t\t\t    float tmp_bi = min(tmp_bh, (float)1);\n\t\t\t\t    float
-      tmp_bj = (float)2 * tmp_bi;\n\t\t\t\t    float tmp_bk = (float)3 - tmp_bj;\n\t\t\t\t
-      \   float tmp_bl = tmp_bk * tmp_bi;\n\t\t\t\t    float tmp_bm = tmp_bl * tmp_bi;\n\t\t\t\t
-      \   float tmp_bn = (float)1 - tmp_bm;\n\t\t\t\t    SetAttribute_18B2FD0( /*inout
-      */color, float3(0.3034359,0.3962264,0.2747419), tmp_bn);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   float tmp_ba = position[1];\n\t\t\t\t    float tmp_bb = tmp_ba - uniform_b;\n\t\t\t\t
-      \   float tmp_bc = abs(tmp_bb);\n\t\t\t\t    float tmp_bd = tmp_bc - (float)1;\n\t\t\t\t
-      \   float tmp_bf = tmp_bd / (float)6;\n\t\t\t\t    float tmp_bh = max(tmp_bf,
-      (float)0);\n\t\t\t\t    float tmp_bi = min(tmp_bh, (float)1);\n\t\t\t\t    float
-      tmp_bj = (float)2 * tmp_bi;\n\t\t\t\t    float tmp_bk = (float)3 - tmp_bj;\n\t\t\t\t
-      \   float tmp_bl = tmp_bk * tmp_bi;\n\t\t\t\t    float tmp_bm = tmp_bl * tmp_bi;\n\t\t\t\t
-      \   float tmp_bn = (float)1 - tmp_bm;\n\t\t\t\t    SetAttribute_E0455985( /*inout
-      */scaleX,  /*inout */scaleY,  /*inout */scaleZ, float3(1,1,1), tmp_bn);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\t\t\n\t\t\t\tif
+      \   float tmp_ba = abs(tmp_z);\n\t\t\t\t    float tmp_bb = tmp_ba - (float)1;\n\t\t\t\t
+      \   float tmp_bd = tmp_bb / (float)6;\n\t\t\t\t    float tmp_bf = max(tmp_bd,
+      (float)0);\n\t\t\t\t    float tmp_bg = min(tmp_bf, (float)1);\n\t\t\t\t    float
+      tmp_bh = (float)2 * tmp_bg;\n\t\t\t\t    float tmp_bi = (float)3 - tmp_bh;\n\t\t\t\t
+      \   float tmp_bj = tmp_bi * tmp_bg;\n\t\t\t\t    float tmp_bk = tmp_bj * tmp_bg;\n\t\t\t\t
+      \   float tmp_bl = (float)1 - tmp_bk;\n\t\t\t\t    SetAttribute_E0455985( /*inout
+      */scaleX,  /*inout */scaleY,  /*inout */scaleZ, float3(1,1,1), tmp_bl);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\t\t\n\t\t\t\tif
       (!alive)\n\t\t\t\t\treturn o;\n\t\t\t\t\n\t\t\t\tfloat3 offsets = (float3)0;\n\t\t\t\toffsets.x
       = float(id & 1);\n\t\t\t\toffsets.y = float((id & 3) >> 1);\n\t\t\t\toffsets.z
       = float((id & 7) >> 2);\n\t\t\t\toffsets -= 0.5f;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tfloat3
@@ -4397,33 +4399,39 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
+        data[3]: 6
+      - op: 1
+        valueIndex: 46
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
         data[3]: 7
       - op: 1
-        valueIndex: 47
+        valueIndex: 48
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 2
       - op: 1
-        valueIndex: 49
+        valueIndex: 50
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 2
       - op: 1
-        valueIndex: 51
+        valueIndex: 52
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 3
       - op: 1
-        valueIndex: 54
+        valueIndex: 55
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 3
       - op: 1
-        valueIndex: 57
+        valueIndex: 58
         data[0]: -1
         data[1]: -1
         data[2]: -1
@@ -4455,38 +4463,40 @@ VisualEffectResource:
           m_Value: 45
         - m_ExpressionIndex: 22
           m_Value: -45
-        - m_ExpressionIndex: 32
+        - m_ExpressionIndex: 33
           m_Value: 0.7
       m_Vector2f:
         m_Array:
         - m_ExpressionIndex: 19
           m_Value: {x: 0.5, y: 0.5}
-        - m_ExpressionIndex: 28
-          m_Value: {x: 0, y: 0}
         - m_ExpressionIndex: 29
+          m_Value: {x: 0, y: 0}
+        - m_ExpressionIndex: 30
           m_Value: {x: 10000, y: 10000}
       m_Vector3f:
         m_Array:
         - m_ExpressionIndex: 17
           m_Value: {x: -0.10515237, y: 1.0932078, z: 0.5538113}
         - m_ExpressionIndex: 18
-          m_Value: {x: 0.4470588, y: 0.6925617, z: 1}
+          m_Value: {x: 0.30343592, y: 0.3962264, z: 0.2747419}
         - m_ExpressionIndex: 23
           m_Value: {x: 0, y: 0, z: 0}
         - m_ExpressionIndex: 25
           m_Value: {x: 1, y: 1, z: 1}
         - m_ExpressionIndex: 26
           m_Value: {x: -0.5, y: 0, z: -3.2}
-        - m_ExpressionIndex: 30
-          m_Value: {x: 5.663672, y: 8.102428, z: 4.1472497}
         - m_ExpressionIndex: 31
-          m_Value: {x: 0.30343592, y: 0.3962264, z: 0.2747419}
+          m_Value: {x: 5.663672, y: 8.102428, z: 4.1472497}
+        - m_ExpressionIndex: 32
+          m_Value: {x: 0.4470588, y: 0.6925617, z: 1}
       m_Vector4f:
         m_Array:
         - m_ExpressionIndex: 14
           m_Value: {x: 0.299, y: 0.587, z: 0.114, w: 0}
       m_Uint:
-        m_Array: []
+        m_Array:
+        - m_ExpressionIndex: 27
+          m_Value: 0
       m_Int:
         m_Array: []
       m_Matrix4x4f:
@@ -4533,7 +4543,7 @@ VisualEffectResource:
         m_Array:
         - m_ExpressionIndex: 24
           m_Value: {fileID: 2800002, guid: 26585bf43ba57c441b1ecfef4562f603, type: 3}
-        - m_ExpressionIndex: 27
+        - m_ExpressionIndex: 28
           m_Value: {fileID: 2800000, guid: 26585bf43ba57c441b1ecfef4562f603, type: 3}
       m_Bool:
         m_Array: []
@@ -4673,9 +4683,9 @@ VisualEffectResource:
       buffers: []
       values:
       - nameId: Count
-        index: 29
+        index: 30
       - nameId: Delay
-        index: 28
+        index: 29
       params: []
       processor: {fileID: 0}
       shaderSourceIndex: -1
@@ -4694,7 +4704,7 @@ VisualEffectResource:
     - nameId: bounds_center
       index: 17
     - nameId: bounds_size
-      index: 30
+      index: 31
     tasks:
     - type: 536870912
       buffers:
@@ -4706,14 +4716,14 @@ VisualEffectResource:
       - nameId: Scale_e
         index: 20
       - nameId: attributeMap_a
-        index: 27
+        index: 28
       - nameId: attributeMap_b
         index: 24
       params:
       - nameId: bounds_center
         index: 17
       - nameId: bounds_size
-        index: 30
+        index: 31
       processor: {fileID: 0}
       shaderSourceIndex: 0
     - type: 1073741827
@@ -5800,6 +5810,7 @@ MonoBehaviour:
   m_UISuperCollapsed: 0
   m_InputSlots:
   - {fileID: 8926484042661614663}
+  - {fileID: 8926484042661614678}
   m_OutputSlots: []
   m_Disabled: 0
   attribute: scale
@@ -6267,6 +6278,120 @@ MonoBehaviour:
     name: y
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes: []
+  m_Direction: 0
+  m_LinkedSlots: []
+--- !u!114 &8926484042661614676
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661614676}
+  m_MasterData:
+    m_Owner: {fileID: 114566768836011894}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 0
+    m_Space: 2147483647
+  m_Property:
+    name: Seed
+    m_serializedType:
+      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: Seed to compute the constant random
+      m_Regex: 
+      m_RegexMaxLength: 0
+  m_Direction: 0
+  m_LinkedSlots: []
+--- !u!114 &8926484042661614677
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661614677}
+  m_MasterData:
+    m_Owner: {fileID: 114851472310870532}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 0
+    m_Space: 2147483647
+  m_Property:
+    name: Seed
+    m_serializedType:
+      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: Seed to compute the constant random
+      m_Regex: 
+      m_RegexMaxLength: 0
+  m_Direction: 0
+  m_LinkedSlots: []
+--- !u!114 &8926484042661614678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661614678}
+  m_MasterData:
+    m_Owner: {fileID: 8926484042661614648}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 
+    m_Space: 2147483647
+  m_Property:
+    name: Seed
+    m_serializedType:
+      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes: []
   m_Direction: 0

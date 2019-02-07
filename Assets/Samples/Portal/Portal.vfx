@@ -12849,32 +12849,32 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.cginc\"\n\t\t\t\n\n\t\t\tvoid
       SetAttribute_D5151644(inout float scaleX, float Scale) /*attribute:scale Composition:Overwrite
       Source:Slot Random:Off channels:X */\n\t\t\t{\n\t\t\t    scaleX = Scale.x;\n\t\t\t}\n\t\t\tvoid
-      AttributeFromCurve_57216CF6(inout float scaleY, float age, float lifetime, float3
-      velocity, float4 Scale, float2 SpeedRange) /*attribute:scale Composition:Overwrite
-      AlphaComposition:Overwrite SampleMode:BySpeed Mode:PerComponent ColorMode:ColorAndAlpha
-      channels:Y */\n\t\t\t{\n\t\t\t    float t = saturate((length(velocity) - SpeedRange.x)
-      * SpeedRange.y);\n\t\t\t    float value = 0.0f;\n\t\t\t    value = SampleCurve(Scale,
-      t);\n\t\t\t    scaleY = value.x;\n\t\t\t}\n\t\t\tvoid Orient_6(inout float3
-      axisX, inout float3 axisY, inout float3 axisZ, float3 position, float3 velocity)
-      /*mode:AlongVelocity */\n\t\t\t{\n\t\t\t    \n\t\t\t    axisY = normalize(velocity);\n\t\t\t
-      \   axisZ = position - GetViewVFXPosition();\n\t\t\t    axisX = normalize(cross(axisY,axisZ));\n\t\t\t
-      \   axisZ = cross(axisX,axisY);\n\t\t\t    \n\t\t\t}\n\t\t\tvoid AttributeFromCurve_3FAB855(inout
-      float alpha, float age, float lifetime, uint particleId, float4 Alpha) /*attribute:alpha
-      Composition:Overwrite AlphaComposition:Overwrite SampleMode:RandomUniformPerParticle
-      Mode:PerComponent ColorMode:ColorAndAlpha channels:XYZ */\n\t\t\t{\n\t\t\t    float
-      t = FIXED_RAND(0x34634bc2);\n\t\t\t    float value = 0.0f;\n\t\t\t    value
-      = SampleCurve(Alpha, t);\n\t\t\t    alpha = value;\n\t\t\t}\n\t\t\tvoid SetAttribute_C7757136(inout
-      float alpha, float Alpha) /*attribute:alpha Composition:Multiply Source:Slot
-      Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    alpha *= Alpha;\n\t\t\t}\n\t\t\tvoid
-      ColorOverLife_733E3(float age, float lifetime, inout float3 color, inout float
-      alpha, float gradient) /*mode:ColorAndAlpha ColorComposition:Multiply AlphaComposition:Multiply
-      */\n\t\t\t{\n\t\t\t    \n\t\t\t    float4 sampledColor = SampleGradient(gradient,
-      age/lifetime);\n\t\t\t    color *= sampledColor.rgb;\n\t\t\t    alpha *= sampledColor.a;\n\t\t\t
-      \   \n\t\t\t}\n\t\t\tvoid SetAttribute_65DEC940(inout float pivotX, inout float
-      pivotY, inout float pivotZ, float3 Pivot) /*attribute:pivot Composition:Overwrite
-      Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    pivotX = Pivot.x;\n\t\t\t
-      \   pivotY = Pivot.y;\n\t\t\t    pivotZ = Pivot.z;\n\t\t\t}\n\t\t\tvoid SubpixelAA(float3
-      position, inout float alpha, float size, inout float scaleX, inout float scaleY)\n\t\t\t{\n\t\t\t
+      AttributeFromCurve_57216CF6(inout float scaleY, float3 velocity, float4 Scale,
+      float2 SpeedRange) /*attribute:scale Composition:Overwrite AlphaComposition:Overwrite
+      SampleMode:BySpeed Mode:PerComponent ColorMode:ColorAndAlpha channels:Y */\n\t\t\t{\n\t\t\t
+      \   float t = saturate((length(velocity) - SpeedRange.x) * SpeedRange.y);\n\t\t\t
+      \   float value = 0.0f;\n\t\t\t    value = SampleCurve(Scale, t);\n\t\t\t    scaleY
+      = value.x;\n\t\t\t}\n\t\t\tvoid Orient_6(inout float3 axisX, inout float3 axisY,
+      inout float3 axisZ, float3 position, float3 velocity) /*mode:AlongVelocity */\n\t\t\t{\n\t\t\t
+      \   \n\t\t\t    axisY = normalize(velocity);\n\t\t\t    axisZ = position - GetViewVFXPosition();\n\t\t\t
+      \   axisX = normalize(cross(axisY,axisZ));\n\t\t\t    axisZ = cross(axisX,axisY);\n\t\t\t
+      \   \n\t\t\t}\n\t\t\tvoid AttributeFromCurve_3FAB855(inout float alpha, uint
+      particleId, float4 Alpha, uint Seed) /*attribute:alpha Composition:Overwrite
+      AlphaComposition:Overwrite SampleMode:RandomConstantPerParticle Mode:PerComponent
+      ColorMode:ColorAndAlpha channels:XYZ */\n\t\t\t{\n\t\t\t    float t = FIXED_RAND(Seed);\n\t\t\t
+      \   float value = 0.0f;\n\t\t\t    value = SampleCurve(Alpha, t);\n\t\t\t    alpha
+      = value;\n\t\t\t}\n\t\t\tvoid SetAttribute_C7757136(inout float alpha, float
+      Alpha) /*attribute:alpha Composition:Multiply Source:Slot Random:Off channels:XYZ
+      */\n\t\t\t{\n\t\t\t    alpha *= Alpha;\n\t\t\t}\n\t\t\tvoid ColorOverLife_733E3(float
+      age, float lifetime, inout float3 color, inout float alpha, float gradient)
+      /*mode:ColorAndAlpha ColorComposition:Multiply AlphaComposition:Multiply */\n\t\t\t{\n\t\t\t
+      \   \n\t\t\t    float4 sampledColor = SampleGradient(gradient, age/lifetime);\n\t\t\t
+      \   color *= sampledColor.rgb;\n\t\t\t    alpha *= sampledColor.a;\n\t\t\t    \n\t\t\t}\n\t\t\tvoid
+      SetAttribute_65DEC940(inout float pivotX, inout float pivotY, inout float pivotZ,
+      float3 Pivot) /*attribute:pivot Composition:Overwrite Source:Slot Random:Off
+      channels:XYZ */\n\t\t\t{\n\t\t\t    pivotX = Pivot.x;\n\t\t\t    pivotY = Pivot.y;\n\t\t\t
+      \   pivotZ = Pivot.z;\n\t\t\t}\n\t\t\tvoid SubpixelAA(float3 position, inout
+      float alpha, float size, inout float scaleX, inout float scaleY)\n\t\t\t{\n\t\t\t
       \   \n\t\t\t    float2 localSize = size * float2(scaleX, scaleY);\n\t\t\t    float
       clipPosW = TransformPositionVFXToClip(position).w;\n\t\t\t    float minSize
       = clipPosW / (0.5f * min(UNITY_MATRIX_P[0][0] * _ScreenParams.x,-UNITY_MATRIX_P[1][1]
@@ -12919,10 +12919,9 @@ VisualEffectResource:
       size = (float)0.1;\n\t\t\t\t\t\tfloat scaleX = (float)1;\n\t\t\t\t\t\tfloat
       scaleY = (float)1;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t
       \   SetAttribute_D5151644( /*inout */scaleX, (float)0.0025);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t
-      \   AttributeFromCurve_57216CF6( /*inout */scaleY, age, lifetime, velocity,
-      Scale_b, float2(0,0.25));\n\t\t\t\t}\n\t\t\t\tOrient_6( /*inout */axisX,  /*inout
-      */axisY,  /*inout */axisZ, position, velocity);\n\t\t\t\tAttributeFromCurve_3FAB855(
-      /*inout */alpha, age, lifetime, particleId, Alpha_d);\n\t\t\t\tSetAttribute_C7757136(
+      \   AttributeFromCurve_57216CF6( /*inout */scaleY, velocity, Scale_b, float2(0,0.25));\n\t\t\t\t}\n\t\t\t\tOrient_6(
+      /*inout */axisX,  /*inout */axisY,  /*inout */axisZ, position, velocity);\n\t\t\t\t{\n\t\t\t\t
+      \   AttributeFromCurve_3FAB855( /*inout */alpha, particleId, Alpha_d, (uint)0);\n\t\t\t\t}\n\t\t\t\tSetAttribute_C7757136(
       /*inout */alpha, Alpha_e);\n\t\t\t\tColorOverLife_733E3(age, lifetime,  /*inout
       */color,  /*inout */alpha, gradient_f);\n\t\t\t\t{\n\t\t\t\t    SetAttribute_65DEC940(
       /*inout */pivotX,  /*inout */pivotY,  /*inout */pivotZ, float3(0,0.58,0));\n\t\t\t\t}\n\t\t\t\tSubpixelAA(position,
@@ -12959,8 +12958,8 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.cginc\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#pragma
       fragment frag\n\t\t\tps_output frag(ps_input i)\n\t\t\t{\n\t\t\t\tps_output
       o = (ps_output)0;\n\t\t\t\to.color = VFXGetFragmentColor(i);\n\t\t\t\to.color
-      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i);\n\t\t\t\to.color = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\treturn
-      o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i);\n\t\t\t\to.color = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
+      = saturate(o.color.a);\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
   m_Infos:
     m_Expressions:
       m_Expressions:
@@ -14453,8 +14452,8 @@ MonoBehaviour:
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots:
-  - {fileID: 8926484042661614637}
   - {fileID: 8926484042661614640}
+  - {fileID: 8926484042661614637}
   m_OutputSlots: []
   m_Disabled: 0
   attribute: scale
@@ -14659,6 +14658,7 @@ MonoBehaviour:
   m_UISuperCollapsed: 0
   m_InputSlots:
   - {fileID: 8926484042661614643}
+  - {fileID: 8926484042661615509}
   m_OutputSlots: []
   m_Disabled: 0
   attribute: alpha
@@ -20401,7 +20401,7 @@ MonoBehaviour:
   m_InputSlots:
   - {fileID: 8926484042661615233}
   - {fileID: 8926484042661615234}
-  - {fileID: 8926484042661615235}
+  - {fileID: 8926484042661615510}
   m_OutputSlots:
   - {fileID: 8926484042661615236}
   seed: 0
@@ -20486,46 +20486,6 @@ MonoBehaviour:
       m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
---- !u!114 &8926484042661615235
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Parent: {fileID: 0}
-  m_Children: []
-  m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 1
-  m_UISuperCollapsed: 0
-  m_MasterSlot: {fileID: 8926484042661615235}
-  m_MasterData:
-    m_Owner: {fileID: 8926484042661615232}
-    m_Value:
-      m_Type:
-        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
-          PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 0
-    m_Space: 2147483647
-  m_Property:
-    name: hash
-    m_serializedType:
-      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-    attributes:
-    - m_Type: 3
-      m_Min: -Infinity
-      m_Max: Infinity
-      m_Tooltip: An optional additional hash.
-      m_Regex: 
-      m_RegexMaxLength: 0
-  m_Direction: 0
-  m_LinkedSlots: []
 --- !u!114 &8926484042661615236
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20588,7 +20548,7 @@ MonoBehaviour:
   m_InputSlots:
   - {fileID: 8926484042661615282}
   - {fileID: 8926484042661615283}
-  - {fileID: 8926484042661615284}
+  - {fileID: 8926484042661615511}
   m_OutputSlots:
   - {fileID: 8926484042661615285}
   seed: 0
@@ -20669,46 +20629,6 @@ MonoBehaviour:
       m_Min: -Infinity
       m_Max: Infinity
       m_Tooltip: The maximum value to be generated.
-      m_Regex: 
-      m_RegexMaxLength: 0
-  m_Direction: 0
-  m_LinkedSlots: []
---- !u!114 &8926484042661615284
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Parent: {fileID: 0}
-  m_Children: []
-  m_UIPosition: {x: 0, y: 0}
-  m_UICollapsed: 1
-  m_UISuperCollapsed: 0
-  m_MasterSlot: {fileID: 8926484042661615284}
-  m_MasterData:
-    m_Owner: {fileID: 8926484042661615281}
-    m_Value:
-      m_Type:
-        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
-          PublicKeyToken=b77a5c561934e089
-      m_SerializableObject: 12345
-    m_Space: 2147483647
-  m_Property:
-    name: hash
-    m_serializedType:
-      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
-        PublicKeyToken=b77a5c561934e089
-    attributes:
-    - m_Type: 3
-      m_Min: -Infinity
-      m_Max: Infinity
-      m_Tooltip: An optional additional hash.
       m_Regex: 
       m_RegexMaxLength: 0
   m_Direction: 0
@@ -25161,3 +25081,117 @@ MonoBehaviour:
   m_Direction: 1
   m_LinkedSlots:
   - {fileID: 8926484042661615496}
+--- !u!114 &8926484042661615509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661615509}
+  m_MasterData:
+    m_Owner: {fileID: 8926484042661614642}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 
+    m_Space: 2147483647
+  m_Property:
+    name: Seed
+    m_serializedType:
+      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes: []
+  m_Direction: 0
+  m_LinkedSlots: []
+--- !u!114 &8926484042661615510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661615510}
+  m_MasterData:
+    m_Owner: {fileID: 8926484042661615232}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 0
+    m_Space: 2147483647
+  m_Property:
+    name: seed
+    m_serializedType:
+      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: Seed to compute the constant random
+      m_Regex: 
+      m_RegexMaxLength: 0
+  m_Direction: 0
+  m_LinkedSlots: []
+--- !u!114 &8926484042661615511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c52d920e7fff73b498050a6b3c4404ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661615511}
+  m_MasterData:
+    m_Owner: {fileID: 8926484042661615281}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 12345
+    m_Space: 2147483647
+  m_Property:
+    name: seed
+    m_serializedType:
+      m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: Seed to compute the constant random
+      m_Regex: 
+      m_RegexMaxLength: 0
+  m_Direction: 0
+  m_LinkedSlots: []

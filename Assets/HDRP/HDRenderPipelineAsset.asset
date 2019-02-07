@@ -40,11 +40,16 @@ MonoBehaviour:
     enableTransparentPostpass: 1
     enableDistortion: 1
     enablePostprocess: 1
-    enableAsyncCompute: 1
     enableOpaqueObjects: 1
     enableTransparentObjects: 1
     enableRealtimePlanarReflection: 1
     enableMSAA: 0
+    enableAsyncCompute: 1
+    runLightListAsync: 1
+    runSSRAsync: 1
+    runSSAOAsync: 1
+    runContactShadowsAsync: 1
+    runVolumeVoxelizationAsync: 1
     lightLoopSettings:
       overrides: 0
       enableTileAndCluster: 1
@@ -79,11 +84,16 @@ MonoBehaviour:
     enableTransparentPostpass: 1
     enableDistortion: 1
     enablePostprocess: 1
-    enableAsyncCompute: 1
     enableOpaqueObjects: 1
     enableTransparentObjects: 1
     enableRealtimePlanarReflection: 1
     enableMSAA: 0
+    enableAsyncCompute: 1
+    runLightListAsync: 1
+    runSSRAsync: 1
+    runSSAOAsync: 1
+    runContactShadowsAsync: 1
+    runVolumeVoxelizationAsync: 1
     lightLoopSettings:
       overrides: 0
       enableTileAndCluster: 1
@@ -118,11 +128,16 @@ MonoBehaviour:
     enableTransparentPostpass: 1
     enableDistortion: 0
     enablePostprocess: 0
-    enableAsyncCompute: 1
     enableOpaqueObjects: 1
     enableTransparentObjects: 1
     enableRealtimePlanarReflection: 1
     enableMSAA: 0
+    enableAsyncCompute: 1
+    runLightListAsync: 1
+    runSSRAsync: 1
+    runSSAOAsync: 1
+    runContactShadowsAsync: 1
+    runVolumeVoxelizationAsync: 1
     lightLoopSettings:
       overrides: 0
       enableTileAndCluster: 1
@@ -141,12 +156,15 @@ MonoBehaviour:
     supportVolumetrics: 1
     increaseResolutionOfVolumetrics: 0
     supportLightLayers: 0
+    supportDistortion: 1
+    supportTransparentBackface: 1
+    supportTransparentDepthPrepass: 1
+    supportTransparentDepthPostpass: 1
     supportedLitShaderMode: 3
     supportDecals: 0
-    supportMSAA: 0
     msaaSampleCount: 1
     supportMotionVectors: 1
-    supportRuntimeDebugDisplay: 1
+    supportRuntimeDebugDisplay: 0
     supportDitheringCrossFade: 1
     supportRayTracing: 0
     lightLoopSettings:
@@ -175,8 +193,7 @@ MonoBehaviour:
       maxShadowRequests: 128
       shadowMapsDepthBits: 32
       useDynamicViewportRescale: 1
-      punctualShadowQuality: 0
-      directionalShadowQuality: 0
+      shadowQuality: 0
     decalSettings:
       drawDistance: 1000
       atlasWidth: 4096
@@ -184,5 +201,6 @@ MonoBehaviour:
       perChannelMask: 0
   allowShaderVariantStripping: 1
   enableSRPBatcher: 0
+  enableVariantStrippingLog: 0
   diffusionProfileSettings: {fileID: 11400000, guid: cbe1ee9036c47b84ba1b8b3dbcde2aff,
     type: 2}

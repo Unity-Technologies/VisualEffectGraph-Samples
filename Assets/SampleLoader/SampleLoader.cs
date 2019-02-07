@@ -1,14 +1,12 @@
-using System.Text;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.VFX;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public class SampleLoader : MonoBehaviour
 {
     [Header("Loading")]
-    public string[] Playlist;
     public Image FullScreenBlack;
     public Text SceneNameText;
     public string ChangeButtonName = "Submit";
@@ -18,17 +16,18 @@ public class SampleLoader : MonoBehaviour
     public float fadeDuration = 2.0f;
 
     [Header("Debug")]
+    public GameObject DebugRoot;
     public Text FramerateText;
 
-    int index = 0;
+    int next = 0;
     bool fading;
     bool loading;
     float fadeTTL;
     // Start is called before the first frame update
     void Start()
     {
-        if (Playlist.Length > 0)
-            StartCoroutine(LoadScene(Playlist[0]));
+        if (SceneManager.sceneCountInBuildSettings > 1)
+            StartCoroutine(LoadScene(0));
     }
 
     void UpdateDebug()
@@ -36,16 +35,41 @@ public class SampleLoader : MonoBehaviour
         if (FramerateText == null)
             return;
 
-        FramerateText.text =  (1.0f / Time.smoothDeltaTime).ToString("F1");
+        FramerateText.text =  (1.0f / GetSmoothDeltaTime()).ToString("F1");
+    }
 
+    Queue<float> deltaTimeSamples = new Queue<float>();
+    const float smoothDeltaTimePeriod = 0.5f;
+
+    float GetSmoothDeltaTime()
+    {
+        float time = Time.unscaledTime;
+        deltaTimeSamples.Enqueue(time);
+
+        if(deltaTimeSamples.Count > 1)
+        {
+            float startTime = deltaTimeSamples.Peek();
+            float delta = time - startTime;
+
+            float smoothDelta = delta / deltaTimeSamples.Count;
+
+            if (delta > smoothDeltaTimePeriod)
+                deltaTimeSamples.Dequeue();
+
+            return smoothDelta;
+        }
+        else
+            return Time.unscaledDeltaTime;
     }
 
 
-    // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             Application.Quit();
+
+        if (Input.GetKeyDown(KeyCode.F12) && DebugRoot != null)
+            DebugRoot.SetActive(!DebugRoot.activeSelf);
 
         UpdateDebug();
 
@@ -56,17 +80,18 @@ public class SampleLoader : MonoBehaviour
 
         if (!loading && (Input.GetButton(ChangeButtonName) || Input.touchCount != 0 || (fadeTTL < 0.0f)))
         {
-            int current = index;
-            index = (index + 1) % Playlist.Length;
-            StartCoroutine(LoadScene(Playlist[current], Playlist[index]));
+            int current = next;
+            next = (next + 1) % (SceneManager.sceneCountInBuildSettings - 1);
+            StartCoroutine(LoadScene(current, next));
         }
     }
 
-    IEnumerator LoadScene(params string[] scene)
+    IEnumerator LoadScene(params int[] scene)
     {
         loading = true;
 
-        string sceneToUnload = "", sceneToLoad;
+        int sceneToUnload = -1, sceneToLoad;
+
         if(scene.Length == 1)
         {
             sceneToLoad = scene[0];
@@ -77,23 +102,25 @@ public class SampleLoader : MonoBehaviour
             sceneToLoad = scene[1];
         }
 
-        if(scene.Length == 2)
+        if(scene.Length == 2) // Need to unload
         {
             StartCoroutine(FadeInCoroutine());
             while (fading)
                 yield return new WaitForEndOfFrame();
 
-            AsyncOperation unload = SceneManager.UnloadSceneAsync(sceneToUnload);
+            AsyncOperation unload = SceneManager.UnloadSceneAsync(sceneToUnload+1);
             while (!unload.isDone)
                 yield return new WaitForEndOfFrame();
 
         }
 
-        SceneNameText.text = sceneToLoad;
+        SceneNameText.text = "";
 
-        AsyncOperation load = SceneManager.LoadSceneAsync(sceneToLoad, LoadSceneMode.Additive);
+        AsyncOperation load = SceneManager.LoadSceneAsync(sceneToLoad+1, LoadSceneMode.Additive);
         while (!load.isDone)
             yield return new WaitForEndOfFrame();
+
+        SceneNameText.text = SceneManager.GetSceneAt(1).name;
 
         StartCoroutine(FadeOutCoroutine());
         while (fading)
