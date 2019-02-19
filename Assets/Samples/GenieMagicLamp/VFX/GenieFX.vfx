@@ -832,7 +832,7 @@ MonoBehaviour:
   - {fileID: 114946465509916290}
   - {fileID: 114780028408030698}
   - {fileID: 114063133802684794}
-  m_Capacity: 320000
+  m_Capacity: 30000
   m_Space: 1
 --- !u!114 &114512514798047786
 MonoBehaviour:
@@ -1396,26 +1396,26 @@ VisualEffectResource:
       \       }\n        \n\n\n#if VFX_USE_ALIVE_CURRENT\n        if (alive)\n        {\n\t\t\tuint
       deadIndex = deadListIn.DecrementCounter();\n            uint index = deadListIn[deadIndex];\n
       \           attributeBuffer.Store((index * 0x1 + 0x0) << 2,asuint(lifetime));\n
-      \           attributeBuffer.Store3((index * 0x8 + 0x4E200) << 2,asuint(position));\n
-      \           attributeBuffer.Store3((index * 0x4 + 0x2BF200) << 2,asuint(velocity));\n
-      \           attributeBuffer.Store((index * 0x3 + 0x3F7A00) << 2,asuint(size));\n
-      \           attributeBuffer.Store((index * 0x3 + 0x3F7A01) << 2,asuint(scaleX));\n
-      \           attributeBuffer.Store((index * 0x3 + 0x3F7A02) << 2,asuint(scaleY));\n
-      \           attributeBuffer.Store((index * 0x8 + 0x4E203) << 2,asuint(age));\n
-      \           attributeBuffer.Store((index * 0x8 + 0x4E204) << 2,uint(alive));\n
-      \           attributeBuffer.Store((index * 0x4 + 0x2BF203) << 2,asuint(particleId));\n
-      \           attributeBuffer.Store3((index * 0x4 + 0x4E2000) << 2,asuint(oldPosition));\n
+      \           attributeBuffer.Store3((index * 0x8 + 0x7540) << 2,asuint(position));\n
+      \           attributeBuffer.Store3((index * 0x4 + 0x41F40) << 2,asuint(velocity));\n
+      \           attributeBuffer.Store((index * 0x3 + 0x5F440) << 2,asuint(size));\n
+      \           attributeBuffer.Store((index * 0x3 + 0x5F441) << 2,asuint(scaleX));\n
+      \           attributeBuffer.Store((index * 0x3 + 0x5F442) << 2,asuint(scaleY));\n
+      \           attributeBuffer.Store((index * 0x8 + 0x7543) << 2,asuint(age));\n
+      \           attributeBuffer.Store((index * 0x8 + 0x7544) << 2,uint(alive));\n
+      \           attributeBuffer.Store((index * 0x4 + 0x41F43) << 2,asuint(particleId));\n
+      \           attributeBuffer.Store3((index * 0x4 + 0x75400) << 2,asuint(oldPosition));\n
       \           \n\n        }\n#else\n        uint index = particleIndex;\n        attributeBuffer.Store((index
       * 0x1 + 0x0) << 2,asuint(lifetime));\n        attributeBuffer.Store3((index
-      * 0x8 + 0x4E200) << 2,asuint(position));\n        attributeBuffer.Store3((index
-      * 0x4 + 0x2BF200) << 2,asuint(velocity));\n        attributeBuffer.Store((index
-      * 0x3 + 0x3F7A00) << 2,asuint(size));\n        attributeBuffer.Store((index
-      * 0x3 + 0x3F7A01) << 2,asuint(scaleX));\n        attributeBuffer.Store((index
-      * 0x3 + 0x3F7A02) << 2,asuint(scaleY));\n        attributeBuffer.Store((index
-      * 0x8 + 0x4E203) << 2,asuint(age));\n        attributeBuffer.Store((index *
-      0x8 + 0x4E204) << 2,uint(alive));\n        attributeBuffer.Store((index * 0x4
-      + 0x2BF203) << 2,asuint(particleId));\n        attributeBuffer.Store3((index
-      * 0x4 + 0x4E2000) << 2,asuint(oldPosition));\n        \n\n#endif\n    }\n}\n"
+      * 0x8 + 0x7540) << 2,asuint(position));\n        attributeBuffer.Store3((index
+      * 0x4 + 0x41F40) << 2,asuint(velocity));\n        attributeBuffer.Store((index
+      * 0x3 + 0x5F440) << 2,asuint(size));\n        attributeBuffer.Store((index *
+      0x3 + 0x5F441) << 2,asuint(scaleX));\n        attributeBuffer.Store((index *
+      0x3 + 0x5F442) << 2,asuint(scaleY));\n        attributeBuffer.Store((index *
+      0x8 + 0x7543) << 2,asuint(age));\n        attributeBuffer.Store((index * 0x8
+      + 0x7544) << 2,uint(alive));\n        attributeBuffer.Store((index * 0x4 + 0x41F43)
+      << 2,asuint(particleId));\n        attributeBuffer.Store3((index * 0x4 + 0x75400)
+      << 2,asuint(oldPosition));\n        \n\n#endif\n    }\n}\n"
   - compute: 1
     name: '[System 1]Update'
     source: "#pragma kernel CSMain\n#include \"HLSLSupport.cginc\"\n#define NB_THREADS_PER_GROUP
@@ -1450,15 +1450,15 @@ VisualEffectResource:
       groupId          : SV_GroupID,\n            uint3 groupThreadId    : SV_GroupThreadID)\n{\n\tuint
       id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP + groupId.y * dispatchWidth
       * NB_THREADS_PER_GROUP;\n\tuint index = id;\n\tif (id < nbMax)\n\t{\n#if VFX_USE_ALIVE_CURRENT\n\t\tbool
-      alive = (attributeBuffer.Load((index * 0x8 + 0x4E204) << 2));\n\t\t\n\n\t\tif
+      alive = (attributeBuffer.Load((index * 0x8 + 0x7544) << 2));\n\t\t\n\n\t\tif
       (alive)\n\t\t{\n\t\t\tfloat lifetime = asfloat(attributeBuffer.Load((index *
       0x1 + 0x0) << 2));\n\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x8 + 0x4E200) << 2));\n\t\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x2BF200) << 2));\n\t\t\tfloat age = asfloat(attributeBuffer.Load((index
-      * 0x8 + 0x4E203) << 2));\n\t\t\tuint eventCount_a = 0u;\n\t\t\tuint eventCount
-      = (uint)0;\n\t\t\tuint particleId = (attributeBuffer.Load((index * 0x4 + 0x2BF203)
+      * 0x8 + 0x7540) << 2));\n\t\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x41F40) << 2));\n\t\t\tfloat age = asfloat(attributeBuffer.Load((index
+      * 0x8 + 0x7543) << 2));\n\t\t\tuint eventCount_a = 0u;\n\t\t\tuint eventCount
+      = (uint)0;\n\t\t\tuint particleId = (attributeBuffer.Load((index * 0x4 + 0x41F43)
       << 2));\n\t\t\tfloat3 oldPosition = asfloat(attributeBuffer.Load3((index * 0x4
-      + 0x4E2000) << 2));\n\t\t\t\n\n\t\t\t\n#if VFX_USE_OLDPOSITION_CURRENT\n\t\t\toldPosition
+      + 0x75400) << 2));\n\t\t\t\n\n\t\t\t\n#if VFX_USE_OLDPOSITION_CURRENT\n\t\t\toldPosition
       = position;\n#endif\n\t\t\t\n\t\t\t{\n\t\t\t    float tmp_bp = age / lifetime;\n\t\t\t
       \   float tmp_bq = FixedRand(particleId ^ asuint(uniform_c));\n\t\t\t    float
       tmp_bs = tmp_bq * (float)0.1;\n\t\t\t    float tmp_bt = tmp_bp - tmp_bs;\n\t\t\t
@@ -1498,22 +1498,22 @@ VisualEffectResource:
       */eventCount, (uint)1, deltaTime_c);\n\t\t\t    eventCount_a += eventCount;\n\t\t\t}\n\t\t\tEulerIntegration(
       /*inout */position, velocity, deltaTime_c);\n\t\t\tAge( /*inout */age, deltaTime_c);\n\t\t\tReap(age,
       lifetime,  /*inout */alive);\n\t\t\t\n\n\t\t\tif (alive)\n\t\t\t{\n\t\t\t\tattributeBuffer.Store3((index
-      * 0x8 + 0x4E200) << 2,asuint(position));\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x4E203) << 2,asuint(age));\n\t\t\t\tattributeBuffer.Store3((index *
-      0x4 + 0x4E2000) << 2,asuint(oldPosition));\n\t\t\t\tfor (uint i = 0; i < eventCount_a;
+      * 0x8 + 0x7540) << 2,asuint(position));\n\t\t\t\tattributeBuffer.Store((index
+      * 0x8 + 0x7543) << 2,asuint(age));\n\t\t\t\tattributeBuffer.Store3((index *
+      0x4 + 0x75400) << 2,asuint(oldPosition));\n\t\t\t\tfor (uint i = 0; i < eventCount_a;
       ++i) eventListOut_a.Append(index);\n\t\t\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n
       \               uint indirectIndex = indirectBuffer.IncrementCounter();\n\t\t\t\tindirectBuffer[indirectIndex]
       = index;\n#endif\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x4E204) << 2,uint(alive));\n\t\t\t\tfor (uint i = 0; i < eventCount_a;
+      * 0x8 + 0x7544) << 2,uint(alive));\n\t\t\t\tfor (uint i = 0; i < eventCount_a;
       ++i) eventListOut_a.Append(index);\n\t\t\t\t\n\n\t\t\t\tuint deadIndex = deadListOut.IncrementCounter();\n\t\t\t\tdeadListOut[deadIndex]
       = index;\n\t\t\t}\n\t\t}\n#else\n\t\tfloat lifetime = asfloat(attributeBuffer.Load((index
       * 0x1 + 0x0) << 2));\n\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x8 + 0x4E200) << 2));\n\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x2BF200) << 2));\n\t\tfloat age = asfloat(attributeBuffer.Load((index
-      * 0x8 + 0x4E203) << 2));\n\t\tbool alive = (attributeBuffer.Load((index * 0x8
-      + 0x4E204) << 2));\n\t\tuint eventCount_a = 0u;\n\t\tuint eventCount = (uint)0;\n\t\tuint
-      particleId = (attributeBuffer.Load((index * 0x4 + 0x2BF203) << 2));\n\t\tfloat3
-      oldPosition = asfloat(attributeBuffer.Load3((index * 0x4 + 0x4E2000) << 2));\n\t\t\n\n\t\t\n#if
+      * 0x8 + 0x7540) << 2));\n\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x41F40) << 2));\n\t\tfloat age = asfloat(attributeBuffer.Load((index
+      * 0x8 + 0x7543) << 2));\n\t\tbool alive = (attributeBuffer.Load((index * 0x8
+      + 0x7544) << 2));\n\t\tuint eventCount_a = 0u;\n\t\tuint eventCount = (uint)0;\n\t\tuint
+      particleId = (attributeBuffer.Load((index * 0x4 + 0x41F43) << 2));\n\t\tfloat3
+      oldPosition = asfloat(attributeBuffer.Load3((index * 0x4 + 0x75400) << 2));\n\t\t\n\n\t\t\n#if
       VFX_USE_OLDPOSITION_CURRENT\n\t\toldPosition = position;\n#endif\n\t\t\n\t\t{\n\t\t
       \   float tmp_bp = age / lifetime;\n\t\t    float tmp_bq = FixedRand(particleId
       ^ asuint(uniform_c));\n\t\t    float tmp_bs = tmp_bq * (float)0.1;\n\t\t    float
@@ -1553,9 +1553,9 @@ VisualEffectResource:
       (uint)1, deltaTime_c);\n\t\t    eventCount_a += eventCount;\n\t\t}\n\t\tEulerIntegration(
       /*inout */position, velocity, deltaTime_c);\n\t\tAge( /*inout */age, deltaTime_c);\n\t\tReap(age,
       lifetime,  /*inout */alive);\n\t\t\n\n\t\tattributeBuffer.Store3((index * 0x8
-      + 0x4E200) << 2,asuint(position));\n\t\tattributeBuffer.Store((index * 0x8 +
-      0x4E203) << 2,asuint(age));\n\t\tattributeBuffer.Store((index * 0x8 + 0x4E204)
-      << 2,uint(alive));\n\t\tattributeBuffer.Store3((index * 0x4 + 0x4E2000) << 2,asuint(oldPosition));\n\t\tfor
+      + 0x7540) << 2,asuint(position));\n\t\tattributeBuffer.Store((index * 0x8 +
+      0x7543) << 2,asuint(age));\n\t\tattributeBuffer.Store((index * 0x8 + 0x7544)
+      << 2,uint(alive));\n\t\tattributeBuffer.Store3((index * 0x4 + 0x75400) << 2,asuint(oldPosition));\n\t\tfor
       (uint i = 0; i < eventCount_a; ++i) eventListOut_a.Append(index);\n\t\t\n\n#if
       VFX_HAS_INDIRECT_DRAW\n        uint indirectIndex = indirectBuffer.IncrementCounter();\n\t\tindirectBuffer[indirectIndex]
       = index;\n#endif\n#endif\n\t}\n}\n"
@@ -1654,34 +1654,34 @@ VisualEffectResource:
       - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat
       lifetime = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x3 + 0x3F7A00) << 2));\n\t\t\t\t\t\tfloat
-      scaleX = asfloat(attributeBuffer.Load((index * 0x3 + 0x3F7A01) << 2));\n\t\t\t\t\t\tfloat
-      scaleY = asfloat(attributeBuffer.Load((index * 0x3 + 0x3F7A02) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x4E203) << 2));\n\t\t\t\t\t\tbool
-      alive = (attributeBuffer.Load((index * 0x8 + 0x4E204) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x7540) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x3 + 0x5F440) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = asfloat(attributeBuffer.Load((index * 0x3 + 0x5F441) << 2));\n\t\t\t\t\t\tfloat
+      scaleY = asfloat(attributeBuffer.Load((index * 0x3 + 0x5F442) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x7543) << 2));\n\t\t\t\t\t\tbool
+      alive = (attributeBuffer.Load((index * 0x8 + 0x7544) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tfloat alpha = (float)1;\n\t\t\t\t\t\tfloat3
       axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
       axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
       angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
       pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
       pivotZ = (float)0;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      oldPosition = asfloat(attributeBuffer.Load3((index * 0x4 + 0x4E2000) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
-      alive = (attributeBuffer.Load((index * 0x8 + 0x4E204) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
+      oldPosition = asfloat(attributeBuffer.Load3((index * 0x4 + 0x75400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
+      alive = (attributeBuffer.Load((index * 0x8 + 0x7544) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
       (!alive)\n\t\t\t\t\t\t\treturn o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat lifetime
       = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x3 + 0x3F7A00) << 2));\n\t\t\t\t\t\tfloat
-      scaleX = asfloat(attributeBuffer.Load((index * 0x3 + 0x3F7A01) << 2));\n\t\t\t\t\t\tfloat
-      scaleY = asfloat(attributeBuffer.Load((index * 0x3 + 0x3F7A02) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x4E203) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x7540) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x3 + 0x5F440) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = asfloat(attributeBuffer.Load((index * 0x3 + 0x5F441) << 2));\n\t\t\t\t\t\tfloat
+      scaleY = asfloat(attributeBuffer.Load((index * 0x3 + 0x5F442) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x7543) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tfloat alpha = (float)1;\n\t\t\t\t\t\tfloat3
       axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3 axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3
       axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat angleX = (float)0;\n\t\t\t\t\t\tfloat
       angleY = (float)0;\n\t\t\t\t\t\tfloat angleZ = (float)0;\n\t\t\t\t\t\tfloat
       pivotX = (float)0;\n\t\t\t\t\t\tfloat pivotY = (float)0;\n\t\t\t\t\t\tfloat
       pivotZ = (float)0;\n\t\t\t\t\t\tfloat scaleZ = (float)1;\n\t\t\t\t\t\tfloat3
-      oldPosition = asfloat(attributeBuffer.Load3((index * 0x4 + 0x4E2000) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\tOrient_1(
+      oldPosition = asfloat(attributeBuffer.Load3((index * 0x4 + 0x75400) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\tOrient_1(
       /*inout */axisX,  /*inout */axisY,  /*inout */axisZ, position);\n\t\t\t\tColorOverLife_733E3(age,
       lifetime,  /*inout */color,  /*inout */alpha, gradient_b);\n\t\t\t\tAttributeFromCurve_8BB145A3(
       /*inout */scaleX,  /*inout */scaleY, age, lifetime, Scale_x_c, Scale_x_c);\n\t\t\t\tSetAttribute_545F0ED(
@@ -1799,24 +1799,24 @@ VisualEffectResource:
       VFX_USE_ALIVE_CURRENT\n        if (alive)\n        {\n\t\t\tuint deadIndex =
       deadListIn.DecrementCounter();\n            uint index = deadListIn[deadIndex];\n
       \           attributeBuffer.Store((index * 0x1 + 0x0) << 2,asuint(lifetime));\n
-      \           attributeBuffer.Store3((index * 0x4 + 0x4E200) << 2,asuint(position));\n
-      \           attributeBuffer.Store3((index * 0x4 + 0x186A00) << 2,asuint(velocity));\n
-      \           attributeBuffer.Store((index * 0x2 + 0x2BF200) << 2,asuint(size));\n
-      \           attributeBuffer.Store((index * 0x2 + 0x2BF201) << 2,asuint(alpha));\n
-      \           attributeBuffer.Store((index * 0x3 + 0x35B600) << 2,asuint(texIndex));\n
-      \           attributeBuffer.Store((index * 0x3 + 0x35B601) << 2,asuint(age));\n
-      \           attributeBuffer.Store((index * 0x4 + 0x186A03) << 2,asuint(particleId));\n
-      \           attributeBuffer.Store((index * 0x3 + 0x35B602) << 2,uint(alive));\n
+      \           attributeBuffer.Store3((index * 0x4 + 0x80) << 2,asuint(position));\n
+      \           attributeBuffer.Store3((index * 0x4 + 0x280) << 2,asuint(velocity));\n
+      \           attributeBuffer.Store((index * 0x2 + 0x480) << 2,asuint(size));\n
+      \           attributeBuffer.Store((index * 0x2 + 0x481) << 2,asuint(alpha));\n
+      \           attributeBuffer.Store((index * 0x3 + 0x580) << 2,asuint(texIndex));\n
+      \           attributeBuffer.Store((index * 0x3 + 0x581) << 2,asuint(age));\n
+      \           attributeBuffer.Store((index * 0x4 + 0x283) << 2,asuint(particleId));\n
+      \           attributeBuffer.Store((index * 0x3 + 0x582) << 2,uint(alive));\n
       \           \n\n        }\n#else\n        uint index = particleIndex;\n        attributeBuffer.Store((index
       * 0x1 + 0x0) << 2,asuint(lifetime));\n        attributeBuffer.Store3((index
-      * 0x4 + 0x4E200) << 2,asuint(position));\n        attributeBuffer.Store3((index
-      * 0x4 + 0x186A00) << 2,asuint(velocity));\n        attributeBuffer.Store((index
-      * 0x2 + 0x2BF200) << 2,asuint(size));\n        attributeBuffer.Store((index
-      * 0x2 + 0x2BF201) << 2,asuint(alpha));\n        attributeBuffer.Store((index
-      * 0x3 + 0x35B600) << 2,asuint(texIndex));\n        attributeBuffer.Store((index
-      * 0x3 + 0x35B601) << 2,asuint(age));\n        attributeBuffer.Store((index *
-      0x4 + 0x186A03) << 2,asuint(particleId));\n        attributeBuffer.Store((index
-      * 0x3 + 0x35B602) << 2,uint(alive));\n        \n\n#endif\n    }\n}\n"
+      * 0x4 + 0x80) << 2,asuint(position));\n        attributeBuffer.Store3((index
+      * 0x4 + 0x280) << 2,asuint(velocity));\n        attributeBuffer.Store((index
+      * 0x2 + 0x480) << 2,asuint(size));\n        attributeBuffer.Store((index * 0x2
+      + 0x481) << 2,asuint(alpha));\n        attributeBuffer.Store((index * 0x3 +
+      0x580) << 2,asuint(texIndex));\n        attributeBuffer.Store((index * 0x3 +
+      0x581) << 2,asuint(age));\n        attributeBuffer.Store((index * 0x4 + 0x283)
+      << 2,asuint(particleId));\n        attributeBuffer.Store((index * 0x3 + 0x582)
+      << 2,uint(alive));\n        \n\n#endif\n    }\n}\n"
   - compute: 1
     name: '[System 2]Update'
     source: "#pragma kernel CSMain\n#include \"HLSLSupport.cginc\"\n#define NB_THREADS_PER_GROUP
@@ -1843,14 +1843,14 @@ VisualEffectResource:
       groupId          : SV_GroupID,\n            uint3 groupThreadId    : SV_GroupThreadID)\n{\n\tuint
       id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP + groupId.y * dispatchWidth
       * NB_THREADS_PER_GROUP;\n\tuint index = id;\n\tif (id < nbMax)\n\t{\n#if VFX_USE_ALIVE_CURRENT\n\t\tbool
-      alive = (attributeBuffer.Load((index * 0x3 + 0x35B602) << 2));\n\t\t\n\n\t\tif
+      alive = (attributeBuffer.Load((index * 0x3 + 0x582) << 2));\n\t\t\n\n\t\tif
       (alive)\n\t\t{\n\t\t\tfloat lifetime = asfloat(attributeBuffer.Load((index *
       0x1 + 0x0) << 2));\n\t\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x4E200) << 2));\n\t\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x186A00) << 2));\n\t\t\tfloat texIndex = asfloat(attributeBuffer.Load((index
-      * 0x3 + 0x35B600) << 2));\n\t\t\tfloat age = asfloat(attributeBuffer.Load((index
-      * 0x3 + 0x35B601) << 2));\n\t\t\tuint particleId = (attributeBuffer.Load((index
-      * 0x4 + 0x186A03) << 2));\n\t\t\t\n\n\t\t\t\n#if VFX_USE_OLDPOSITION_CURRENT\n\t\t\toldPosition
+      * 0x4 + 0x80) << 2));\n\t\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\t\tfloat texIndex = asfloat(attributeBuffer.Load((index
+      * 0x3 + 0x580) << 2));\n\t\t\tfloat age = asfloat(attributeBuffer.Load((index
+      * 0x3 + 0x581) << 2));\n\t\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x4 + 0x283) << 2));\n\t\t\t\n\n\t\t\t\n#if VFX_USE_OLDPOSITION_CURRENT\n\t\t\toldPosition
       = position;\n#endif\n\t\t\t\n\t\t\tFlipbookPlay_1( /*inout */texIndex, age,
       lifetime, FrameRate_a, deltaTime_a);\n\t\t\t{\n\t\t\t    float tmp_bg = age
       / lifetime;\n\t\t\t    float tmp_bh = FixedRand(particleId ^ asuint(uniform_e));\n\t\t\t
@@ -1870,20 +1870,20 @@ VisualEffectResource:
       */position, tmp_cf);\n\t\t\t}\n\t\t\tEulerIntegration( /*inout */position, velocity,
       deltaTime_a);\n\t\t\tAge( /*inout */age, deltaTime_a);\n\t\t\tReap(age, lifetime,
       \ /*inout */alive);\n\t\t\t\n\n\t\t\tif (alive)\n\t\t\t{\n\t\t\t\tattributeBuffer.Store3((index
-      * 0x4 + 0x4E200) << 2,asuint(position));\n\t\t\t\tattributeBuffer.Store((index
-      * 0x3 + 0x35B600) << 2,asuint(texIndex));\n\t\t\t\tattributeBuffer.Store((index
-      * 0x3 + 0x35B601) << 2,asuint(age));\n\t\t\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n
-      \               uint indirectIndex = indirectBuffer.IncrementCounter();\n\t\t\t\tindirectBuffer[indirectIndex]
+      * 0x4 + 0x80) << 2,asuint(position));\n\t\t\t\tattributeBuffer.Store((index
+      * 0x3 + 0x580) << 2,asuint(texIndex));\n\t\t\t\tattributeBuffer.Store((index
+      * 0x3 + 0x581) << 2,asuint(age));\n\t\t\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n                uint
+      indirectIndex = indirectBuffer.IncrementCounter();\n\t\t\t\tindirectBuffer[indirectIndex]
       = index;\n#endif\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\tattributeBuffer.Store((index
-      * 0x3 + 0x35B602) << 2,uint(alive));\n\t\t\t\t\n\n\t\t\t\tuint deadIndex = deadListOut.IncrementCounter();\n\t\t\t\tdeadListOut[deadIndex]
+      * 0x3 + 0x582) << 2,uint(alive));\n\t\t\t\t\n\n\t\t\t\tuint deadIndex = deadListOut.IncrementCounter();\n\t\t\t\tdeadListOut[deadIndex]
       = index;\n\t\t\t}\n\t\t}\n#else\n\t\tfloat lifetime = asfloat(attributeBuffer.Load((index
       * 0x1 + 0x0) << 2));\n\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x4E200) << 2));\n\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
-      * 0x4 + 0x186A00) << 2));\n\t\tfloat texIndex = asfloat(attributeBuffer.Load((index
-      * 0x3 + 0x35B600) << 2));\n\t\tfloat age = asfloat(attributeBuffer.Load((index
-      * 0x3 + 0x35B601) << 2));\n\t\tuint particleId = (attributeBuffer.Load((index
-      * 0x4 + 0x186A03) << 2));\n\t\tbool alive = (attributeBuffer.Load((index * 0x3
-      + 0x35B602) << 2));\n\t\t\n\n\t\t\n#if VFX_USE_OLDPOSITION_CURRENT\n\t\toldPosition
+      * 0x4 + 0x80) << 2));\n\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
+      * 0x4 + 0x280) << 2));\n\t\tfloat texIndex = asfloat(attributeBuffer.Load((index
+      * 0x3 + 0x580) << 2));\n\t\tfloat age = asfloat(attributeBuffer.Load((index
+      * 0x3 + 0x581) << 2));\n\t\tuint particleId = (attributeBuffer.Load((index *
+      0x4 + 0x283) << 2));\n\t\tbool alive = (attributeBuffer.Load((index * 0x3 +
+      0x582) << 2));\n\t\t\n\n\t\t\n#if VFX_USE_OLDPOSITION_CURRENT\n\t\toldPosition
       = position;\n#endif\n\t\t\n\t\tFlipbookPlay_1( /*inout */texIndex, age, lifetime,
       FrameRate_a, deltaTime_a);\n\t\t{\n\t\t    float tmp_bg = age / lifetime;\n\t\t
       \   float tmp_bh = FixedRand(particleId ^ asuint(uniform_e));\n\t\t    float
@@ -1902,11 +1902,11 @@ VisualEffectResource:
       \   SetAttribute_CAC29747( /*inout */position, tmp_cf);\n\t\t}\n\t\tEulerIntegration(
       /*inout */position, velocity, deltaTime_a);\n\t\tAge( /*inout */age, deltaTime_a);\n\t\tReap(age,
       lifetime,  /*inout */alive);\n\t\t\n\n\t\tattributeBuffer.Store3((index * 0x4
-      + 0x4E200) << 2,asuint(position));\n\t\tattributeBuffer.Store((index * 0x3 +
-      0x35B600) << 2,asuint(texIndex));\n\t\tattributeBuffer.Store((index * 0x3 +
-      0x35B601) << 2,asuint(age));\n\t\tattributeBuffer.Store((index * 0x3 + 0x35B602)
-      << 2,uint(alive));\n\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n        uint indirectIndex
-      = indirectBuffer.IncrementCounter();\n\t\tindirectBuffer[indirectIndex] = index;\n#endif\n#endif\n\t}\n}\n"
+      + 0x80) << 2,asuint(position));\n\t\tattributeBuffer.Store((index * 0x3 + 0x580)
+      << 2,asuint(texIndex));\n\t\tattributeBuffer.Store((index * 0x3 + 0x581) <<
+      2,asuint(age));\n\t\tattributeBuffer.Store((index * 0x3 + 0x582) << 2,uint(alive));\n\t\t\n\n#if
+      VFX_HAS_INDIRECT_DRAW\n        uint indirectIndex = indirectBuffer.IncrementCounter();\n\t\tindirectBuffer[indirectIndex]
+      = index;\n#endif\n#endif\n\t}\n}\n"
   - compute: 0
     name: '[System 2]Magic Lamp - Smoke'
     source: "Shader \"Hidden/VFX/System 2/Magic Lamp - Smoke\"\n{\n\tSubShader\n\t{\t\n\t\tCull
@@ -2012,27 +2012,27 @@ VisualEffectResource:
       (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat
       lifetime = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x2 + 0x2BF200) << 2));\n\t\t\t\t\t\tfloat
-      alpha = asfloat(attributeBuffer.Load((index * 0x2 + 0x2BF201) << 2));\n\t\t\t\t\t\tfloat
-      texIndex = asfloat(attributeBuffer.Load((index * 0x3 + 0x35B600) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x3 + 0x35B601) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x80) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x2 + 0x480) << 2));\n\t\t\t\t\t\tfloat
+      alpha = asfloat(attributeBuffer.Load((index * 0x2 + 0x481) << 2));\n\t\t\t\t\t\tfloat
+      texIndex = asfloat(attributeBuffer.Load((index * 0x3 + 0x580) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x3 + 0x581) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tbool alive = (attributeBuffer.Load((index
-      * 0x3 + 0x35B602) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      * 0x3 + 0x582) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
       axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
       angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
       angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
       pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
       scaleX = (float)1;\n\t\t\t\t\t\tfloat scaleY = (float)1;\n\t\t\t\t\t\tfloat
       scaleZ = (float)1;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
-      alive = (attributeBuffer.Load((index * 0x3 + 0x35B602) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
+      alive = (attributeBuffer.Load((index * 0x3 + 0x582) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
       (!alive)\n\t\t\t\t\t\t\treturn o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat lifetime
       = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x2 + 0x2BF200) << 2));\n\t\t\t\t\t\tfloat
-      alpha = asfloat(attributeBuffer.Load((index * 0x2 + 0x2BF201) << 2));\n\t\t\t\t\t\tfloat
-      texIndex = asfloat(attributeBuffer.Load((index * 0x3 + 0x35B600) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x3 + 0x35B601) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x4 + 0x80) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x2 + 0x480) << 2));\n\t\t\t\t\t\tfloat
+      alpha = asfloat(attributeBuffer.Load((index * 0x2 + 0x481) << 2));\n\t\t\t\t\t\tfloat
+      texIndex = asfloat(attributeBuffer.Load((index * 0x3 + 0x580) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x3 + 0x581) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
       axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
       angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
@@ -2183,7 +2183,7 @@ VisualEffectResource:
       \       float texIndex = (float)0;\n        float age = (float)0;\n        float3
       velocity = float3(0,0,0);\n        uint particleId = (uint)0;\n        bool
       alive = (bool)true;\n        float3 position_source = asfloat(sourceAttributeBuffer.Load3((sourceIndex
-      * 0x8 + 0x4E200) << 2));\n        \n\n#if VFX_USE_PARTICLEID_CURRENT\n         particleId
+      * 0x8 + 0x7540) << 2));\n        \n\n#if VFX_USE_PARTICLEID_CURRENT\n         particleId
       = particleIndex;\n#endif\n#if VFX_USE_SEED_CURRENT\n        seed = WangHash(particleIndex
       ^ systemSeed);\n#endif\n        \n        {\n            SetAttribute_F01429A3(
       /*inout */lifetime,  /*inout */seed, (float)0.1, (float)5);\n        }\n        {\n
@@ -2196,28 +2196,28 @@ VisualEffectResource:
       \       if (alive)\n        {\n\t\t\tuint deadIndex = deadListIn.DecrementCounter();\n
       \           uint index = deadListIn[deadIndex];\n            attributeBuffer.Store((index
       * 0x1 + 0x0) << 2,asuint(lifetime));\n            attributeBuffer.Store3((index
-      * 0x8 + 0x4E200) << 2,asuint(position));\n            attributeBuffer.Store((index
-      * 0x4 + 0x2BF200) << 2,asuint(size));\n            attributeBuffer.Store((index
-      * 0x4 + 0x2BF201) << 2,asuint(scaleX));\n            attributeBuffer.Store((index
-      * 0x4 + 0x2BF202) << 2,asuint(scaleY));\n            attributeBuffer.Store((index
-      * 0x4 + 0x2BF203) << 2,asuint(alpha));\n            attributeBuffer.Store((index
-      * 0x1 + 0x3F7A00) << 2,asuint(texIndex));\n            attributeBuffer.Store((index
-      * 0x8 + 0x4E203) << 2,asuint(age));\n            attributeBuffer.Store3((index
-      * 0x8 + 0x4E204) << 2,asuint(velocity));\n            attributeBuffer.Store((index
-      * 0x1 + 0x445C00) << 2,asuint(particleId));\n            attributeBuffer.Store((index
-      * 0x8 + 0x4E207) << 2,uint(alive));\n            \n\n        }\n#else\n        uint
+      * 0x8 + 0x61C0) << 2,asuint(position));\n            attributeBuffer.Store((index
+      * 0x4 + 0x36FC0) << 2,asuint(size));\n            attributeBuffer.Store((index
+      * 0x4 + 0x36FC1) << 2,asuint(scaleX));\n            attributeBuffer.Store((index
+      * 0x4 + 0x36FC2) << 2,asuint(scaleY));\n            attributeBuffer.Store((index
+      * 0x4 + 0x36FC3) << 2,asuint(alpha));\n            attributeBuffer.Store((index
+      * 0x1 + 0x4F6C0) << 2,asuint(texIndex));\n            attributeBuffer.Store((index
+      * 0x8 + 0x61C3) << 2,asuint(age));\n            attributeBuffer.Store3((index
+      * 0x8 + 0x61C4) << 2,asuint(velocity));\n            attributeBuffer.Store((index
+      * 0x1 + 0x55880) << 2,asuint(particleId));\n            attributeBuffer.Store((index
+      * 0x8 + 0x61C7) << 2,uint(alive));\n            \n\n        }\n#else\n        uint
       index = particleIndex;\n        attributeBuffer.Store((index * 0x1 + 0x0) <<
-      2,asuint(lifetime));\n        attributeBuffer.Store3((index * 0x8 + 0x4E200)
-      << 2,asuint(position));\n        attributeBuffer.Store((index * 0x4 + 0x2BF200)
-      << 2,asuint(size));\n        attributeBuffer.Store((index * 0x4 + 0x2BF201)
-      << 2,asuint(scaleX));\n        attributeBuffer.Store((index * 0x4 + 0x2BF202)
-      << 2,asuint(scaleY));\n        attributeBuffer.Store((index * 0x4 + 0x2BF203)
-      << 2,asuint(alpha));\n        attributeBuffer.Store((index * 0x1 + 0x3F7A00)
-      << 2,asuint(texIndex));\n        attributeBuffer.Store((index * 0x8 + 0x4E203)
-      << 2,asuint(age));\n        attributeBuffer.Store3((index * 0x8 + 0x4E204) <<
-      2,asuint(velocity));\n        attributeBuffer.Store((index * 0x1 + 0x445C00)
-      << 2,asuint(particleId));\n        attributeBuffer.Store((index * 0x8 + 0x4E207)
-      << 2,uint(alive));\n        \n\n#endif\n    }\n}\n"
+      2,asuint(lifetime));\n        attributeBuffer.Store3((index * 0x8 + 0x61C0)
+      << 2,asuint(position));\n        attributeBuffer.Store((index * 0x4 + 0x36FC0)
+      << 2,asuint(size));\n        attributeBuffer.Store((index * 0x4 + 0x36FC1) <<
+      2,asuint(scaleX));\n        attributeBuffer.Store((index * 0x4 + 0x36FC2) <<
+      2,asuint(scaleY));\n        attributeBuffer.Store((index * 0x4 + 0x36FC3) <<
+      2,asuint(alpha));\n        attributeBuffer.Store((index * 0x1 + 0x4F6C0) <<
+      2,asuint(texIndex));\n        attributeBuffer.Store((index * 0x8 + 0x61C3) <<
+      2,asuint(age));\n        attributeBuffer.Store3((index * 0x8 + 0x61C4) << 2,asuint(velocity));\n
+      \       attributeBuffer.Store((index * 0x1 + 0x55880) << 2,asuint(particleId));\n
+      \       attributeBuffer.Store((index * 0x8 + 0x61C7) << 2,uint(alive));\n        \n\n#endif\n
+      \   }\n}\n"
   - compute: 1
     name: '[System 3]Update'
     source: "#pragma kernel CSMain\n#include \"HLSLSupport.cginc\"\n#define NB_THREADS_PER_GROUP
@@ -2268,14 +2268,14 @@ VisualEffectResource:
       \   : SV_GroupThreadID)\n{\n\tuint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP
       + groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\n\tuint index = id;\n\tif
       (id < nbMax)\n\t{\n#if VFX_USE_ALIVE_CURRENT\n\t\tbool alive = (attributeBuffer.Load((index
-      * 0x8 + 0x4E207) << 2));\n\t\t\n\n\t\tif (alive)\n\t\t{\n\t\t\tfloat lifetime
+      * 0x8 + 0x61C7) << 2));\n\t\t\n\n\t\tif (alive)\n\t\t{\n\t\t\tfloat lifetime
       = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\tfloat3 position
-      = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E200) << 2));\n\t\t\tfloat
-      texIndex = asfloat(attributeBuffer.Load((index * 0x1 + 0x3F7A00) << 2));\n\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x4E203) << 2));\n\t\t\tfloat3
-      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E204) << 2));\n\t\t\tfloat
+      = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C0) << 2));\n\t\t\tfloat
+      texIndex = asfloat(attributeBuffer.Load((index * 0x1 + 0x4F6C0) << 2));\n\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x61C3) << 2));\n\t\t\tfloat3
+      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C4) << 2));\n\t\t\tfloat
       mass = (float)1;\n\t\t\tuint particleId = (attributeBuffer.Load((index * 0x1
-      + 0x445C00) << 2));\n\t\t\tfloat3 position_source = position;\n\t\t\t\n\n\t\t\t\n#if
+      + 0x55880) << 2));\n\t\t\tfloat3 position_source = position;\n\t\t\t\n\n\t\t\t\n#if
       VFX_USE_OLDPOSITION_CURRENT\n\t\t\toldPosition = position;\n#endif\n\t\t\t\n\t\t\tFlipbookPlay_1(
       /*inout */texIndex, age, lifetime, FrameRate_a, deltaTime_a);\n\t\t\t{\n\t\t\t
       \   float tmp_bi = age / lifetime;\n\t\t\t    float tmp_bk = FixedRand(particleId
@@ -2302,21 +2302,21 @@ VisualEffectResource:
       FieldTransform_c, (float)1, tmp_bz, tmp_cc, (uint)4, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
       /*inout */position, velocity, deltaTime_a);\n\t\t\tAge( /*inout */age, deltaTime_a);\n\t\t\tReap(age,
       lifetime,  /*inout */alive);\n\t\t\t\n\n\t\t\tif (alive)\n\t\t\t{\n\t\t\t\tattributeBuffer.Store3((index
-      * 0x8 + 0x4E200) << 2,asuint(position));\n\t\t\t\tattributeBuffer.Store((index
-      * 0x1 + 0x3F7A00) << 2,asuint(texIndex));\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x4E203) << 2,asuint(age));\n\t\t\t\tattributeBuffer.Store3((index *
-      0x8 + 0x4E204) << 2,asuint(velocity));\n\t\t\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n
+      * 0x8 + 0x61C0) << 2,asuint(position));\n\t\t\t\tattributeBuffer.Store((index
+      * 0x1 + 0x4F6C0) << 2,asuint(texIndex));\n\t\t\t\tattributeBuffer.Store((index
+      * 0x8 + 0x61C3) << 2,asuint(age));\n\t\t\t\tattributeBuffer.Store3((index *
+      0x8 + 0x61C4) << 2,asuint(velocity));\n\t\t\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n
       \               uint indirectIndex = indirectBuffer.IncrementCounter();\n\t\t\t\tindirectBuffer[indirectIndex]
       = index;\n#endif\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x4E207) << 2,uint(alive));\n\t\t\t\t\n\n\t\t\t\tuint deadIndex = deadListOut.IncrementCounter();\n\t\t\t\tdeadListOut[deadIndex]
+      * 0x8 + 0x61C7) << 2,uint(alive));\n\t\t\t\t\n\n\t\t\t\tuint deadIndex = deadListOut.IncrementCounter();\n\t\t\t\tdeadListOut[deadIndex]
       = index;\n\t\t\t}\n\t\t}\n#else\n\t\tfloat lifetime = asfloat(attributeBuffer.Load((index
       * 0x1 + 0x0) << 2));\n\t\tfloat3 position = asfloat(attributeBuffer.Load3((index
-      * 0x8 + 0x4E200) << 2));\n\t\tfloat texIndex = asfloat(attributeBuffer.Load((index
-      * 0x1 + 0x3F7A00) << 2));\n\t\tfloat age = asfloat(attributeBuffer.Load((index
-      * 0x8 + 0x4E203) << 2));\n\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
-      * 0x8 + 0x4E204) << 2));\n\t\tfloat mass = (float)1;\n\t\tuint particleId =
-      (attributeBuffer.Load((index * 0x1 + 0x445C00) << 2));\n\t\tbool alive = (attributeBuffer.Load((index
-      * 0x8 + 0x4E207) << 2));\n\t\tfloat3 position_source = position;\n\t\t\n\n\t\t\n#if
+      * 0x8 + 0x61C0) << 2));\n\t\tfloat texIndex = asfloat(attributeBuffer.Load((index
+      * 0x1 + 0x4F6C0) << 2));\n\t\tfloat age = asfloat(attributeBuffer.Load((index
+      * 0x8 + 0x61C3) << 2));\n\t\tfloat3 velocity = asfloat(attributeBuffer.Load3((index
+      * 0x8 + 0x61C4) << 2));\n\t\tfloat mass = (float)1;\n\t\tuint particleId = (attributeBuffer.Load((index
+      * 0x1 + 0x55880) << 2));\n\t\tbool alive = (attributeBuffer.Load((index * 0x8
+      + 0x61C7) << 2));\n\t\tfloat3 position_source = position;\n\t\t\n\n\t\t\n#if
       VFX_USE_OLDPOSITION_CURRENT\n\t\toldPosition = position;\n#endif\n\t\t\n\t\tFlipbookPlay_1(
       /*inout */texIndex, age, lifetime, FrameRate_a, deltaTime_a);\n\t\t{\n\t\t    float
       tmp_bi = age / lifetime;\n\t\t    float tmp_bk = FixedRand(particleId ^ asuint(uniform_f));\n\t\t
@@ -2342,11 +2342,11 @@ VisualEffectResource:
       */velocity, mass, InvFieldTransform_c, FieldTransform_c, (float)1, tmp_bz, tmp_cc,
       (uint)4, deltaTime_a);\n\t\t}\n\t\tEulerIntegration( /*inout */position, velocity,
       deltaTime_a);\n\t\tAge( /*inout */age, deltaTime_a);\n\t\tReap(age, lifetime,
-      \ /*inout */alive);\n\t\t\n\n\t\tattributeBuffer.Store3((index * 0x8 + 0x4E200)
-      << 2,asuint(position));\n\t\tattributeBuffer.Store((index * 0x1 + 0x3F7A00)
-      << 2,asuint(texIndex));\n\t\tattributeBuffer.Store((index * 0x8 + 0x4E203) <<
-      2,asuint(age));\n\t\tattributeBuffer.Store3((index * 0x8 + 0x4E204) << 2,asuint(velocity));\n\t\tattributeBuffer.Store((index
-      * 0x8 + 0x4E207) << 2,uint(alive));\n\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n        uint
+      \ /*inout */alive);\n\t\t\n\n\t\tattributeBuffer.Store3((index * 0x8 + 0x61C0)
+      << 2,asuint(position));\n\t\tattributeBuffer.Store((index * 0x1 + 0x4F6C0) <<
+      2,asuint(texIndex));\n\t\tattributeBuffer.Store((index * 0x8 + 0x61C3) << 2,asuint(age));\n\t\tattributeBuffer.Store3((index
+      * 0x8 + 0x61C4) << 2,asuint(velocity));\n\t\tattributeBuffer.Store((index *
+      0x8 + 0x61C7) << 2,uint(alive));\n\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n        uint
       indirectIndex = indirectBuffer.IncrementCounter();\n\t\tindirectBuffer[indirectIndex]
       = index;\n#endif\n#endif\n\t}\n}\n"
   - compute: 0
@@ -2435,30 +2435,30 @@ VisualEffectResource:
       (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat
       lifetime = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF200) << 2));\n\t\t\t\t\t\tfloat
-      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF201) << 2));\n\t\t\t\t\t\tfloat
-      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF202) << 2));\n\t\t\t\t\t\tfloat
-      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF203) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x4E203) << 2));\n\t\t\t\t\t\tfloat3
-      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E204) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C0) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC0) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC1) << 2));\n\t\t\t\t\t\tfloat
+      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC2) << 2));\n\t\t\t\t\t\tfloat
+      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC3) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x61C3) << 2));\n\t\t\t\t\t\tfloat3
+      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C4) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tbool alive = (attributeBuffer.Load((index
-      * 0x8 + 0x4E207) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      * 0x8 + 0x61C7) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
       axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
       angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
       angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
       pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
       scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 position_source = position;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
-      alive = (attributeBuffer.Load((index * 0x8 + 0x4E207) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
+      alive = (attributeBuffer.Load((index * 0x8 + 0x61C7) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
       (!alive)\n\t\t\t\t\t\t\treturn o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat lifetime
       = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF200) << 2));\n\t\t\t\t\t\tfloat
-      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF201) << 2));\n\t\t\t\t\t\tfloat
-      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF202) << 2));\n\t\t\t\t\t\tfloat
-      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF203) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x4E203) << 2));\n\t\t\t\t\t\tfloat3
-      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E204) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C0) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC0) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC1) << 2));\n\t\t\t\t\t\tfloat
+      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC2) << 2));\n\t\t\t\t\t\tfloat
+      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC3) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x61C3) << 2));\n\t\t\t\t\t\tfloat3
+      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C4) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
       axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
       angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
@@ -2576,30 +2576,30 @@ VisualEffectResource:
       (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat
       lifetime = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF200) << 2));\n\t\t\t\t\t\tfloat
-      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF201) << 2));\n\t\t\t\t\t\tfloat
-      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF202) << 2));\n\t\t\t\t\t\tfloat
-      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF203) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x4E203) << 2));\n\t\t\t\t\t\tfloat3
-      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E204) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C0) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC0) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC1) << 2));\n\t\t\t\t\t\tfloat
+      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC2) << 2));\n\t\t\t\t\t\tfloat
+      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC3) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x61C3) << 2));\n\t\t\t\t\t\tfloat3
+      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C4) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tbool alive = (attributeBuffer.Load((index
-      * 0x8 + 0x4E207) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
+      * 0x8 + 0x61C7) << 2));\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
       axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
       angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
       angleZ = (float)0;\n\t\t\t\t\t\tfloat pivotX = (float)0;\n\t\t\t\t\t\tfloat
       pivotY = (float)0;\n\t\t\t\t\t\tfloat pivotZ = (float)0;\n\t\t\t\t\t\tfloat
       scaleZ = (float)1;\n\t\t\t\t\t\tfloat3 position_source = position;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tbool
-      alive = (attributeBuffer.Load((index * 0x8 + 0x4E207) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
+      alive = (attributeBuffer.Load((index * 0x8 + 0x61C7) << 2));\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tif
       (!alive)\n\t\t\t\t\t\t\treturn o;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\tfloat lifetime
       = asfloat(attributeBuffer.Load((index * 0x1 + 0x0) << 2));\n\t\t\t\t\t\tfloat3
-      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E200) << 2));\n\t\t\t\t\t\tfloat
-      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF200) << 2));\n\t\t\t\t\t\tfloat
-      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF201) << 2));\n\t\t\t\t\t\tfloat
-      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF202) << 2));\n\t\t\t\t\t\tfloat
-      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x2BF203) << 2));\n\t\t\t\t\t\tfloat
-      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x4E203) << 2));\n\t\t\t\t\t\tfloat3
-      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x4E204) << 2));\n\t\t\t\t\t\tfloat3
+      position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C0) << 2));\n\t\t\t\t\t\tfloat
+      size = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC0) << 2));\n\t\t\t\t\t\tfloat
+      scaleX = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC1) << 2));\n\t\t\t\t\t\tfloat
+      scaleY = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC2) << 2));\n\t\t\t\t\t\tfloat
+      alpha = asfloat(attributeBuffer.Load((index * 0x4 + 0x36FC3) << 2));\n\t\t\t\t\t\tfloat
+      age = asfloat(attributeBuffer.Load((index * 0x8 + 0x61C3) << 2));\n\t\t\t\t\t\tfloat3
+      velocity = asfloat(attributeBuffer.Load3((index * 0x8 + 0x61C4) << 2));\n\t\t\t\t\t\tfloat3
       color = float3(1,1,1);\n\t\t\t\t\t\tfloat3 axisX = float3(1,0,0);\n\t\t\t\t\t\tfloat3
       axisY = float3(0,1,0);\n\t\t\t\t\t\tfloat3 axisZ = float3(0,0,1);\n\t\t\t\t\t\tfloat
       angleX = (float)0;\n\t\t\t\t\t\tfloat angleY = (float)0;\n\t\t\t\t\t\tfloat
@@ -3114,7 +3114,7 @@ VisualEffectResource:
       -= deadListCount.Load(0);\n#endif\n\tuint id = groupThreadId.x + groupId.x *
       NB_THREADS_PER_GROUP + groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\n\tif
       (id < threshold)\n\t{\n\t\tuint index = inputBuffer[id];\n\t\tfloat3 position
-      = asfloat(attributeBuffer.Load3((index * 0x4 + 0x4E200) << 2));\n\t\t\n\n\t\t\n#if
+      = asfloat(attributeBuffer.Load3((index * 0x4 + 0x80) << 2));\n\t\t\n\n\t\t\n#if
       VFX_LOCAL_SPACE\n\t\tfloat3 wPos = mul(localToWorld,float4(position,1.0f)).xyz;\n#else\n\t\tfloat3
       wPos = position;\n#endif\n\t\tfloat3 camToPos = wPos - cameraPosition;\n\t\t\n\t\tKvp
       kvp;\n\t\tkvp.sortKey = dot(camToPos,camToPos); // sqr distance to the camera\n\t\tkvp.index
@@ -4789,7 +4789,7 @@ VisualEffectResource:
       index: 19
     m_Buffers:
     - type: 1
-      size: 6720000
+      size: 630320
       layout:
       - name: lifetime
         type: 1
@@ -4800,67 +4800,67 @@ VisualEffectResource:
       - name: position
         type: 3
         offset:
-          bucket: 320000
+          bucket: 30016
           structure: 8
           element: 0
       - name: age
         type: 1
         offset:
-          bucket: 320000
+          bucket: 30016
           structure: 8
           element: 3
       - name: alive
         type: 17
         offset:
-          bucket: 320000
+          bucket: 30016
           structure: 8
           element: 4
       - name: velocity
         type: 3
         offset:
-          bucket: 2880000
+          bucket: 270144
           structure: 4
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 2880000
+          bucket: 270144
           structure: 4
           element: 3
       - name: size
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 390208
           structure: 3
           element: 0
       - name: scaleX
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 390208
           structure: 3
           element: 1
       - name: scaleY
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 390208
           structure: 3
           element: 2
       - name: oldPosition
         type: 3
         offset:
-          bucket: 5120000
+          bucket: 480256
           structure: 4
           element: 0
       - name: spawnCount
         type: 1
         offset:
-          bucket: 6400000
+          bucket: 600320
           structure: 1
           element: 0
-      capacity: 320000
+      capacity: 30000
       stride: 4
     - type: 1
-      size: 4480000
+      size: 1768
       layout:
       - name: lifetime
         type: 1
@@ -4871,55 +4871,55 @@ VisualEffectResource:
       - name: position
         type: 3
         offset:
-          bucket: 320000
+          bucket: 128
           structure: 4
           element: 0
       - name: velocity
         type: 3
         offset:
-          bucket: 1600000
+          bucket: 640
           structure: 4
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 1600000
+          bucket: 640
           structure: 4
           element: 3
       - name: size
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 1152
           structure: 2
           element: 0
       - name: alpha
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 1152
           structure: 2
           element: 1
       - name: texIndex
         type: 1
         offset:
-          bucket: 3520000
+          bucket: 1408
           structure: 3
           element: 0
       - name: age
         type: 1
         offset:
-          bucket: 3520000
+          bucket: 1408
           structure: 3
           element: 1
       - name: alive
         type: 17
         offset:
-          bucket: 3520000
+          bucket: 1408
           structure: 3
           element: 2
-      capacity: 320000
+      capacity: 120
       stride: 4
     - type: 1
-      size: 4800000
+      size: 375336
       layout:
       - name: lifetime
         type: 1
@@ -4930,64 +4930,64 @@ VisualEffectResource:
       - name: position
         type: 3
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 0
       - name: age
         type: 1
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 3
       - name: velocity
         type: 3
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 4
       - name: alive
         type: 17
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 7
       - name: size
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 0
       - name: scaleX
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 1
       - name: scaleY
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 2
       - name: alpha
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 3
       - name: texIndex
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 325312
           structure: 1
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 4480000
+          bucket: 350336
           structure: 1
           element: 0
-      capacity: 320000
+      capacity: 25000
       stride: 4
     - type: 1
       size: 103
@@ -5061,12 +5061,12 @@ VisualEffectResource:
       capacity: 7
       stride: 4
     - type: 2
-      size: 320000
+      size: 25000
       layout: []
       capacity: 0
       stride: 4
     - type: 1
-      size: 6720000
+      size: 630336
       layout:
       - name: lifetime
         type: 1
@@ -5077,64 +5077,64 @@ VisualEffectResource:
       - name: position
         type: 3
         offset:
-          bucket: 320000
+          bucket: 30016
           structure: 8
           element: 0
       - name: age
         type: 1
         offset:
-          bucket: 320000
+          bucket: 30016
           structure: 8
           element: 3
       - name: alive
         type: 17
         offset:
-          bucket: 320000
+          bucket: 30016
           structure: 8
           element: 4
       - name: velocity
         type: 3
         offset:
-          bucket: 2880000
+          bucket: 270144
           structure: 4
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 2880000
+          bucket: 270144
           structure: 4
           element: 3
       - name: size
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 390208
           structure: 3
           element: 0
       - name: scaleX
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 390208
           structure: 3
           element: 1
       - name: scaleY
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 390208
           structure: 3
           element: 2
       - name: oldPosition
         type: 3
         offset:
-          bucket: 5120000
+          bucket: 480256
           structure: 4
           element: 0
       - name: spawnCount
         type: 1
         offset:
-          bucket: 6400000
+          bucket: 600320
           structure: 1
           element: 0
-      capacity: 320000
+      capacity: 30016
       stride: 4
     - type: 1
       size: 1
@@ -5148,7 +5148,7 @@ VisualEffectResource:
       capacity: 1
       stride: 4
     - type: 4
-      size: 320000
+      size: 30000
       layout: []
       capacity: 0
       stride: 4
@@ -5158,7 +5158,7 @@ VisualEffectResource:
       capacity: 0
       stride: 4
     - type: 1
-      size: 4480000
+      size: 1792
       layout:
       - name: lifetime
         type: 1
@@ -5169,52 +5169,52 @@ VisualEffectResource:
       - name: position
         type: 3
         offset:
-          bucket: 320000
+          bucket: 128
           structure: 4
           element: 0
       - name: velocity
         type: 3
         offset:
-          bucket: 1600000
+          bucket: 640
           structure: 4
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 1600000
+          bucket: 640
           structure: 4
           element: 3
       - name: size
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 1152
           structure: 2
           element: 0
       - name: alpha
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 1152
           structure: 2
           element: 1
       - name: texIndex
         type: 1
         offset:
-          bucket: 3520000
+          bucket: 1408
           structure: 3
           element: 0
       - name: age
         type: 1
         offset:
-          bucket: 3520000
+          bucket: 1408
           structure: 3
           element: 1
       - name: alive
         type: 17
         offset:
-          bucket: 3520000
+          bucket: 1408
           structure: 3
           element: 2
-      capacity: 320000
+      capacity: 128
       stride: 4
     - type: 1
       size: 1
@@ -5228,7 +5228,7 @@ VisualEffectResource:
       capacity: 1
       stride: 4
     - type: 4
-      size: 320000
+      size: 120
       layout: []
       capacity: 0
       stride: 4
@@ -5238,22 +5238,22 @@ VisualEffectResource:
       capacity: 0
       stride: 4
     - type: 4
-      size: 320000
+      size: 120
       layout: []
       capacity: 0
       stride: 4
     - type: 0
-      size: 320000
+      size: 120
       layout: []
       capacity: 0
       stride: 8
     - type: 0
-      size: 320000
+      size: 120
       layout: []
       capacity: 0
       stride: 8
     - type: 1
-      size: 4800000
+      size: 375360
       layout:
       - name: lifetime
         type: 1
@@ -5264,67 +5264,67 @@ VisualEffectResource:
       - name: position
         type: 3
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 0
       - name: age
         type: 1
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 3
       - name: velocity
         type: 3
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 4
       - name: alive
         type: 17
         offset:
-          bucket: 320000
+          bucket: 25024
           structure: 8
           element: 7
       - name: size
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 0
       - name: scaleX
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 1
       - name: scaleY
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 2
       - name: alpha
         type: 1
         offset:
-          bucket: 2880000
+          bucket: 225216
           structure: 4
           element: 3
       - name: texIndex
         type: 1
         offset:
-          bucket: 4160000
+          bucket: 325312
           structure: 1
           element: 0
       - name: particleId
         type: 6
         offset:
-          bucket: 4480000
+          bucket: 350336
           structure: 1
           element: 0
-      capacity: 320000
+      capacity: 25024
       stride: 4
     - type: 4
-      size: 320000
+      size: 25000
       layout: []
       capacity: 0
       stride: 4
@@ -5578,7 +5578,7 @@ VisualEffectResource:
       shaderSourceIndex: -1
   - type: 1
     flags: 1
-    capacity: 320000
+    capacity: 30000
     layer: 0
     buffers:
     - nameId: attributeBuffer
@@ -5681,7 +5681,7 @@ VisualEffectResource:
       shaderSourceIndex: 2
   - type: 1
     flags: 3
-    capacity: 320000
+    capacity: 120
     layer: 4294967295
     buffers:
     - nameId: attributeBuffer
@@ -5792,7 +5792,7 @@ VisualEffectResource:
       shaderSourceIndex: 5
   - type: 1
     flags: 5
-    capacity: 320000
+    capacity: 25000
     layer: 1
     buffers:
     - nameId: attributeBuffer
@@ -7184,7 +7184,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614879}
   - {fileID: 8926484042661614914}
   - {fileID: 8926484042661615038}
-  m_Capacity: 320000
+  m_Capacity: 120
   m_Space: 1
 --- !u!114 &8926484042661614890
 MonoBehaviour:
@@ -14676,7 +14676,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Parent: {fileID: 114780028408030698}
   m_Children: []
-  m_UIPosition: {x: 0, y: 0}
+  m_UIPosition: {x: 0, y: 270}
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots:
@@ -15190,7 +15190,7 @@ MonoBehaviour:
   - {fileID: 8926484042661616250}
   - {fileID: 8926484042661616285}
   - {fileID: 8926484042661616655}
-  m_Capacity: 320000
+  m_Capacity: 25000
   m_Space: 1
 --- !u!114 &8926484042661616261
 MonoBehaviour:
@@ -18316,7 +18316,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Parent: {fileID: 114350483966674976}
   m_Children: []
-  m_UIPosition: {x: 3269, y: -22}
+  m_UIPosition: {x: 3239, y: 52}
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots: []
