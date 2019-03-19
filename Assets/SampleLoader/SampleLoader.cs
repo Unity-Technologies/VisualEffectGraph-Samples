@@ -82,7 +82,9 @@ public class SampleLoader : MonoBehaviour
         {
             int current = next;
             next = (next + 1) % (SceneManager.sceneCountInBuildSettings - 1);
-            StartCoroutine(LoadScene(current, next));
+
+            if(next != current)
+                StartCoroutine(LoadScene(current, next));
         }
     }
 

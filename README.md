@@ -6,6 +6,19 @@ There are also pre-built binaries for Windows and macOS available.
 
 ### Changelog
 
+- #### The 2019.1 Release! ( 5.8.2-preview rev1 - 2019-03-19 )
+
+  -  **New Samples**
+    - Spaceship Holo Table : Holographic Pin-Screen effect isolated from the [Spaceship Demo](https://www.youtube.com/watch?v=rqMcPZoEc3U)
+
+  - **General Improvements**
+    - Upgraded all project, volumes, postprocesses and scenes to 2019.1 package track
+      - HD/VFX Package versions to 5.8.2-preview
+      - Editor version to 2019.1.0b6
+
+  - **Fixes**
+    - General Performance adjustments
+
 - #### Third Release ( 4.9.0-preview rev1 - 2019-02-07 )
 
   - **New Samples**
