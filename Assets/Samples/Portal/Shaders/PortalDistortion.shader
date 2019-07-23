@@ -21,13 +21,12 @@ Shader "Unlit/PortalDistortion"
         {
             Tags{ "LightMode" = "ForwardOnly" }
 
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
             #include "Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderVariables.hlsl"
-            //#include "UnityCG.cginc"
 
             float _Radius;
             float _Thickness;
@@ -37,10 +36,6 @@ Shader "Unlit/PortalDistortion"
             float _NoiseIntensity;
             float _NoiseTime;
             sampler2D _NoiseTexture;
-
-            float4 _ColorPyramidScale; // (x,y) = PyramidToScreenScale, z = lodCount
-            Texture2D _ColorPyramidTexture;
-            SamplerState sampler_ColorPyramidTexture;
 
             struct appdata
             {
@@ -57,7 +52,7 @@ Shader "Unlit/PortalDistortion"
             v2f vert (appdata v)
             {
                 v2f o;
-                o.pos = UnityObjectToClipPos(v.pos);
+				o.pos = TransformWorldToHClip(TransformObjectToWorld(v.pos));
                 o.uv = v.uv;
                 return o;
             }
@@ -85,10 +80,11 @@ Shader "Unlit/PortalDistortion"
                 float2 grabPos = i.pos.xy + duv * dUVtoScreen;
                 grabPos = saturate(grabPos / _ScreenParams.xy);
 
-                float4 bgcolor = SAMPLE_TEXTURE2D(_ColorPyramidTexture, sampler_ColorPyramidTexture, _ColorPyramidScale.xy * grabPos);
+                //float4 bgcolor = SAMPLE_TEXTURE2D(_ColorPyramidTexture, sampler_ColorPyramidTexture, _ColorPyramidScale.xy * grabPos);
+				float4 bgcolor = SAMPLE_TEXTURE2D_X(_ColorPyramidTexture, s_trilinear_clamp_sampler, grabPos * _ColorPyramidScale.xy);
                 return float4(bgcolor.rgb,1);
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

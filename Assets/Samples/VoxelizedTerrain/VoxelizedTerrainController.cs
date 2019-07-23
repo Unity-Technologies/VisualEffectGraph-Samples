@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Experimental.VFX;
-using UnityEngine.VFX.Utils;
+using UnityEngine.Experimental.VFX.Utility;
 using UnityEngine.EventSystems;
 
 public class VoxelizedTerrainController : MonoBehaviour
