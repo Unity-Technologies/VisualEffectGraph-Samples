@@ -1379,7 +1379,7 @@ VisualEffectResource:
       += uint(asfloat(sourceAttributeBuffer.Load((sourceIndex * 0x1 + 0x0) << 2)));\n
       \           if (id < currentSumSpawnCount)\n            {\n                break;\n
       \           }\n        }\n        */\n        \n\n#endif\n        float lifetime
-      = (float)0;\n        uint seed = (uint)0;\n        float3 position = float3(0,0,0);\n
+      = (float)1;\n        uint seed = (uint)0;\n        float3 position = float3(0,0,0);\n
       \       float3 direction = float3(0,0,1);\n        float3 velocity = float3(0,0,0);\n
       \       float size = (float)0.1;\n        float scaleX = (float)1;\n        float
       scaleY = (float)1;\n        float age = (float)0;\n        bool alive = (bool)true;\n
@@ -1784,7 +1784,7 @@ VisualEffectResource:
       += uint(asfloat(sourceAttributeBuffer.Load((sourceIndex * 0x1 + 0x0) << 2)));\n
       \           if (id < currentSumSpawnCount)\n            {\n                break;\n
       \           }\n        }\n        */\n        \n\n#endif\n        float lifetime
-      = (float)0;\n        uint seed = (uint)0;\n        float3 position = float3(0,0,0);\n
+      = (float)1;\n        uint seed = (uint)0;\n        float3 position = float3(0,0,0);\n
       \       float3 direction = float3(0,0,1);\n        float3 velocity = float3(0,0,0);\n
       \       float size = (float)0.1;\n        float alpha = (float)1;\n        float
       texIndex = (float)0;\n        float age = (float)0;\n        uint particleId
@@ -2179,7 +2179,7 @@ VisualEffectResource:
       on CPU\n#endif\n\n    if (id < maxThreadId)\n    {\n#if VFX_USE_SPAWNER_FROM_GPU\n
       \       int sourceIndex = eventList[id];\n#endif\n        uint particleIndex
       = id + currentSpawnIndex;\n\t\t\n#if !VFX_USE_SPAWNER_FROM_GPU\n        \n#endif\n
-      \       float lifetime = (float)0;\n        uint seed = (uint)0;\n        float3
+      \       float lifetime = (float)1;\n        uint seed = (uint)0;\n        float3
       position = float3(0,0,0);\n        float size = (float)0.1;\n        float scaleX
       = (float)1;\n        float scaleY = (float)1;\n        float alpha = (float)1;\n
       \       float texIndex = (float)0;\n        float age = (float)0;\n        float3
@@ -2535,7 +2535,7 @@ VisualEffectResource:
       ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t#define
       VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.x\n\t\t#define VFX_VARYING_FRAMEBLEND
       builtInInterpolants.y\n\t\t#define VFX_VARYING_UV uv\n\t\t\t\t\n\t\t\n\t\t\n\t\t//
-      Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t#define USE_LEGACY_UNITY_MATRIX_VARIABLES\n\t\t\t\t\n\t\t\t#if
+      Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t\t\t\n\t\t\t#if
       !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
       VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXCommon.cginc\"\n\t\t\t#include
@@ -2721,7 +2721,7 @@ VisualEffectResource:
       += uint(asfloat(sourceAttributeBuffer.Load((sourceIndex * 0x1 + 0x0) << 2)));\n
       \           if (id < currentSumSpawnCount)\n            {\n                break;\n
       \           }\n        }\n        */\n        \n\n#endif\n        float3 position
-      = float3(0,0,0);\n        float lifetime = (float)0;\n        uint seed = (uint)0;\n
+      = float3(0,0,0);\n        float lifetime = (float)1;\n        uint seed = (uint)0;\n
       \       float size = (float)0.1;\n        float scaleX = (float)1;\n        float
       scaleY = (float)1;\n        float pivotY = (float)0;\n        float angleZ =
       (float)0;\n        float3 targetPosition = float3(0,0,0);\n        float texIndex

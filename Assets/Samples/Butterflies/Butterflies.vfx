@@ -5696,8 +5696,8 @@ VisualEffectResource:
       + 0x3) << 2,asuint(age));\n\t\t\n\n#if VFX_HAS_INDIRECT_DRAW\n        uint indirectIndex
       = indirectBuffer.IncrementCounter();\n\t\tindirectBuffer[indirectIndex] = index;\n#endif\n#endif\n\t}\n}\n"
   - compute: 0
-    name: '[System 1]Body'
-    source: "Shader \"Hidden/VFX/System 1/Body\"\n{\n\tSubShader\n\t{\t\n\t\tCull
+    name: '[System 1]C Body'
+    source: "Shader \"Hidden/VFX/System 1/(C) Body\"\n{\n\tSubShader\n\t{\t\n\t\tCull
       Off\n\t\t\n\t\tTags { \"Queue\"=\"Geometry\" \"IgnoreProjector\"=\"False\" \"RenderType\"=\"Opaque\"
       }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tZTest
       LEqual\n\t\tZWrite On\n\t\tCull Back\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
@@ -5996,8 +5996,8 @@ VisualEffectResource:
       = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
       = saturate(o.color.a);\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t\n\t}\n}\n"
   - compute: 0
-    name: '[System 1]Left Wing'
-    source: "Shader \"Hidden/VFX/System 1/Left Wing\"\n{\n\tSubShader\n\t{\t\n\t\tCull
+    name: '[System 1]A Left Wing'
+    source: "Shader \"Hidden/VFX/System 1/(A) Left Wing\"\n{\n\tSubShader\n\t{\t\n\t\tCull
       Off\n\t\t\n\t\tTags { \"Queue\"=\"AlphaTest\" \"IgnoreProjector\"=\"False\"
       \"RenderType\"=\"Opaque\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tZTest
       LEqual\n\t\tZWrite On\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
@@ -6180,8 +6180,8 @@ VisualEffectResource:
       out BSDFData bsdfData, out PreLightData preLightData, VFX_VARYING_PS_INPUTS
       i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
       HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t
-      \   \n\t\t\t\t    diffusionProfileHash = (uint)0;\n\t\t\t\t}\n\t\t\t\t\n //
-      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      \   \n\t\t\t\t    diffusionProfileHash = (uint)1076631242;\n\t\t\t\t}\n\t\t\t\t\n
+      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -6417,8 +6417,8 @@ VisualEffectResource:
       out BSDFData bsdfData, out PreLightData preLightData, VFX_VARYING_PS_INPUTS
       i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
       HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t
-      \   \n\t\t\t\t    diffusionProfileHash = (uint)0;\n\t\t\t\t}\n\t\t\t\t\n //
-      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      \   \n\t\t\t\t    diffusionProfileHash = (uint)1076631242;\n\t\t\t\t}\n\t\t\t\t\n
+      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -6649,8 +6649,8 @@ VisualEffectResource:
       out BSDFData bsdfData, out PreLightData preLightData, VFX_VARYING_PS_INPUTS
       i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
       HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t
-      \   \n\t\t\t\t    diffusionProfileHash = (uint)0;\n\t\t\t\t}\n\t\t\t\t\n //
-      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      \   \n\t\t\t\t    diffusionProfileHash = (uint)1076631242;\n\t\t\t\t}\n\t\t\t\t\n
+      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -6695,7 +6695,7 @@ VisualEffectResource:
       ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t#define
       VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.x\n\t\t#define VFX_VARYING_FRAMEBLEND
       builtInInterpolants.y\n\t\t#define VFX_VARYING_UV uv\n\t\t\n\t\t\n\t\t\n\t\t//
-      Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t#define USE_LEGACY_UNITY_MATRIX_VARIABLES\n\t\t\t\t\n\t\t\t#if
+      Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t\t\t\n\t\t\t#if
       !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
       VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXCommon.cginc\"\n\t\t\t#include
@@ -6832,8 +6832,8 @@ VisualEffectResource:
       *= VFXGetTextureColor(VFX_SAMPLER(baseColorMap),i).a;\t\n\t\t#endif\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\n\t\t\t\treturn
       0;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t}\n}\n"
   - compute: 0
-    name: '[System 1]Right Wing'
-    source: "Shader \"Hidden/VFX/System 1/Right Wing\"\n{\n\tSubShader\n\t{\t\n\t\tCull
+    name: '[System 1]B Right Wing'
+    source: "Shader \"Hidden/VFX/System 1/(B) Right Wing\"\n{\n\tSubShader\n\t{\t\n\t\tCull
       Off\n\t\t\n\t\tTags { \"Queue\"=\"AlphaTest\" \"IgnoreProjector\"=\"False\"
       \"RenderType\"=\"Opaque\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tZTest
       LEqual\n\t\tZWrite On\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t#if
@@ -7016,8 +7016,8 @@ VisualEffectResource:
       out BSDFData bsdfData, out PreLightData preLightData, VFX_VARYING_PS_INPUTS
       i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
       HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t
-      \   \n\t\t\t\t    diffusionProfileHash = (uint)0;\n\t\t\t\t}\n\t\t\t\t\n //
-      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      \   \n\t\t\t\t    diffusionProfileHash = (uint)1076631242;\n\t\t\t\t}\n\t\t\t\t\n
+      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -7253,8 +7253,8 @@ VisualEffectResource:
       out BSDFData bsdfData, out PreLightData preLightData, VFX_VARYING_PS_INPUTS
       i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
       HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t
-      \   \n\t\t\t\t    diffusionProfileHash = (uint)0;\n\t\t\t\t}\n\t\t\t\t\n //
-      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      \   \n\t\t\t\t    diffusionProfileHash = (uint)1076631242;\n\t\t\t\t}\n\t\t\t\t\n
+      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -7485,8 +7485,8 @@ VisualEffectResource:
       out BSDFData bsdfData, out PreLightData preLightData, VFX_VARYING_PS_INPUTS
       i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
       HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t
-      \   \n\t\t\t\t    diffusionProfileHash = (uint)0;\n\t\t\t\t}\n\t\t\t\t\n //
-      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      \   \n\t\t\t\t    diffusionProfileHash = (uint)1076631242;\n\t\t\t\t}\n\t\t\t\t\n
+      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -7531,7 +7531,7 @@ VisualEffectResource:
       ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t#define
       VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.x\n\t\t#define VFX_VARYING_FRAMEBLEND
       builtInInterpolants.y\n\t\t#define VFX_VARYING_UV uv\n\t\t\n\t\t\n\t\t\n\t\t//
-      Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t#define USE_LEGACY_UNITY_MATRIX_VARIABLES\n\t\t\t\t\n\t\t\t#if
+      Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t\t\t\n\t\t\t#if
       !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
       VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/RenderPipeline/HDRP/VFXCommon.cginc\"\n\t\t\t#include
@@ -7784,78 +7784,78 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 1
+      - op: 7
         valueIndex: 23
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
-      - op: 7
+        data[3]: -1
+      - op: 1
         valueIndex: 24
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: -1
+        data[3]: 1
       - op: 1
         valueIndex: 25
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
-      - op: 1
-        valueIndex: 26
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 3
-      - op: 1
-        valueIndex: 29
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 3
-      - op: 1
-        valueIndex: 32
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
         data[3]: 3
       - op: 3
-        valueIndex: 35
+        valueIndex: 28
         data[0]: 4
-        data[1]: 20
+        data[1]: 19
         data[2]: 4
         data[3]: -1
       - op: 1
-        valueIndex: 38
+        valueIndex: 31
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 3
-      - op: 33
-        valueIndex: 41
-        data[0]: 25
-        data[1]: 23
-        data[2]: 22
-        data[3]: -1
       - op: 1
-        valueIndex: 57
+        valueIndex: 34
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 3
+      - op: 1
+        valueIndex: 37
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 1
+      - op: 33
+        valueIndex: 38
+        data[0]: 22
+        data[1]: 24
+        data[2]: 23
+        data[3]: -1
+      - op: 1
+        valueIndex: 54
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 1
+      - op: 1
+        valueIndex: 55
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 3
       - op: 1
         valueIndex: 58
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
+        data[3]: 7
       - op: 1
-        valueIndex: 59
+        valueIndex: 60
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 2
+        data[3]: 1
       - op: 1
         valueIndex: 61
         data[0]: -1
@@ -7867,79 +7867,79 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
+        data[3]: 2
       - op: 1
-        valueIndex: 64
+        valueIndex: 65
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 7
+        data[3]: 1
       - op: 1
         valueIndex: 66
         data[0]: -1
         data[1]: -1
         data[2]: -1
+        data[3]: 6
+      - op: 1
+        valueIndex: 67
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
         data[3]: 7
       - op: 1
-        valueIndex: 68
+        valueIndex: 69
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 3
       - op: 1
-        valueIndex: 71
+        valueIndex: 72
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 2
-      - op: 1
-        valueIndex: 73
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 1
       - op: 1
         valueIndex: 74
         data[0]: -1
         data[1]: -1
         data[2]: -1
+        data[3]: 1
+      - op: 1
+        valueIndex: 75
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
         data[3]: 2
       - op: 1
-        valueIndex: 76
+        valueIndex: 77
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 3
       - op: 1
-        valueIndex: 79
+        valueIndex: 80
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 15
       - op: 1
-        valueIndex: 81
+        valueIndex: 82
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 6
       - op: 1
-        valueIndex: 82
+        valueIndex: 83
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 2
       - op: 1
-        valueIndex: 84
+        valueIndex: 85
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 2
-      - op: 1
-        valueIndex: 86
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 1
       - op: 1
         valueIndex: 87
         data[0]: -1
@@ -7958,44 +7958,50 @@ VisualEffectResource:
         data[1]: -1
         data[2]: -1
         data[3]: 1
-      - op: 6
+      - op: 1
         valueIndex: 90
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 1
+      - op: 6
+        valueIndex: 91
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: -1
       - op: 34
-        valueIndex: 91
-        data[0]: 27
+        valueIndex: 92
+        data[0]: 26
         data[1]: -1
         data[2]: -1
         data[3]: -1
       - op: 25
-        valueIndex: 107
-        data[0]: 13
-        data[1]: 28
+        valueIndex: 108
+        data[0]: 15
+        data[1]: 27
         data[2]: -1
         data[3]: 1
-      - op: 1
-        valueIndex: 108
-        data[0]: -1
-        data[1]: -1
-        data[2]: -1
-        data[3]: 6
       - op: 1
         valueIndex: 109
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 2
+        data[3]: 6
       - op: 1
-        valueIndex: 111
+        valueIndex: 110
         data[0]: -1
         data[1]: -1
         data[2]: -1
         data[3]: 2
       - op: 1
-        valueIndex: 113
+        valueIndex: 112
+        data[0]: -1
+        data[1]: -1
+        data[2]: -1
+        data[3]: 2
+      - op: 1
+        valueIndex: 114
         data[0]: -1
         data[1]: -1
         data[2]: -1
@@ -8017,62 +8023,62 @@ VisualEffectResource:
         - m_ExpressionIndex: 9
           m_Value: 2
         - m_ExpressionIndex: 10
-          m_Value: 18
-        - m_ExpressionIndex: 11
           m_Value: -2
+        - m_ExpressionIndex: 11
+          m_Value: 18
         - m_ExpressionIndex: 12
           m_Value: 22
         - m_ExpressionIndex: 13
-          m_Value: -1
-        - m_ExpressionIndex: 14
           m_Value: -4
-        - m_ExpressionIndex: 15
+        - m_ExpressionIndex: 14
           m_Value: -0.72
+        - m_ExpressionIndex: 15
+          m_Value: -1
         - m_ExpressionIndex: 16
           m_Value: 0.2
         - m_ExpressionIndex: 17
           m_Value: 1
         - m_ExpressionIndex: 18
-          m_Value: 0.024
-        - m_ExpressionIndex: 19
           m_Value: 120
-        - m_ExpressionIndex: 21
+        - m_ExpressionIndex: 20
+          m_Value: 0.024
+        - m_ExpressionIndex: 25
           m_Value: 20
-        - m_ExpressionIndex: 28
+        - m_ExpressionIndex: 27
           m_Value: 12
-        - m_ExpressionIndex: 29
+        - m_ExpressionIndex: 30
           m_Value: 0.4
-        - m_ExpressionIndex: 32
+        - m_ExpressionIndex: 33
           m_Value: 0.3968326
-        - m_ExpressionIndex: 37
+        - m_ExpressionIndex: 38
           m_Value: 0.45
-        - m_ExpressionIndex: 44
-          m_Value: 0.03
         - m_ExpressionIndex: 45
-          m_Value: 6.2831855
+          m_Value: 0.03
         - m_ExpressionIndex: 46
-          m_Value: 0.8634909
+          m_Value: 6.2831855
         - m_ExpressionIndex: 47
+          m_Value: 0.8634909
+        - m_ExpressionIndex: 48
           m_Value: 8
-        - m_ExpressionIndex: 54
+        - m_ExpressionIndex: 55
           m_Value: 0.3
       m_Vector2f:
         m_Array:
-        - m_ExpressionIndex: 30
-          m_Value: {x: 8, y: 1}
         - m_ExpressionIndex: 31
+          m_Value: {x: 8, y: 1}
+        - m_ExpressionIndex: 32
           m_Value: {x: 0.125, y: 1}
-        - m_ExpressionIndex: 36
+        - m_ExpressionIndex: 37
           m_Value: {x: 50, y: 50}
-        - m_ExpressionIndex: 38
+        - m_ExpressionIndex: 39
           m_Value: {x: 0, y: 0}
-        - m_ExpressionIndex: 42
-          m_Value: {x: 22, y: 0}
         - m_ExpressionIndex: 43
+          m_Value: {x: 22, y: 0}
+        - m_ExpressionIndex: 44
           m_Value: {x: 20, y: 0}
-        - m_ExpressionIndex: 52
-          m_Value: {x: 0.6, y: 1}
         - m_ExpressionIndex: 53
+          m_Value: {x: 0.6, y: 1}
+        - m_ExpressionIndex: 54
           m_Value: {x: 1, y: 1}
       m_Vector3f:
         m_Array:
@@ -8080,17 +8086,17 @@ VisualEffectResource:
           m_Value: {x: 1, y: 0, z: 1}
         - m_ExpressionIndex: 3
           m_Value: {x: 0, y: 0.8, z: 0}
-        - m_ExpressionIndex: 22
-          m_Value: {x: 1, y: 1, z: 1}
-        - m_ExpressionIndex: 23
-          m_Value: {x: 0, y: 0, z: 0}
-        - m_ExpressionIndex: 24
+        - m_ExpressionIndex: 21
           m_Value: {x: -1, y: -1, z: -1}
-        - m_ExpressionIndex: 26
+        - m_ExpressionIndex: 23
+          m_Value: {x: 1, y: 1, z: 1}
+        - m_ExpressionIndex: 24
+          m_Value: {x: 0, y: 0, z: 0}
+        - m_ExpressionIndex: 28
           m_Value: {x: 0, y: 1, z: 0}
-        - m_ExpressionIndex: 35
+        - m_ExpressionIndex: 36
           m_Value: {x: 0.12, y: 0.12, z: 0.12}
-        - m_ExpressionIndex: 39
+        - m_ExpressionIndex: 40
           m_Value: {x: 4, y: 4, z: 4}
       m_Vector4f:
         m_Array: []
@@ -8098,9 +8104,11 @@ VisualEffectResource:
         m_Array:
         - m_ExpressionIndex: 6
           m_Value: 0
-        - m_ExpressionIndex: 41
+        - m_ExpressionIndex: 34
+          m_Value: 1076631242
+        - m_ExpressionIndex: 42
           m_Value: 4294967295
-        - m_ExpressionIndex: 51
+        - m_ExpressionIndex: 52
           m_Value: 1
       m_Int:
         m_Array: []
@@ -8112,25 +8120,25 @@ VisualEffectResource:
         m_Array: []
       m_NamedObject:
         m_Array:
-        - m_ExpressionIndex: 33
-          m_Value: {fileID: 2800000, guid: a9294f3c73bd98842a3deefd044b5697, type: 3}
-        - m_ExpressionIndex: 34
+        - m_ExpressionIndex: 29
           m_Value: {fileID: 10305, guid: 0000000000000000f000000000000000, type: 0}
-        - m_ExpressionIndex: 40
+        - m_ExpressionIndex: 35
+          m_Value: {fileID: 2800000, guid: a9294f3c73bd98842a3deefd044b5697, type: 3}
+        - m_ExpressionIndex: 41
           m_Value: {fileID: 4300000, guid: b73b3d8cce4689c42a4994bd3dbfb8d1, type: 2}
       m_Bool:
         m_Array: []
     m_ExposedExpressions:
     - nameId: FlapAmplitude
-      index: 44
+      index: 45
     - nameId: FlapMinMaxAngle
-      index: 43
+      index: 44
     - nameId: FlapMinMaxSpeed
-      index: 42
+      index: 43
     - nameId: MaximumVelocity
       index: 17
     - nameId: TiltAngle
-      index: 28
+      index: 27
     m_Buffers:
     - type: 1
       size: 882
@@ -8316,9 +8324,9 @@ VisualEffectResource:
       buffers: []
       values:
       - nameId: Count
-        index: 36
+        index: 37
       - nameId: Delay
-        index: 38
+        index: 39
       params: []
       processor: {fileID: 0}
       shaderSourceIndex: -1
@@ -8335,9 +8343,9 @@ VisualEffectResource:
       index: 1
     values:
     - nameId: bounds_center
-      index: 23
+      index: 24
     - nameId: bounds_size
-      index: 39
+      index: 40
     tasks:
     - type: 536870912
       buffers:
@@ -8348,9 +8356,9 @@ VisualEffectResource:
       values: []
       params:
       - nameId: bounds_center
-        index: 23
+        index: 24
       - nameId: bounds_size
-        index: 39
+        index: 40
       processor: {fileID: 0}
       shaderSourceIndex: 0
     - type: 805306368
@@ -8361,11 +8369,11 @@ VisualEffectResource:
       - nameId: uniform_b
         index: 7
       - nameId: deltaTime_a
-        index: 48
-      - nameId: InvFieldTransform_b
         index: 49
+      - nameId: InvFieldTransform_b
+        index: 50
       - nameId: FieldTransform_b
-        index: 27
+        index: 26
       - nameId: uniform_f
         index: 17
       params: []
@@ -8379,12 +8387,12 @@ VisualEffectResource:
       - nameId: uniform_b
         index: 7
       - nameId: mainTexture
-        index: 34
+        index: 29
       params:
       - nameId: mesh
-        index: 40
-      - nameId: subMeshMask
         index: 41
+      - nameId: subMeshMask
+        index: 42
       - nameId: sortPriority
         index: 0
       processor: {fileID: 0}
@@ -8397,9 +8405,9 @@ VisualEffectResource:
       - nameId: uniform_b
         index: 7
       - nameId: Angle_d
-        index: 28
+        index: 27
       - nameId: baseColorMap
-        index: 33
+        index: 35
       params:
       - nameId: sortPriority
         index: 0
@@ -8413,9 +8421,9 @@ VisualEffectResource:
       - nameId: uniform_b
         index: 7
       - nameId: Angle_d
-        index: 50
+        index: 51
       - nameId: baseColorMap
-        index: 33
+        index: 35
       params:
       - nameId: sortPriority
         index: 0
@@ -15104,7 +15112,8 @@ MonoBehaviour:
   preRefraction: 0
   materialType: 2
   onlyAmbientLighting: 0
-  diffusionProfileAsset: {fileID: 0}
+  diffusionProfileAsset: {fileID: 11400000, guid: a6e49c92568d36640bf75bae8006ad8f,
+    type: 2}
   multiplyThicknessWithAlpha: 0
   useBaseColorMap: 3
   useMaskMap: 0
@@ -15955,7 +15964,8 @@ MonoBehaviour:
   preRefraction: 0
   materialType: 2
   onlyAmbientLighting: 0
-  diffusionProfileAsset: {fileID: 0}
+  diffusionProfileAsset: {fileID: 11400000, guid: a6e49c92568d36640bf75bae8006ad8f,
+    type: 2}
   multiplyThicknessWithAlpha: 0
   useBaseColorMap: 3
   useMaskMap: 0

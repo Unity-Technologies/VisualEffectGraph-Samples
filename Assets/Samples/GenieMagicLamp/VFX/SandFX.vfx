@@ -316,7 +316,7 @@ VisualEffectResource:
       \           if (id < currentSumSpawnCount)\n            {\n                break;\n
       \           }\n        }\n        */\n        \n\n#endif\n        float3 position
       = float3(0,0,0);\n        uint particleId = (uint)0;\n        float lifetime
-      = (float)0;\n        uint seed = (uint)0;\n        float3 color = float3(1,1,1);\n
+      = (float)1;\n        uint seed = (uint)0;\n        float3 color = float3(1,1,1);\n
       \       float size = (float)0.1;\n        float3 velocity = float3(0,0,0);\n
       \       float age = (float)0;\n        bool alive = (bool)true;\n        \n\n#if
       VFX_USE_PARTICLEID_CURRENT\n         particleId = particleIndex;\n#endif\n#if
@@ -695,18 +695,16 @@ VisualEffectResource:
       / size;\n\t\t\t}\n\t\t\tvoid ScreenSpaceSize_18C(float3 position, float size,
       inout float scaleX, inout float scaleY, inout float scaleZ, float2 ReferenceResolution,
       float PixelSize) /*sizeMode:PixelRelativeToResolution sizeZMode:SameAsSizeX
-      */\n\t\t\t{\n\t\t\t    \n\t\t\t    float2 localSize = (size * float2(scaleX,scaleY));\n\t\t\t
-      \   float clipPosW = TransformPositionVFXToClip(position).w;\n\t\t\t    float
-      minSize = clipPosW / (0.5f * min(UNITY_MATRIX_P[0][0] * _ScreenParams.x,-UNITY_MATRIX_P[1][1]
-      * _ScreenParams.y)); // max size in one pixel\n\t\t\t    float2 scale = float2(PixelSize,
-      PixelSize) * (_ScreenParams.xy/ReferenceResolution);\n\t\t\t    localSize =
-      minSize * scale;\n\t\t\t    scaleX = localSize.x / size;\n\t\t\t    scaleY =
-      localSize.y / size;\n\t\t\t    scaleZ = localSize.x;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#pragma
-      vertex vert\n\t\t\tVFX_VARYING_PS_INPUTS vert(uint id : SV_VertexID, uint instanceID
-      : SV_InstanceID)\n\t\t\t{\n\t\t\t\tuint index = (id >> 2) + instanceID * 2048;\n\t\t\t\tVFX_VARYING_PS_INPUTS
-      o = (VFX_VARYING_PS_INPUTS)0;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tuint deadCount
-      = 0;\n\t\t\t\t\t\t#if USE_DEAD_LIST_COUNT\n\t\t\t\t\t\tdeadCount = deadListCount.Load(0);\n\t\t\t\t\t\t#endif\t\n\t\t\t\t\t\tif
-      (index >= asuint(nbMax) - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
+      */\n\t\t\t{\n\t\t\t    \n\t\t\t    float clipPosW = TransformPositionVFXToClip(position).w;\n\t\t\t
+      \   float2 newScale = (float2(PixelSize, PixelSize) * (_ScreenParams.xy/ReferenceResolution)
+      * clipPosW) / (size * 0.5f * min(UNITY_MATRIX_P[0][0] * _ScreenParams.x,-UNITY_MATRIX_P[1][1]
+      * _ScreenParams.y));\n\t\t\t    scaleX = newScale.x;\n\t\t\t    scaleY = newScale.y;\n\t\t\t
+      \   scaleZ = scaleX;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#pragma vertex vert\n\t\t\tVFX_VARYING_PS_INPUTS
+      vert(uint id : SV_VertexID, uint instanceID : SV_InstanceID)\n\t\t\t{\n\t\t\t\tuint
+      index = (id >> 2) + instanceID * 2048;\n\t\t\t\tVFX_VARYING_PS_INPUTS o = (VFX_VARYING_PS_INPUTS)0;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\tuint
+      deadCount = 0;\n\t\t\t\t\t\t#if USE_DEAD_LIST_COUNT\n\t\t\t\t\t\tdeadCount =
+      deadListCount.Load(0);\n\t\t\t\t\t\t#endif\t\n\t\t\t\t\t\tif (index >= asuint(nbMax)
+      - deadCount)\n\t\t\t\t\t\t\treturn o; // cull\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       VFX_HAS_INDIRECT_DRAW\n\t\t\t\t\t\tindex = indirectBuffer[index];\n\t\t\t\t\t\tfloat3
       position = asfloat(attributeBuffer.Load3((index * 0x8 + 0x0) << 2));\n\t\t\t\t\t\tuint
       particleId = (attributeBuffer.Load((index * 0x2 + 0x1F400) << 2));\n\t\t\t\t\t\tfloat
@@ -848,7 +846,7 @@ VisualEffectResource:
       \           if (id < currentSumSpawnCount)\n            {\n                break;\n
       \           }\n        }\n        */\n        \n\n#endif\n        float3 position
       = float3(0,0,0);\n        uint particleId = (uint)0;\n        float lifetime
-      = (float)0;\n        uint seed = (uint)0;\n        float3 color = float3(1,1,1);\n
+      = (float)1;\n        uint seed = (uint)0;\n        float3 color = float3(1,1,1);\n
       \       float size = (float)0.1;\n        bool alive = (bool)true;\n        float
       texIndex = (float)0;\n        float3 velocity = float3(0,0,0);\n        float
       age = (float)0;\n        \n\n#if VFX_USE_PARTICLEID_CURRENT\n         particleId

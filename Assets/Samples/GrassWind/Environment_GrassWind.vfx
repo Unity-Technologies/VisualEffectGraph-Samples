@@ -85,8 +85,8 @@ MonoBehaviour:
     serializedVersion: 2
     x: -49
     y: -190
-    width: 1150
-    height: 1916
+    width: 1142
+    height: 1888
 --- !u!114 &114350483966674976
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -782,8 +782,8 @@ VisualEffectResource:
       out BSDFData bsdfData, out PreLightData preLightData, VFX_VARYING_PS_INPUTS
       i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
       HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t
-      \   \n\t\t\t\t    diffusionProfileHash = (uint)0;\n\t\t\t\t}\n\t\t\t\t\n //
-      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      \   \n\t\t\t\t    diffusionProfileHash = (uint)1080650646;\n\t\t\t\t}\n\t\t\t\t\n
+      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -1044,7 +1044,7 @@ VisualEffectResource:
       m_Uint:
         m_Array:
         - m_ExpressionIndex: 5
-          m_Value: 0
+          m_Value: 1080650646
       m_Int:
         m_Array: []
       m_Matrix4x4f:
@@ -2863,7 +2863,8 @@ MonoBehaviour:
   preRefraction: 0
   materialType: 4
   onlyAmbientLighting: 0
-  diffusionProfileAsset: {fileID: 0}
+  diffusionProfileAsset: {fileID: 11400000, guid: 578e14a174424a64f901ea91cbdf10e3,
+    type: 2}
   multiplyThicknessWithAlpha: 0
   useBaseColorMap: 2
   useMaskMap: 0
