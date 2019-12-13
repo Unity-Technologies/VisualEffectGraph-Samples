@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Experimental.VFX;
-using UnityEngine.Experimental.VFX.Utility;
+using UnityEngine.VFX;
+using UnityEngine.VFX.Utility;
 using UnityEngine.EventSystems;
 
 public class VoxelizedTerrainController : MonoBehaviour
@@ -36,11 +36,11 @@ public class VoxelizedTerrainController : MonoBehaviour
     public Vector2 WaterElevationRange = new Vector2(0.1f, 1.0f);
     public Vector2 ElevationRange = new Vector2(0.2f, 1.0f);
 
-    public ExposedParameter Position = "Position";
-    public ExposedParameter WorldSize = "WorldSize";
-    public ExposedParameter InputHeightMapScale = "Input HeightMap Scale";
-    public ExposedParameter WaterElevation = "Water Elevation";
-    public ExposedParameter Elevation = "Elevation";
+    public ExposedProperty Position = "Position";
+    public ExposedProperty WorldSize = "WorldSize";
+    public ExposedProperty InputHeightMapScale = "Input HeightMap Scale";
+    public ExposedProperty WaterElevation = "Water Elevation";
+    public ExposedProperty Elevation = "Elevation";
 
     private Vector2 m_Position;
     private Vector2 m_WorldSize;

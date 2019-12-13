@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.06625049, g: 0.0040313853, b: 0.04675253, a: 1}
+  m_IndirectSpecularColor: {r: 0.06629866, g: 0.0040312503, b: 0.046730895, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -94,8 +94,9 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -202,6 +203,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Profile: {fileID: 11400000, guid: 0e28bb77d0643bd42bdd46fa8e26a5d3, type: 2}
   m_StaticLightingSkyUniqueID: 3
+  m_SkySettings: {fileID: 1563628372}
+  m_SkySettingsFromProfile: {fileID: 114257510638711138, guid: 0e28bb77d0643bd42bdd46fa8e26a5d3,
+    type: 2}
 --- !u!114 &1337786429
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -305,6 +309,76 @@ PlayableDirector:
     value: {fileID: 791037435}
   m_ExposedReferences:
     m_References: []
+--- !u!114 &1563628372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a81bcacc415a1f743bfdf703afc52027, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  rotation:
+    m_OverrideState: 0
+    m_Value: 0
+    min: 0
+    max: 360
+  skyIntensityMode:
+    m_OverrideState: 0
+    m_Value: 0
+  exposure:
+    m_OverrideState: 0
+    m_Value: 0
+  multiplier:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+  upperHemisphereLuxValue:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+  upperHemisphereLuxColor:
+    m_OverrideState: 0
+    m_Value: {x: 0, y: 0, z: 0}
+  desiredLuxValue:
+    m_OverrideState: 0
+    m_Value: 20000
+  updateMode:
+    m_OverrideState: 0
+    m_Value: 0
+  updatePeriod:
+    m_OverrideState: 0
+    m_Value: 0
+    min: 0
+  includeSunInBaking:
+    m_OverrideState: 0
+    m_Value: 0
+  top:
+    m_OverrideState: 0
+    m_Value: {r: 0.13207549, g: 0, b: 0.053857703, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
+  middle:
+    m_OverrideState: 0
+    m_Value: {r: 0.103773594, g: 0.01679502, b: 0, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
+  bottom:
+    m_OverrideState: 0
+    m_Value: {r: 0.0073014796, g: 0, b: 0.103773594, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
+  gradientDiffusion:
+    m_OverrideState: 0
+    m_Value: 1.71
 --- !u!1 &1682085478
 GameObject:
   m_ObjectHideFlags: 0
@@ -382,6 +456,8 @@ VisualEffect:
   m_GameObject: {fileID: 1692057708}
   m_Enabled: 1
   m_Asset: {fileID: 8926484042661614526, guid: b51b163050ba80a4cb5f2ba7fcb4a85b, type: 3}
+  m_InitialEventName: OnPlay
+  m_InitialEventNameOverriden: 0
   m_StartSeed: 0
   m_ResetSeedOnPlay: 1
   m_PropertySheet:
@@ -435,8 +511,8 @@ VisualEffect:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 1.7689819
-            value: 0.99420166
+            time: 1.5
+            value: 1
             inSlope: -0.0029129528
             outSlope: -0.0029129528
             tangentMode: 0
@@ -483,11 +559,11 @@ VisualEffect:
         m_Overridden: 0
       - m_Value:
           serializedVersion: 2
-          key0: {r: 8.450676, g: 1.1503537, b: 4.6014147, a: 1}
-          key1: {r: 13.766364, g: 6.1804204, b: 1.0090524, a: 1}
-          key2: {r: 10.816204, g: 1.1892163, b: 1.1892163, a: 0}
-          key3: {r: 7.9707613, g: 0.6677078, b: 4.2983685, a: 0}
-          key4: {r: 0, g: 0, b: 0, a: 0}
+          key0: {r: 16.901358, g: 2.3007083, b: 9.202833, a: 1}
+          key1: {r: 27.532728, g: 12.396935, b: 2.0181057, a: 1}
+          key2: {r: 21.632408, g: 2.491691, b: 2.491691, a: 0}
+          key3: {r: 15.941523, g: 1.418879, b: 8.596737, a: 0}
+          key4: {r: 7.9707613, g: 0.6677078, b: 4.2983685, a: 0}
           key5: {r: 0, g: 0, b: 0, a: 0}
           key6: {r: 0, g: 0, b: 0, a: 0}
           key7: {r: 0, g: 0, b: 0, a: 0}
@@ -495,7 +571,7 @@ VisualEffect:
           ctime1: 21203
           ctime2: 44911
           ctime3: 65535
-          ctime4: 0
+          ctime4: 65535
           ctime5: 0
           ctime6: 0
           ctime7: 0
@@ -511,7 +587,7 @@ VisualEffect:
           m_NumColorKeys: 4
           m_NumAlphaKeys: 2
         m_Name: Initial Color Cycle
-        m_Overridden: 1
+        m_Overridden: 0
     m_NamedObject:
       m_Array:
       - m_Value: {fileID: 11700000, guid: 500adb08ae2ef274c9095ec1e41fde84, type: 2}
@@ -545,7 +621,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fdfea1f838247c40921a07afedde962, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Parameter:
+  m_Property:
     m_Name: VectorFieldTransform
   Target: {fileID: 791037434}
 --- !u!114 &1692057712
@@ -575,9 +651,10 @@ VFXRenderer:
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
-  m_MotionVectors: 0
+  m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -589,6 +666,7 @@ VFXRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -736,42 +814,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23c1ce4fb46143f46bc5cb5224c934f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clearColorMode: 0
-  backgroundColorHDR: {r: 0.005181517, g: 0.0056053917, b: 0.0056053917, a: 0}
-  clearDepth: 1
-  volumeLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  volumeAnchorOverride: {fileID: 0}
-  antialiasing: 2
-  SMAAQuality: 2
-  dithering: 0
-  stopNaNs: 0
-  physicalParameters:
-    m_Iso: 200
-    m_ShutterSpeed: 0.005
-    m_Aperture: 16
-    m_BladeCount: 5
-    m_Curvature: {x: 2, y: 11}
-    m_BarrelClipping: 0.25
-    m_Anamorphism: 0
-  flipYMode: 0
-  fullscreenPassthrough: 0
-  customRenderingSettings: 0
-  invertFaceCulling: 0
-  probeLayerMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPathCustomFrameSettings:
-    bitDatas:
-      data1: 69284259954461
-      data2: 4539628424389459968
-  renderingPathCustomFrameSettingsOverrideMask:
-    mask:
-      data1: 0
-      data2: 0
-  defaultFrameSettings: 0
-  m_Version: 5
+  m_Version: 7
   m_ObsoleteRenderingPath: 0
   m_ObsoleteFrameSettings:
     overrides: 0
@@ -818,3 +861,48 @@ MonoBehaviour:
       enableFptlForForwardOpaque: 0
       enableBigTilePrepass: 0
       isFptlEnabled: 0
+  clearColorMode: 0
+  backgroundColorHDR: {r: 0.005181517, g: 0.0056053917, b: 0.0056053917, a: 0}
+  clearDepth: 1
+  volumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  volumeAnchorOverride: {fileID: 0}
+  antialiasing: 2
+  SMAAQuality: 2
+  dithering: 0
+  stopNaNs: 0
+  taaSharpenStrength: 0.6
+  physicalParameters:
+    m_Iso: 200
+    m_ShutterSpeed: 0.005
+    m_Aperture: 16
+    m_BladeCount: 5
+    m_Curvature: {x: 2, y: 11}
+    m_BarrelClipping: 0.25
+    m_Anamorphism: 0
+  flipYMode: 0
+  fullscreenPassthrough: 0
+  allowDynamicResolution: 0
+  customRenderingSettings: 0
+  invertFaceCulling: 0
+  probeLayerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  hasPersistentHistory: 0
+  m_RenderingPathCustomFrameSettings:
+    bitDatas:
+      data1: 70005814460253
+      data2: 4539628424389459968
+    lodBias: 1
+    lodBiasMode: 0
+    lodBiasQualityLevel: 0
+    maximumLODLevel: 0
+    maximumLODLevelMode: 0
+    maximumLODLevelQualityLevel: 0
+    materialQuality: 0
+  renderingPathCustomFrameSettingsOverrideMask:
+    mask:
+      data1: 0
+      data2: 0
+  defaultFrameSettings: 0

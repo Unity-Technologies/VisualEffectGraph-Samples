@@ -6,6 +6,20 @@ There are also pre-built binaries for Windows and macOS available.
 
 ### Changelog
 
+- #### 2019.3 Release ! (7.1.6 rev1 2019-12-XX)
+
+  - **New Samples**
+  - Bonfire : Small Scene with Fire and smoke featuring custom VFX ShaderGraph rendering (Using CC0 Assets from [Kenney](https://kenney.nl))
+    - RibbonPack : Dancing Balls of multi-colored trails featuring the new ParticleStrips.
+    - EllenHologram : Holographic reprojection of moving characters from [3D Game Kit](https://learn.unity.com/project/3d-game-kit)
+  - **General Improvements**
+    - Other Samples were updated and polished to match new features
+      - Added Motion Vectors / Motion blur in Butterflies, Portal, SpaceshipHoloTable, UnityLogo, Volumetric, VoxelizedTerrain
+      - Reduced texture size of the SpaceshipHoloTable environment
+      - Rebuilt all assets
+      - Removed old ProceduralSky from scenes
+      - Embedded Visual Effect Graph Sample Additions from package 7.1.6
+
 - #### The 2019.1 Release! ( 5.8.2-preview rev1 - 2019-03-19 )
 
   -  **New Samples**
