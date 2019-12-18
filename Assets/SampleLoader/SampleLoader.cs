@@ -219,7 +219,7 @@ public class SampleLoader : MonoBehaviour
         if(m_DemoMode)
             UpdateDemoMode();
 
-        if (!m_Loading && (Input.GetButton(ChangeButtonName) || Input.touchCount != 0))
+        if ((Input.GetButton(ChangeButtonName) || Input.touchCount != 0))
         {
             NextScene();
         }
@@ -229,6 +229,9 @@ public class SampleLoader : MonoBehaviour
 
     public void NextScene()
     {
+        if (m_Loading || m_Fading)
+            return;
+
         int previous = currentScene;
         currentScene = (currentScene + 1) % (SceneManager.sceneCountInBuildSettings - 1);
 
