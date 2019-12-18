@@ -35,6 +35,8 @@ public class SampleLoader : MonoBehaviour
     public Text FramerateText;
     public Toggle FPSCounterToggle;
 
+    [Header("Screenshot")]
+    public KeyCode ScreenshotCode = KeyCode.F10;
 
     int currentScene = 0;
     bool m_Fading;
@@ -203,6 +205,14 @@ public class SampleLoader : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F11))
             SetDemoMode(!m_DemoMode);
+
+        if (Input.GetKeyDown(KeyCode.F10))
+        {
+            var now = System.DateTime.Now;
+            string filename = $"VisualEffectGraph-Samples-{SceneManager.GetSceneAt(1).name}-{now.Year}{now.Month.ToString("D2")}{now.Day.ToString("D2")}{now.Hour.ToString("D2")}{now.Minute.ToString("D2")}{now.Second.ToString("D2")}.png";
+            Debug.Log($"Captured Screenshot to : {filename}");
+            ScreenCapture.CaptureScreenshot(filename);
+        }
 
         UpdateDebug();
 
