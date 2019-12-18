@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +7,8 @@ using UnityEngine.SceneManagement;
 
 public class SampleLoader : MonoBehaviour
 {
+    public static SampleLoader instance;
+
     [Header("Loading")]
     public Image FullScreenBlack;
     public Text SceneNameText;
@@ -43,6 +46,11 @@ public class SampleLoader : MonoBehaviour
     bool m_Loading;
     float m_FadeTTL;
 
+    public event MenuOpenDelegate onMenuToggle;
+
+    public delegate void MenuOpenDelegate(bool isOpen);
+     
+
     void Start()
     {
         if (SceneManager.sceneCountInBuildSettings > 1)
@@ -52,6 +60,8 @@ public class SampleLoader : MonoBehaviour
         SetMenuVisible(false);
         SetLoadSceneWindowVisible(false);
         SetDemoMode(true);
+
+        instance = this;
     }
 
     #region FPS COUNTER
@@ -123,7 +133,13 @@ public class SampleLoader : MonoBehaviour
             OptionsMenuTransform.anchoredPosition = new Vector3(OptionsMenuTransform.sizeDelta.x, 0, 0);
         }
 
-        m_MenuVisible = visible;
+        if(m_MenuVisible != visible)
+        {
+            m_MenuVisible = visible;
+
+            if(onMenuToggle != null)
+                onMenuToggle.Invoke(visible);
+        }
     }
 
     public void ExitApplication()
@@ -172,15 +188,22 @@ public class SampleLoader : MonoBehaviour
 
     #region LOAD SAMPLE WINDOW
 
-    bool m_LoadSceneWindowVisible = false;
+    bool m_LoadSceneWindowVisible = true;
 
     public void SetLoadSceneWindowVisible(bool value)
     {
-        if (value)
-            SetMenuVisible(false);
+        if (m_LoadSceneWindowVisible != value)
+        {
+            if (value)
+                SetMenuVisible(false);
 
-        LoadSceneWindowRoot.SetActive(value);
-        m_LoadSceneWindowVisible = value;
+            LoadSceneWindowRoot.SetActive(value);
+
+            m_LoadSceneWindowVisible = value;
+
+            if (onMenuToggle != null)
+                onMenuToggle.Invoke(value);
+        }
     }
 
     public void MenuLoadScene(int index)
@@ -276,6 +299,11 @@ public class SampleLoader : MonoBehaviour
                 yield return new WaitForEndOfFrame();
 
         }
+
+        // Disable menu / load window
+        SetMenuVisible(false);
+        SetLoadSceneWindowVisible(false);
+
 
         SceneNameText.text = "";
 

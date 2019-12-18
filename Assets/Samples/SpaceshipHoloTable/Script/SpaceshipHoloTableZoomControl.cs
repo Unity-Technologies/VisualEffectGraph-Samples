@@ -24,11 +24,31 @@ public class SpaceshipHoloTableZoomControl : MonoBehaviour
     {
         m_AxisDelegateBackup = CinemachineCore.GetInputAxis;
         CinemachineCore.GetInputAxis = GetInputAxis;
+        if(SampleLoader.instance != null)
+        {
+            SampleLoader.instance.onMenuToggle += OnSamplesMenuToggle;
+        }
+    }
+
+    private void OnDisable()
+    {
+        CinemachineCore.GetInputAxis = m_AxisDelegateBackup;
+
+        if (SampleLoader.instance != null)
+        {
+            SampleLoader.instance.onMenuToggle -= OnSamplesMenuToggle;
+        }
+    }
+
+    bool menuVisible = false;
+    void OnSamplesMenuToggle(bool visible)
+    {
+        menuVisible = visible;
     }
 
     float GetInputAxis(string axisName)
     {
-        if (Input.GetMouseButton(MouseRotateButton))
+        if (Input.GetMouseButton(MouseRotateButton) && !menuVisible)
         {
             return Input.GetAxis(axisName);
         }
@@ -36,10 +56,6 @@ public class SpaceshipHoloTableZoomControl : MonoBehaviour
             return 0;
     }
 
-    private void OnDisable()
-    {
-        CinemachineCore.GetInputAxis = m_AxisDelegateBackup;
-    }
 
     // Update is called once per frame
     void Update()

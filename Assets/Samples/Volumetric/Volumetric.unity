@@ -165,11 +165,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 5
-  directionalIntensity: 3.1415927
-  punctualIntensity: 600
-  areaIntensity: 200
-  lightLayers: 1
+  m_Version: 9
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 1024
+  m_ObsoleteContactShadows: 0
+  m_PointlightHDType: 0
+  m_SpotLightShape: 0
+  m_AreaLightShape: 0
   m_Intensity: 1200
   m_EnableSpotReflector: 0
   m_LuxAtDistance: 1
@@ -181,12 +184,11 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_LightTypeExtent: 0
-  m_SpotLightShape: 0
   m_ShapeWidth: 0.5
   m_ShapeHeight: 0.5
   m_AspectRatio: 1
   m_ShapeRadius: 0
+  m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
   m_MaxSmoothness: 1
@@ -196,6 +198,19 @@ MonoBehaviour:
   m_AreaLightShadowCone: 120
   m_UseScreenSpaceShadows: 0
   m_InteractsWithSky: 1
+  m_AngularDiameter: 0.5
+  m_FlareSize: 2
+  m_FlareTint: {r: 1, g: 1, b: 1, a: 1}
+  m_FlareFalloff: 4
+  m_SurfaceTexture: {fileID: 0}
+  m_SurfaceTint: {r: 1, g: 1, b: 1, a: 1}
+  m_Distance: 1.5e+11
+  m_UseRayTracedShadows: 0
+  m_NumRayTracingSamples: 4
+  m_FilterTracedShadow: 1
+  m_FilterSizeTraced: 16
+  m_SunLightConeAngle: 0.5
+  m_LightShadowRadius: 0.5
   m_EvsmExponent: 15
   m_EvsmLightLeakBias: 0
   m_EvsmVarianceBias: 0.00001
@@ -203,24 +218,31 @@ MonoBehaviour:
   m_LightlayersMask: 1
   m_LinkShadowLayers: 1
   m_ShadowNearPlane: 0.2
-  m_ShadowSoftness: 0.5
   m_BlockerSampleCount: 24
   m_FilterSampleCount: 32
-  m_MinFilterSize: 0.00001
+  m_MinFilterSize: 0.01
   m_KernelSize: 5
   m_LightAngle: 1
   m_MaxDepthBias: 0.001
-  m_ShadowResolutionTier: 1
-  m_UseShadowQualitySettings: 0
-  m_CustomShadowResolution: 1024
+  m_ShadowResolution:
+    m_Override: 1024
+    m_UseOverride: 1
+    m_Level: 1
   m_ShadowDimmer: 1
   m_VolumetricShadowDimmer: 1
   m_ShadowFadeDistance: 10000
-  m_ContactShadows: 0
+  m_UseContactShadow:
+    m_Override: 0
+    m_UseOverride: 1
+    m_Level: 0
+  m_RayTracedContactShadow: 0
   m_ShadowTint: {r: 0, g: 0, b: 0, a: 1}
+  m_PenumbraTint: 0
   m_NormalBias: 0.75
-  m_ConstantBias: 0.15
+  m_SlopeBias: 0.5
   m_ShadowUpdateMode: 0
+  m_BarnDoorAngle: 90
+  m_BarnDoorLength: 0.05
   m_ShadowCascadeRatios:
   - 0.05
   - 0.2
@@ -312,6 +334,7 @@ GameObject:
   - component: {fileID: 359567786}
   - component: {fileID: 359567791}
   - component: {fileID: 359567790}
+  - component: {fileID: 359567784}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -319,6 +342,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &359567784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359567783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 329a80dfda2a3b947923e71a6a7ed377, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DefaultCursorVisible: 0
 --- !u!114 &359567786
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -331,7 +367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23c1ce4fb46143f46bc5cb5224c934f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 6
+  m_Version: 7
   m_ObsoleteRenderingPath: 1
   m_ObsoleteFrameSettings:
     overrides: 0
@@ -389,6 +425,7 @@ MonoBehaviour:
   SMAAQuality: 2
   dithering: 0
   stopNaNs: 0
+  taaSharpenStrength: 0.6
   physicalParameters:
     m_Iso: 200
     m_ShutterSpeed: 0.005
@@ -405,14 +442,18 @@ MonoBehaviour:
   probeLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  hasPersistentHistory: 0
   m_RenderingPathCustomFrameSettings:
     bitDatas:
-      data1: 69456020872221
+      data1: 70005776686173
       data2: 4539628424389459968
     lodBias: 1
     lodBiasMode: 0
+    lodBiasQualityLevel: 0
     maximumLODLevel: 0
     maximumLODLevelMode: 0
+    maximumLODLevelQualityLevel: 0
+    materialQuality: 0
   renderingPathCustomFrameSettingsOverrideMask:
     mask:
       data1: 58781468
@@ -747,7 +788,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Profile: {fileID: 11400000, guid: 98fc33b23ead27d489c98cebedcae68c, type: 2}
   m_StaticLightingSkyUniqueID: 3
-  m_SkySettings: {fileID: 1656040790}
+  m_SkySettings: {fileID: 1384845759}
   m_SkySettingsFromProfile: {fileID: 114517847276359042, guid: 98fc33b23ead27d489c98cebedcae68c,
     type: 2}
 --- !u!114 &948803361
@@ -811,11 +852,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 5
-  directionalIntensity: 3.1415927
-  punctualIntensity: 600
-  areaIntensity: 200
-  lightLayers: 1
+  m_Version: 9
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 128
+  m_ObsoleteContactShadows: 0
+  m_PointlightHDType: 0
+  m_SpotLightShape: 0
+  m_AreaLightShape: 0
   m_Intensity: 1200
   m_EnableSpotReflector: 0
   m_LuxAtDistance: 1
@@ -827,12 +871,11 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_LightTypeExtent: 0
-  m_SpotLightShape: 0
   m_ShapeWidth: 0.5
   m_ShapeHeight: 0.5
   m_AspectRatio: 1
   m_ShapeRadius: 0
+  m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
   m_MaxSmoothness: 1
@@ -842,6 +885,19 @@ MonoBehaviour:
   m_AreaLightShadowCone: 120
   m_UseScreenSpaceShadows: 0
   m_InteractsWithSky: 1
+  m_AngularDiameter: 0.5
+  m_FlareSize: 2
+  m_FlareTint: {r: 1, g: 1, b: 1, a: 1}
+  m_FlareFalloff: 4
+  m_SurfaceTexture: {fileID: 0}
+  m_SurfaceTint: {r: 1, g: 1, b: 1, a: 1}
+  m_Distance: 1.5e+11
+  m_UseRayTracedShadows: 0
+  m_NumRayTracingSamples: 4
+  m_FilterTracedShadow: 1
+  m_FilterSizeTraced: 16
+  m_SunLightConeAngle: 0.5
+  m_LightShadowRadius: 0.5
   m_EvsmExponent: 15
   m_EvsmLightLeakBias: 0
   m_EvsmVarianceBias: 0.00001
@@ -849,24 +905,31 @@ MonoBehaviour:
   m_LightlayersMask: 1
   m_LinkShadowLayers: 1
   m_ShadowNearPlane: 0.2
-  m_ShadowSoftness: 0.5
   m_BlockerSampleCount: 24
   m_FilterSampleCount: 32
-  m_MinFilterSize: 0.00001
+  m_MinFilterSize: 0.01
   m_KernelSize: 5
   m_LightAngle: 1
   m_MaxDepthBias: 0.001
-  m_ShadowResolutionTier: 1
-  m_UseShadowQualitySettings: 0
-  m_CustomShadowResolution: 128
+  m_ShadowResolution:
+    m_Override: 128
+    m_UseOverride: 1
+    m_Level: 1
   m_ShadowDimmer: 1
   m_VolumetricShadowDimmer: 1
   m_ShadowFadeDistance: 10000
-  m_ContactShadows: 0
+  m_UseContactShadow:
+    m_Override: 0
+    m_UseOverride: 1
+    m_Level: 0
+  m_RayTracedContactShadow: 0
   m_ShadowTint: {r: 0, g: 0, b: 0, a: 1}
+  m_PenumbraTint: 0
   m_NormalBias: 0.75
-  m_ConstantBias: 0.15
+  m_SlopeBias: 0.5
   m_ShadowUpdateMode: 0
+  m_BarnDoorAngle: 90
+  m_BarnDoorLength: 0.05
   m_ShadowCascadeRatios:
   - 0.05
   - 0.2
@@ -1019,11 +1082,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 5
-  directionalIntensity: 3.1415927
-  punctualIntensity: 600
-  areaIntensity: 200
-  lightLayers: 1
+  m_Version: 9
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 128
+  m_ObsoleteContactShadows: 0
+  m_PointlightHDType: 0
+  m_SpotLightShape: 0
+  m_AreaLightShape: 0
   m_Intensity: 1200
   m_EnableSpotReflector: 0
   m_LuxAtDistance: 1
@@ -1035,12 +1101,11 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_LightTypeExtent: 0
-  m_SpotLightShape: 0
   m_ShapeWidth: 0.5
   m_ShapeHeight: 0.5
   m_AspectRatio: 1
   m_ShapeRadius: 0
+  m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
   m_MaxSmoothness: 1
@@ -1050,6 +1115,19 @@ MonoBehaviour:
   m_AreaLightShadowCone: 120
   m_UseScreenSpaceShadows: 0
   m_InteractsWithSky: 1
+  m_AngularDiameter: 0.5
+  m_FlareSize: 2
+  m_FlareTint: {r: 1, g: 1, b: 1, a: 1}
+  m_FlareFalloff: 4
+  m_SurfaceTexture: {fileID: 0}
+  m_SurfaceTint: {r: 1, g: 1, b: 1, a: 1}
+  m_Distance: 1.5e+11
+  m_UseRayTracedShadows: 0
+  m_NumRayTracingSamples: 4
+  m_FilterTracedShadow: 1
+  m_FilterSizeTraced: 16
+  m_SunLightConeAngle: 0.5
+  m_LightShadowRadius: 0.5
   m_EvsmExponent: 15
   m_EvsmLightLeakBias: 0
   m_EvsmVarianceBias: 0.00001
@@ -1057,24 +1135,31 @@ MonoBehaviour:
   m_LightlayersMask: 1
   m_LinkShadowLayers: 1
   m_ShadowNearPlane: 0.2
-  m_ShadowSoftness: 0.5
   m_BlockerSampleCount: 24
   m_FilterSampleCount: 32
-  m_MinFilterSize: 0.00001
+  m_MinFilterSize: 0.01
   m_KernelSize: 5
   m_LightAngle: 1
   m_MaxDepthBias: 0.001
-  m_ShadowResolutionTier: 1
-  m_UseShadowQualitySettings: 0
-  m_CustomShadowResolution: 128
+  m_ShadowResolution:
+    m_Override: 128
+    m_UseOverride: 1
+    m_Level: 1
   m_ShadowDimmer: 1
   m_VolumetricShadowDimmer: 1
   m_ShadowFadeDistance: 10000
-  m_ContactShadows: 0
+  m_UseContactShadow:
+    m_Override: 0
+    m_UseOverride: 1
+    m_Level: 0
+  m_RayTracedContactShadow: 0
   m_ShadowTint: {r: 0, g: 0, b: 0, a: 1}
+  m_PenumbraTint: 0
   m_NormalBias: 0.75
-  m_ConstantBias: 0.15
+  m_SlopeBias: 0.5
   m_ShadowUpdateMode: 0
+  m_BarnDoorAngle: 90
+  m_BarnDoorLength: 0.05
   m_ShadowCascadeRatios:
   - 0.05
   - 0.2
@@ -1167,6 +1252,76 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: -16.693, y: 161.57301, z: -50.020004}
+--- !u!114 &1384845759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a81bcacc415a1f743bfdf703afc52027, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  rotation:
+    m_OverrideState: 0
+    m_Value: 0
+    min: 0
+    max: 360
+  skyIntensityMode:
+    m_OverrideState: 0
+    m_Value: 0
+  exposure:
+    m_OverrideState: 0
+    m_Value: 0
+  multiplier:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+  upperHemisphereLuxValue:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+  upperHemisphereLuxColor:
+    m_OverrideState: 0
+    m_Value: {x: 0, y: 0, z: 0}
+  desiredLuxValue:
+    m_OverrideState: 0
+    m_Value: 20000
+  updateMode:
+    m_OverrideState: 0
+    m_Value: 0
+  updatePeriod:
+    m_OverrideState: 0
+    m_Value: 0
+    min: 0
+  includeSunInBaking:
+    m_OverrideState: 0
+    m_Value: 0
+  top:
+    m_OverrideState: 0
+    m_Value: {r: 0.1792453, g: 0.09294793, b: 0, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
+  middle:
+    m_OverrideState: 0
+    m_Value: {r: 0, g: 0, b: 0, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
+  bottom:
+    m_OverrideState: 0
+    m_Value: {r: 0.034264863, g: 0.08075503, b: 0.20754719, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
+  gradientDiffusion:
+    m_OverrideState: 0
+    m_Value: 3
 --- !u!1 &1617275933
 GameObject:
   m_ObjectHideFlags: 0
@@ -1211,11 +1366,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7a68c43fe1f2a47cfa234b5eeaa98012, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 5
-  directionalIntensity: 3.1415927
-  punctualIntensity: 600
-  areaIntensity: 200
-  lightLayers: 1
+  m_Version: 9
+  m_ObsoleteShadowResolutionTier: 1
+  m_ObsoleteUseShadowQualitySettings: 0
+  m_ObsoleteCustomShadowResolution: 1024
+  m_ObsoleteContactShadows: 0
+  m_PointlightHDType: 0
+  m_SpotLightShape: 0
+  m_AreaLightShape: 0
   m_Intensity: 1200
   m_EnableSpotReflector: 0
   m_LuxAtDistance: 1
@@ -1227,12 +1385,11 @@ MonoBehaviour:
   m_AffectDiffuse: 1
   m_AffectSpecular: 1
   m_NonLightmappedOnly: 0
-  m_LightTypeExtent: 0
-  m_SpotLightShape: 0
   m_ShapeWidth: 0.5
   m_ShapeHeight: 0.5
   m_AspectRatio: 1
   m_ShapeRadius: 0
+  m_SoftnessScale: 1
   m_UseCustomSpotLightShadowCone: 0
   m_CustomSpotLightShadowCone: 30
   m_MaxSmoothness: 1
@@ -1242,6 +1399,19 @@ MonoBehaviour:
   m_AreaLightShadowCone: 120
   m_UseScreenSpaceShadows: 0
   m_InteractsWithSky: 1
+  m_AngularDiameter: 0.5
+  m_FlareSize: 2
+  m_FlareTint: {r: 1, g: 1, b: 1, a: 1}
+  m_FlareFalloff: 4
+  m_SurfaceTexture: {fileID: 0}
+  m_SurfaceTint: {r: 1, g: 1, b: 1, a: 1}
+  m_Distance: 1.5e+11
+  m_UseRayTracedShadows: 0
+  m_NumRayTracingSamples: 4
+  m_FilterTracedShadow: 1
+  m_FilterSizeTraced: 16
+  m_SunLightConeAngle: 0.5
+  m_LightShadowRadius: 0.5
   m_EvsmExponent: 15
   m_EvsmLightLeakBias: 0
   m_EvsmVarianceBias: 0.00001
@@ -1249,24 +1419,31 @@ MonoBehaviour:
   m_LightlayersMask: 1
   m_LinkShadowLayers: 1
   m_ShadowNearPlane: 0.2
-  m_ShadowSoftness: 0.5
   m_BlockerSampleCount: 24
   m_FilterSampleCount: 32
-  m_MinFilterSize: 0.00001
+  m_MinFilterSize: 0.01
   m_KernelSize: 5
   m_LightAngle: 1
   m_MaxDepthBias: 0.001
-  m_ShadowResolutionTier: 1
-  m_UseShadowQualitySettings: 0
-  m_CustomShadowResolution: 1024
+  m_ShadowResolution:
+    m_Override: 1024
+    m_UseOverride: 1
+    m_Level: 1
   m_ShadowDimmer: 1
   m_VolumetricShadowDimmer: 1
   m_ShadowFadeDistance: 10000
-  m_ContactShadows: 0
+  m_UseContactShadow:
+    m_Override: 0
+    m_UseOverride: 1
+    m_Level: 0
+  m_RayTracedContactShadow: 0
   m_ShadowTint: {r: 0, g: 0, b: 0, a: 1}
+  m_PenumbraTint: 0
   m_NormalBias: 0.75
-  m_ConstantBias: 0.15
+  m_SlopeBias: 0.5
   m_ShadowUpdateMode: 0
+  m_BarnDoorAngle: 90
+  m_BarnDoorLength: 0.05
   m_ShadowCascadeRatios:
   - 0.05
   - 0.2
@@ -1344,70 +1521,3 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
---- !u!114 &1656040790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a81bcacc415a1f743bfdf703afc52027, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  active: 1
-  m_AdvancedMode: 0
-  rotation:
-    m_OverrideState: 0
-    m_Value: 0
-    min: 0
-    max: 360
-  skyIntensityMode:
-    m_OverrideState: 0
-    m_Value: 0
-  exposure:
-    m_OverrideState: 0
-    m_Value: 0
-  multiplier:
-    m_OverrideState: 0
-    m_Value: 1
-    min: 0
-  upperHemisphereLuxValue:
-    m_OverrideState: 0
-    m_Value: 1
-    min: 0
-  desiredLuxValue:
-    m_OverrideState: 0
-    m_Value: 20000
-  updateMode:
-    m_OverrideState: 0
-    m_Value: 0
-  updatePeriod:
-    m_OverrideState: 0
-    m_Value: 0
-    min: 0
-  includeSunInBaking:
-    m_OverrideState: 0
-    m_Value: 0
-  top:
-    m_OverrideState: 0
-    m_Value: {r: 0.1792453, g: 0.09294793, b: 0, a: 1}
-    hdr: 1
-    showAlpha: 0
-    showEyeDropper: 1
-  middle:
-    m_OverrideState: 0
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
-    hdr: 1
-    showAlpha: 0
-    showEyeDropper: 1
-  bottom:
-    m_OverrideState: 0
-    m_Value: {r: 0.034264863, g: 0.08075503, b: 0.20754719, a: 1}
-    hdr: 1
-    showAlpha: 0
-    showEyeDropper: 1
-  gradientDiffusion:
-    m_OverrideState: 0
-    m_Value: 3

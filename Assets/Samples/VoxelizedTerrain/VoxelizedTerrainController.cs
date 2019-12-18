@@ -20,6 +20,7 @@ public class VoxelizedTerrainController : MonoBehaviour
     public float ScaleSpeed = 0.01f;
 
     [Header("UI")]
+    public GameObject UIPanelRoot;
     public Slider WaterElevationSlider;
     public Slider ElevationSlider;
     public Slider InputHeightMapScaleSlider;
@@ -48,6 +49,28 @@ public class VoxelizedTerrainController : MonoBehaviour
     private Vector2 mousePos;
     private int clicked;
 
+    private void OnEnable()
+    {
+        if (SampleLoader.instance != null)
+        {
+            SampleLoader.instance.onMenuToggle += OnSamplesMenuToggle;
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (SampleLoader.instance != null)
+        {
+            SampleLoader.instance.onMenuToggle -= OnSamplesMenuToggle;
+        }
+    }
+
+    bool menuVisible = false;
+    void OnSamplesMenuToggle(bool visible)
+    {
+        menuVisible = visible;
+        UIPanelRoot.SetActive(!visible);
+    }
 
     private void Start()
     {
@@ -59,6 +82,9 @@ public class VoxelizedTerrainController : MonoBehaviour
 
     private void Update()
     {
+        if (menuVisible)
+            return;
+
         // Mouse Management
         Vector2 delta = (Vector2)Input.mousePosition - mousePos;
         mousePos = Input.mousePosition;
