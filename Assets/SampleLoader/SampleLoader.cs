@@ -24,14 +24,17 @@ public class SampleLoader : MonoBehaviour
     public GameObject DemoModeProgressBG;
     public RectTransform DemoModeProgressBar;
 
-    [Header("Options Menu")]
+    [Header("Menu")]
     public KeyCode MenuToggleKey = KeyCode.Escape;
-    public RectTransform OptionsMenuTransform;
+    public RectTransform MenuTransform;
     public Button OpenMenuButton;
     public Button CloseMenuButton;
 
     [Header("Load Scene Window")]
     public GameObject LoadSceneWindowRoot;
+
+    [Header("Options Window")]
+    public GameObject OptionsWindowRoot;
 
     [Header("FPS Counter")]
     public GameObject DebugRoot;
@@ -59,6 +62,7 @@ public class SampleLoader : MonoBehaviour
         SetFPSVisible(false);
         SetMenuVisible(false);
         SetLoadSceneWindowVisible(false);
+        SetOptionsWindowVisible(false);
         SetDemoMode(true);
 
         instance = this;
@@ -113,7 +117,7 @@ public class SampleLoader : MonoBehaviour
 
     #endregion
 
-    #region OPTIONS MENU
+    #region MENU
 
     bool m_MenuVisible = false;
 
@@ -124,13 +128,16 @@ public class SampleLoader : MonoBehaviour
             if(m_LoadSceneWindowVisible)
                 SetLoadSceneWindowVisible(false);
 
+            if (m_OptionsWindowVisible)
+                SetOptionsWindowVisible(false);
+
             OpenMenuButton.gameObject.SetActive(false);
-            OptionsMenuTransform.anchoredPosition = new Vector3(0, 0, 0);
+            MenuTransform.anchoredPosition = new Vector3(0, 0, 0);
         }
         else
         {
             OpenMenuButton.gameObject.SetActive(true);
-            OptionsMenuTransform.anchoredPosition = new Vector3(OptionsMenuTransform.sizeDelta.x, 0, 0);
+            MenuTransform.anchoredPosition = new Vector3(MenuTransform.sizeDelta.x, 0, 0);
         }
 
         if(m_MenuVisible != visible)
@@ -195,7 +202,11 @@ public class SampleLoader : MonoBehaviour
         if (m_LoadSceneWindowVisible != value)
         {
             if (value)
+            {
+                SetOptionsWindowVisible(false);
                 SetMenuVisible(false);
+            }
+
 
             LoadSceneWindowRoot.SetActive(value);
 
@@ -215,6 +226,31 @@ public class SampleLoader : MonoBehaviour
 
     #endregion
 
+    #region OPTIONS WINDOW
+
+    bool m_OptionsWindowVisible = true;
+
+    public void SetOptionsWindowVisible(bool value)
+    {
+        if (m_OptionsWindowVisible != value)
+        {
+            if (value)
+            {
+                SetMenuVisible(false);
+                SetLoadSceneWindowVisible(false);
+            }
+
+
+            OptionsWindowRoot.SetActive(value);
+
+            m_OptionsWindowVisible = value;
+
+            if (onMenuToggle != null)
+                onMenuToggle.Invoke(value);
+        }
+    }
+
+    #endregion
     void Update()
     {
         if (Input.GetKeyDown(MenuToggleKey))
