@@ -3505,30 +3505,30 @@ VisualEffectResource:
   m_ShaderSources:
   - compute: 1
     name: '[System 1]Initialize Particle'
-    source: "#pragma kernel CSMain\r\n#define NB_THREADS_PER_GROUP 64\n#define HAS_ATTRIBUTES
+    source: "#pragma kernel CSMain\n#define NB_THREADS_PER_GROUP 64\n#define HAS_ATTRIBUTES
       1\n#define VFX_PASSDEPTH_ACTUAL (0)\n#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n#define
       VFX_PASSDEPTH_SELECTION (2)\n#define VFX_USE_POSITION_CURRENT 1\n#define VFX_USE_PARTICLEID_CURRENT
       1\n#define VFX_USE_COLOR_CURRENT 1\n#define VFX_USE_ANGLEX_CURRENT 1\n#define
       VFX_USE_SEED_CURRENT 1\n#define VFX_USE_ANGLEZ_CURRENT 1\n#define VFX_USE_SCALEY_CURRENT
       1\n#define VFX_USE_SCALEX_CURRENT 1\n#define VFX_USE_SCALEZ_CURRENT 1\n#define
-      VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
+      VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\nCBUFFER_START(parameters)\n   
       float4 Scale_e;\nCBUFFER_END\n\nstruct Attributes\n{\n    float3 position;\n   
       uint particleId;\n    float3 color;\n    float angleX;\n    uint seed;\n   
       float angleZ;\n    float scaleY;\n    float scaleX;\n    float scaleZ;\n};\n\nstruct
       SourceAttributes\n{\n};\n\nTexture2D attributeMap_a;\nSamplerState samplerattributeMap_a;\nfloat4
       attributeMap_a_TexelSize;\nTexture2D attributeMap_b;\nSamplerState samplerattributeMap_b;\nfloat4
-      attributeMap_b_TexelSize;\n\n\r\n\r\n#define USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT
-      && !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer attributeBuffer;\r\nByteAddressBuffer
-      sourceAttributeBuffer;\r\n\r\nCBUFFER_START(initParams)\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
-      uint nbSpawned;\t\t\t\t\t// Numbers of particle spawned\r\n    uint spawnIndex;\t\t\t\t//
-      Index of the first particle spawned\r\n    uint dispatchWidth;\r\n#else\r\n   
-      uint offsetInAdditionalOutput;\r\n\tuint nbMax;\r\n#endif\r\n\tuint systemSeed;\r\nCBUFFER_END\r\n\r\n#if
-      USE_DEAD_LIST\r\nRWStructuredBuffer<uint> deadListIn;\r\nByteAddressBuffer
-      deadListCount; // This is bad to use a SRV to fetch deadList count but Unity
-      API currently prevent from copying to CB\r\n#endif\r\n\r\n#if VFX_USE_SPAWNER_FROM_GPU\r\nStructuredBuffer<uint>
-      eventList;\r\nByteAddressBuffer inputAdditional;\r\n#endif\r\n\r\n#if HAS_STRIPS\r\nRWBuffer<uint>
-      stripDataBuffer;\r\n#endif\r\n\r\n#include \"Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.hlsl\"\n#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\r\nvoid
+      attributeMap_b_TexelSize;\n\n\n\n#define USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT
+      && !HAS_STRIPS)\n\nRWByteAddressBuffer attributeBuffer;\nByteAddressBuffer
+      sourceAttributeBuffer;\n\nCBUFFER_START(initParams)\n#if !VFX_USE_SPAWNER_FROM_GPU\n   
+      uint nbSpawned;\t\t\t\t\t// Numbers of particle spawned\n    uint spawnIndex;\t\t\t\t//
+      Index of the first particle spawned\n    uint dispatchWidth;\n#else\n    uint
+      offsetInAdditionalOutput;\n\tuint nbMax;\n#endif\n\tuint systemSeed;\nCBUFFER_END\n\n#if
+      USE_DEAD_LIST\nRWStructuredBuffer<uint> deadListIn;\nByteAddressBuffer deadListCount;
+      // This is bad to use a SRV to fetch deadList count but Unity API currently
+      prevent from copying to CB\n#endif\n\n#if VFX_USE_SPAWNER_FROM_GPU\nStructuredBuffer<uint>
+      eventList;\nByteAddressBuffer inputAdditional;\n#endif\n\n#if HAS_STRIPS\nRWBuffer<uint>
+      stripDataBuffer;\n#endif\n\n#include \"Packages/com.unity.visualeffectgraph/Shaders/Common/VFXCommonCompute.hlsl\"\n#include
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\n\nvoid
       AttributeFromMap_6F6C36D5(inout float3 position, uint particleId, VFXSampler2D
       attributeMap, uint Seed, float3 valueBias, float3 valueScale) /*attribute:position
       Composition:Overwrite SampleMode:RandomConstantPerParticle channels:XYZ */\n{\n   
@@ -3552,47 +3552,44 @@ VisualEffectResource:
       uint Seed) /*attribute:scale Composition:Overwrite AlphaComposition:Overwrite
       SampleMode:RandomConstantPerParticle Mode:PerComponent ColorMode:ColorAndAlpha
       channels:Y */\n{\n    float t = FIXED_RAND(Seed);\n    float value = 0.0f;\n   
-      value = SampleCurve(Scale, t);\n    scaleY = value.x;\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool
-      GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
-      relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
-      1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT) // strip
-      is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
-      -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
+      value = SampleCurve(Scale, t);\n    scaleY = value.x;\n}\n\n\n\n#if HAS_STRIPS\nbool
+      GetParticleIndex(inout uint particleIndex, uint stripIndex)\n{\n\tuint relativeIndex;\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
+      stripIndex), 1, relativeIndex);\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT)
+      // strip is full\n\t{\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
+      -1); // Remove previous increment\n\t\treturn false;\n\t}\n\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
-      VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
-      * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
-      * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
-      uint currentSpawnIndex = spawnIndex;\r\n#endif\r\n\r\n#if USE_DEAD_LIST\r\n   
-      maxThreadId = min(maxThreadId, deadListCount.Load(0x0));\r\n#elif VFX_USE_SPAWNER_FROM_GPU\r\n   
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\n    return true;\n}\n#endif\n\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\nvoid
+      CSMain(uint3 groupId          : SV_GroupID,\n            uint3 groupThreadId   
+      : SV_GroupThreadID)\n{\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\n#if
+      !VFX_USE_SPAWNER_FROM_GPU\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\n#endif\n\n#if
+      VFX_USE_SPAWNER_FROM_GPU\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
+      * 2 + 0) << 2);\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
+      * 2 + 1) << 2) - maxThreadId;\n#else\n    uint maxThreadId = nbSpawned;\n   
+      uint currentSpawnIndex = spawnIndex;\n#endif\n\n#if USE_DEAD_LIST\n    maxThreadId
+      = min(maxThreadId, deadListCount.Load(0x0));\n#elif VFX_USE_SPAWNER_FROM_GPU\n   
       maxThreadId = min(maxThreadId, nbMax); //otherwise, nbSpawned already clamped
-      on CPU\r\n#endif\r\n\r\n    if (id < maxThreadId)\r\n    {\r\n#if VFX_USE_SPAWNER_FROM_GPU\r\n       
-      int sourceIndex = eventList[id];\r\n#endif\r\n\t\tuint particleIndex = id +
-      currentSpawnIndex;\r\n\t\t\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n        int
-      sourceIndex = 0;\n        /*//Loop with 1 iteration generate a wrong IL Assembly
-      (and actually, useless code)\n        uint currentSumSpawnCount = 0u;\n       
-      for (sourceIndex=0; sourceIndex<1; sourceIndex++)\n        {\n            currentSumSpawnCount
-      += uint(asfloat(sourceAttributeBuffer.Load((sourceIndex * 0x1 + 0x0) << 2)));\n           
-      if (id < currentSumSpawnCount)\n            {\n                break;\n           
-      }\n        }\n        */\n        \n\r\n#endif\r\n\r\n\t\tAttributes attributes
-      = (Attributes)0;\r\n\t\tSourceAttributes sourceAttributes = (SourceAttributes)0;\r\n\t\t\r\n       
+      on CPU\n#endif\n\n    if (id < maxThreadId)\n    {\n#if VFX_USE_SPAWNER_FROM_GPU\n       
+      int sourceIndex = eventList[id];\n#endif\n\t\tuint particleIndex = id + currentSpawnIndex;\n\t\t\n#if
+      !VFX_USE_SPAWNER_FROM_GPU\n        int sourceIndex = 0;\n        /*//Loop with
+      1 iteration generate a wrong IL Assembly (and actually, useless code)\n       
+      uint currentSumSpawnCount = 0u;\n        for (sourceIndex=0; sourceIndex<1;
+      sourceIndex++)\n        {\n            currentSumSpawnCount += uint(asfloat(sourceAttributeBuffer.Load((sourceIndex
+      * 0x1 + 0x0) << 2)));\n            if (id < currentSumSpawnCount)\n           
+      {\n                break;\n            }\n        }\n        */\n        \n\n#endif\n\n\t\tAttributes
+      attributes = (Attributes)0;\n\t\tSourceAttributes sourceAttributes = (SourceAttributes)0;\n\t\t\n       
       attributes.position = float3(0, 0, 0);\n        attributes.particleId = (uint)0;\n       
       attributes.color = float3(1, 1, 1);\n        attributes.angleX = (float)0;\n       
       attributes.seed = (uint)0;\n        attributes.angleZ = (float)0;\n       
       attributes.scaleY = (float)1;\n        attributes.scaleX = (float)1;\n       
-      attributes.scaleZ = (float)1;\n        \n\r\n#if VFX_USE_PARTICLEID_CURRENT\r\n        
-      attributes.particleId = particleIndex;\r\n#endif\r\n#if VFX_USE_SEED_CURRENT\r\n       
-      attributes.seed = WangHash(particleIndex ^ systemSeed);\r\n#endif\r\n#if VFX_USE_SPAWNINDEX_CURRENT\r\n       
-      attributes.spawnIndex = id;\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
-      uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex = min(stripIndex,
-      STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex, stripIndex))\r\n           
-      return;\r\n\r\n        const StripData stripData = GetStripDataFromStripIndex(stripIndex,
-      PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex, attributes,
-      stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic on random
-      with strip\r\n#endif\r\n        \r\n        {\n            AttributeFromMap_6F6C36D5(
+      attributes.scaleZ = (float)1;\n        \n\n#if VFX_USE_PARTICLEID_CURRENT\n        
+      attributes.particleId = particleIndex;\n#endif\n#if VFX_USE_SEED_CURRENT\n       
+      attributes.seed = WangHash(particleIndex ^ systemSeed);\n#endif\n#if VFX_USE_SPAWNINDEX_CURRENT\n       
+      attributes.spawnIndex = id;\n#endif\n#if HAS_STRIPS\n#if !VFX_USE_SPAWNER_FROM_GPU\n\t\t\n#else\n       
+      uint stripIndex = sourceIndex;\n#endif\n\t\tstripIndex = min(stripIndex, STRIP_COUNT);\n\n       
+      if (!GetParticleIndex(particleIndex, stripIndex))\n            return;\n\n       
+      const StripData stripData = GetStripDataFromStripIndex(stripIndex, PARTICLE_PER_STRIP_COUNT);\n\t\tInitStripAttributes(particleIndex,
+      attributes, stripData);\n\t\t// TODO Change seed to be sure we're deterministic
+      on random with strip\n#endif\n        \n        {\n            AttributeFromMap_6F6C36D5(
       /*inout */attributes.position, attributes.particleId, GetVFXSampler(attributeMap_a,
       samplerattributeMap_a), (uint)0, float3(-0.5, 0, -3.20000005), float3(1, 1,
       1));\n        }\n        {\n            AttributeFromMap_9AACC55( /*inout */attributes.color,
@@ -3602,10 +3599,10 @@ VisualEffectResource:
       (float)-45, (float)45);\n        }\n        {\n            SetAttribute_48A7C211(
       /*inout */attributes.angleZ,  /*inout */attributes.seed, (float)-45, (float)45);\n       
       }\n        {\n            AttributeFromCurve_5E96E8EC( /*inout */attributes.scaleY,
-      attributes.particleId, Scale_e, (uint)0);\n        }\n        \n\r\n\t\t\r\n#if
-      VFX_USE_ALIVE_CURRENT\r\n        if (attributes.alive)\r\n#endif       \r\n       
-      {\r\n#if USE_DEAD_LIST\r\n\t        uint deadIndex = deadListIn.DecrementCounter();\r\n           
-      uint index = deadListIn[deadIndex];\r\n#else\r\n            uint index = particleIndex;\r\n#endif\r\n           
+      attributes.particleId, Scale_e, (uint)0);\n        }\n        \n\n\t\t\n#if
+      VFX_USE_ALIVE_CURRENT\n        if (attributes.alive)\n#endif       \n       
+      {\n#if USE_DEAD_LIST\n\t        uint deadIndex = deadListIn.DecrementCounter();\n           
+      uint index = deadListIn[deadIndex];\n#else\n            uint index = particleIndex;\n#endif\n           
       attributeBuffer.Store3((index * 0x4 + 0x0) << 2,asuint(attributes.position));\n           
       attributeBuffer.Store3((index * 0x8 + 0x9D00) << 2,asuint(attributes.color));\n           
       attributeBuffer.Store((index * 0x8 + 0x9D03) << 2,asuint(attributes.angleX));\n           
@@ -3613,11 +3610,11 @@ VisualEffectResource:
       attributeBuffer.Store((index * 0x8 + 0x9D05) << 2,asuint(attributes.scaleY));\n           
       attributeBuffer.Store((index * 0x8 + 0x9D06) << 2,asuint(attributes.scaleX));\n           
       attributeBuffer.Store((index * 0x8 + 0x9D07) << 2,asuint(attributes.scaleZ));\n           
-      \n\r\n        }\r\n    }\r\n}\r\n"
+      \n\n        }\n    }\n}\n"
   - compute: 0
     name: '[System 1]Output Particle Lit Cube'
-    source: "Shader \"Hidden/VFX/MorphingFace/System 1/Output Particle Lit Cube\"\n{\r\n\tSubShader\r\n\t{\t\r\n\t\tCull
-      Back\r\n\t\t\r\n\t\tTags { \"Queue\"=\"Geometry+0\" \"IgnoreProjector\"=\"False\"
+    source: "Shader \"Hidden/VFX/MorphingFace/System 1/Output Particle Lit Cube\"\n{\n\tSubShader\n\t{\t\n\t\tCull
+      Back\n\t\t\n\t\tTags { \"Queue\"=\"Geometry+0\" \"IgnoreProjector\"=\"False\"
       \"RenderType\"=\"Opaque\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tZTest
       LEqual\n\t\tZWrite On\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t\n\t\t#define
       NB_THREADS_PER_GROUP 64\n\t\t#define HAS_ATTRIBUTES 1\n\t\t#define VFX_PASSDEPTH_ACTUAL
@@ -3654,7 +3651,7 @@ VisualEffectResource:
       to always use a valid instanceID\n\t\t#if defined(UNITY_STEREO_INSTANCING_ENABLED)\n\t\t\t#define
       VFX_DECLARE_INSTANCE_ID     UNITY_VERTEX_INPUT_INSTANCE_ID\n\t\t\t#define VFX_GET_INSTANCE_ID(i)     
       unity_InstanceID\n\t\t#else\n\t\t\t#define VFX_DECLARE_INSTANCE_ID     uint
-      instanceID : SV_InstanceID;\n\t\t\t#define VFX_GET_INSTANCE_ID(i)      i.instanceID\n\t\t#endif\n\t\t\n\t\tENDHLSL\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
+      instanceID : SV_InstanceID;\n\t\t\t#define VFX_GET_INSTANCE_ID(i)      i.instanceID\n\t\t#endif\n\t\t\n\t\tENDHLSL\n\t\t\n\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"SceneSelectionPass\" }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend
       Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH VFX_PASSDEPTH_SELECTION\n\t\t\t#pragma
       target 4.5\n\t\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t#if
@@ -3865,7 +3862,7 @@ VisualEffectResource:
       0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
       VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
       _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
+      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t//
       Depth pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"DepthForwardOnly\"
       }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define
       VFX_PASSDEPTH VFX_PASSDEPTH_ACTUAL\n\t\t\t#pragma target 4.5\n\t\t\t\n\t\t\tstruct
@@ -4077,7 +4074,7 @@ VisualEffectResource:
       0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
       VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
       _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
+      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"MotionVectors\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t
       WriteMask 176\n\t\t\t Ref 160\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
       On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH
@@ -4290,7 +4287,7 @@ VisualEffectResource:
       0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
       VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
       _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
+      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t//
       Forward pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
       7\n\t\t\t\tRef  2\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
       target 4.5\n\t\t\t\n\t\t\t#pragma multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma
@@ -4571,7 +4568,7 @@ VisualEffectResource:
       n = SampleNormalMap(VFX_SAMPLER(normalMap),uvData);\n\t\t\t\tnormalWS = VFXCubeTransformNormalTS(i,n,frontFace);\n\t\t\t\tnormalWS
       = lerp(VFXCubeGetLocalNormal(i) * faceMul,normalWS,i.materialProperties.z);\n\t\t\t\t#else\n\t\t\t\tnormalWS
       = VFXCubeGetLocalNormal(i) * faceMul;\n\t\t\t\t#endif\n\t\t\t\tnormalWS = VFXCubeTransformNormalWS(i,normalWS);\n\t\t\t\tnormalWS
-      = normalize(normalWS);\n\t\t\n\t\t\t\tVFXComputePixelOutputToGBuffer(i,normalWS,uvData,outGBuffer);\n\t\t\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
+      = normalize(normalWS);\n\t\t\n\t\t\t\tVFXComputePixelOutputToGBuffer(i,normalWS,uvData,outGBuffer);\n\t\t\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t\t//
       Shadow pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"ShadowCaster\"
       }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#if
       !USE_ALPHA_TEST && IS_TRANSPARENT_PARTICLE\n\t\t\t#define USE_ALPHA_TEST 1\n\t\t\t#endif\n\t\t\t#pragma
@@ -4773,10 +4770,10 @@ VisualEffectResource:
       fragment frag\n\t\t\tfloat frag(ps_input i) : SV_Target0\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\tfloat
       alpha = VFXGetFragmentColor(i).a;\n\t\t#if HDRP_USE_BASE_COLOR_MAP_ALPHA\n\t\t\t\talpha
       *= VFXGetTextureColorWithProceduralUV(VFX_SAMPLER(baseColorMap),i,VFXCubeGetUV(i)).a;\n\t\t#endif\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\treturn
-      0;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t}\r\n}\r\n"
+      0;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\n\t}\n}\n"
   - compute: 1
     name: '[System 1]MotionVector'
-    source: "#pragma kernel CSMain\r\n#define NB_THREADS_PER_GROUP 64\n#define HAS_ATTRIBUTES
+    source: "#pragma kernel CSMain\n#define NB_THREADS_PER_GROUP 64\n#define HAS_ATTRIBUTES
       1\n#define VFX_PASSDEPTH_ACTUAL (0)\n#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n#define
       VFX_PASSDEPTH_SELECTION (2)\n#define VFX_USE_POSITION_CURRENT 1\n#define VFX_USE_COLOR_CURRENT
       1\n#define VFX_USE_ANGLEX_CURRENT 1\n#define VFX_USE_ANGLEZ_CURRENT 1\n#define
@@ -4785,18 +4782,17 @@ VisualEffectResource:
       VFX_USE_AXISZ_CURRENT 1\n#define VFX_USE_ANGLEY_CURRENT 1\n#define VFX_USE_PIVOTX_CURRENT
       1\n#define VFX_USE_PIVOTY_CURRENT 1\n#define VFX_USE_PIVOTZ_CURRENT 1\n#define
       VFX_USE_SIZE_CURRENT 1\n#define VFX_USE_SCALEX_CURRENT 1\n#define VFX_USE_SCALEZ_CURRENT
-      1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
+      1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\nCBUFFER_START(parameters)\n   
       float uniform_b;\n    float currentFrameIndex;\n    uint2 PADDING_0;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float3 position;\n    float3 color;\n    float angleX;\n   
       float angleZ;\n    float scaleY;\n    float alpha;\n    bool alive;\n    float3
       axisX;\n    float3 axisY;\n    float3 axisZ;\n    float angleY;\n    float
       pivotX;\n    float pivotY;\n    float pivotZ;\n    float size;\n    float scaleX;\n   
-      float scaleZ;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\nByteAddressBuffer
-      attributeBuffer;\r\nRWByteAddressBuffer elementToVFXBuffer;\r\n#if VFX_USE_ALIVE_CURRENT\r\nStructuredBuffer<uint>
-      deadListOut;\r\n#endif\r\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\nStructuredBuffer<uint>
-      indirectBuffer;\r\n#endif\r\n\r\nCBUFFER_START(updateParams)\r\n\tuint nbMax;\r\n\tuint
-      dispatchWidth;\r\n\tuint systemSeed;\r\nCBUFFER_END\r\n\r\nvoid SetAttribute_D5151640(inout
+      float scaleZ;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n#include
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nByteAddressBuffer
+      attributeBuffer;\nRWByteAddressBuffer elementToVFXBuffer;\n#if VFX_USE_ALIVE_CURRENT\nStructuredBuffer<uint>
+      deadListOut;\n#endif\n\n#if VFX_HAS_INDIRECT_DRAW\nStructuredBuffer<uint> indirectBuffer;\n#endif\n\nCBUFFER_START(updateParams)\n\tuint
+      nbMax;\n\tuint dispatchWidth;\n\tuint systemSeed;\nCBUFFER_END\n\nvoid SetAttribute_D5151640(inout
       float scaleX, inout float scaleZ, float2 Scale) /*attribute:scale Composition:Overwrite
       Source:Slot Random:Off channels:XZ */\n{\n    scaleX = Scale.x;\n    scaleZ
       = Scale.y;\n}\nvoid SetAttribute_545F0ED(inout float3 color, float3 Color)
@@ -4811,12 +4807,12 @@ VisualEffectResource:
       SetAttribute_E0455985(inout float scaleX, inout float scaleY, inout float scaleZ,
       float3 Scale, float Blend) /*attribute:scale Composition:Blend Source:Slot
       Random:Off channels:XYZ */\n{\n    scaleX = lerp(scaleX,Scale.x,Blend);\n   
-      scaleY = lerp(scaleY,Scale.y,Blend);\n    scaleZ = lerp(scaleZ,Scale.z,Blend);\n}\n\n\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId\t\t: SV_GroupID,\r\n\t\t\tuint3 groupThreadId\t: SV_GroupThreadID)\r\n{\r\n\tuint
+      scaleY = lerp(scaleY,Scale.y,Blend);\n    scaleZ = lerp(scaleZ,Scale.z,Blend);\n}\n\n\n\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\nvoid
+      CSMain(uint3 groupId\t\t: SV_GroupID,\n\t\t\tuint3 groupThreadId\t: SV_GroupThreadID)\n{\n\tuint
       id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP + groupId.y * dispatchWidth
-      * NB_THREADS_PER_GROUP;\r\n\tuint index = id;\r\n\tif (id < nbMax)\r\n\t{\r\n\t\tAttributes
-      attributes = (Attributes)0;\r\n\t\tSourceAttributes sourceAttributes = (SourceAttributes)0;\r\n\t\t\r\n\t\tattributes.alive
-      = (bool)true;\n\n\r\n\t\tif (attributes.alive)\r\n\t\t{\r\n\t\t\tattributes.position
+      * NB_THREADS_PER_GROUP;\n\tuint index = id;\n\tif (id < nbMax)\n\t{\n\t\tAttributes
+      attributes = (Attributes)0;\n\t\tSourceAttributes sourceAttributes = (SourceAttributes)0;\n\t\t\n\t\tattributes.alive
+      = (bool)true;\n\n\n\t\tif (attributes.alive)\n\t\t{\n\t\t\tattributes.position
       = asfloat(attributeBuffer.Load3((index * 0x4 + 0x0) << 2));\nattributes.color
       = asfloat(attributeBuffer.Load3((index * 0x8 + 0x9D00) << 2));\nattributes.angleX
       = asfloat(attributeBuffer.Load((index * 0x8 + 0x9D03) << 2));\nattributes.angleZ
@@ -4827,7 +4823,7 @@ VisualEffectResource:
       = (float)0;\nattributes.pivotY = (float)0;\nattributes.pivotZ = (float)0;\nattributes.size
       = (float)0.100000001;\nattributes.scaleX = asfloat(attributeBuffer.Load((index
       * 0x8 + 0x9D06) << 2));\nattributes.scaleZ = asfloat(attributeBuffer.Load((index
-      * 0x8 + 0x9D07) << 2));\n\n\r\n\t\t\t{\n\t\t\t    SetAttribute_D5151640( /*inout
+      * 0x8 + 0x9D07) << 2));\n\n\n\t\t\t{\n\t\t\t    SetAttribute_D5151640( /*inout
       */attributes.scaleX,  /*inout */attributes.scaleZ, float2(0.5, 0.5));\n\t\t\t}\n\t\t\t{\n\t\t\t   
       float tmp_x = attributes.color[0];\n\t\t\t    float tmp_y = attributes.color[1];\n\t\t\t   
       float tmp_z = attributes.color[2];\n\t\t\t    float4 tmp_bb = float4(tmp_x,
@@ -4873,19 +4869,19 @@ VisualEffectResource:
       tmp_bo = (float)1 - tmp_bn;\n\t\t\t    float tmp_bp = max(tmp_bo, (float)0);\n\t\t\t   
       float tmp_bq = min(tmp_bp, (float)1);\n\t\t\t    SetAttribute_E0455985( /*inout
       */attributes.scaleX,  /*inout */attributes.scaleY,  /*inout */attributes.scaleZ,
-      float3(1, 1, 1), tmp_bq);\n\t\t\t}\n\t\t\t\n\r\n\t\t\t\r\n\t\t\t\n\t\t\tfloat3
+      float3(1, 1, 1), tmp_bq);\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t\n\t\t\tfloat3
       size3 = float3(attributes.size,attributes.size,attributes.size);\n\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\tsize3.x *= attributes.scaleX;\n\t\t\t#endif\n\t\t\t#if
       VFX_USE_SCALEY_CURRENT\n\t\t\tsize3.y *= attributes.scaleY;\n\t\t\t#endif\n\t\t\t#if
-      VFX_USE_SCALEZ_CURRENT\n\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t#endif\n\t\t\t\r\n\t\t\tfloat4x4
-      elementToVFX = GetElementToVFXMatrix(\r\n\t\t\t\tattributes.axisX,\r\n\t\t\t\tattributes.axisY,\r\n\t\t\t\tattributes.axisZ,\r\n\t\t\t\tfloat3(attributes.angleX,attributes.angleY,attributes.angleZ),\r\n\t\t\t\tfloat3(attributes.pivotX,attributes.pivotY,attributes.pivotZ),\r\n\t\t\t\tsize3,\r\n\t\t\t\tattributes.position);\r\n\t\t\r\n\t\t\tUNITY_UNROLL\r\n\t\t\tfor
-      (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\r\n\t\t\t{\r\n\t\t\t\tUNITY_UNROLL\r\n\t\t\t\tfor
-      (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\r\n\t\t\t\t{\r\n\t\t\t\t\tuint
-      itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\r\n\t\t\t\t\tfloat
-      value = elementToVFX[itIndexMatrixRow][itIndexMatrixCol];\r\n\t\t\t\t\telementToVFXBuffer.Store((index
-      * 16 + itIndexMatrix) << 2, asuint(value));\r\n\t\t\t\t}\r\n\t\t\t}\r\n\r\n           
+      VFX_USE_SCALEZ_CURRENT\n\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t#endif\n\t\t\t\n\t\t\tfloat4x4
+      elementToVFX = GetElementToVFXMatrix(\n\t\t\t\tattributes.axisX,\n\t\t\t\tattributes.axisY,\n\t\t\t\tattributes.axisZ,\n\t\t\t\tfloat3(attributes.angleX,attributes.angleY,attributes.angleZ),\n\t\t\t\tfloat3(attributes.pivotX,attributes.pivotY,attributes.pivotZ),\n\t\t\t\tsize3,\n\t\t\t\tattributes.position);\n\t\t\n\t\t\tUNITY_UNROLL\n\t\t\tfor
+      (int itIndexMatrixRow = 0; itIndexMatrixRow < 3; ++itIndexMatrixRow)\n\t\t\t{\n\t\t\t\tUNITY_UNROLL\n\t\t\t\tfor
+      (int itIndexMatrixCol = 0; itIndexMatrixCol < 4; ++itIndexMatrixCol)\n\t\t\t\t{\n\t\t\t\t\tuint
+      itIndexMatrix = itIndexMatrixCol * 4 + itIndexMatrixRow;\n\t\t\t\t\tfloat value
+      = elementToVFX[itIndexMatrixRow][itIndexMatrixCol];\n\t\t\t\t\telementToVFXBuffer.Store((index
+      * 16 + itIndexMatrix) << 2, asuint(value));\n\t\t\t\t}\n\t\t\t}\n\n           
       elementToVFXBuffer.Store((index*16 + 15) << 2, attributes.alive ? asuint(currentFrameIndex)
-      : 0u);\r\n\t\t}\t\t\r\n\t}\r\n}\r\n"
+      : 0u);\n\t\t}\t\t\n\t}\n}\n"
   m_Infos:
     m_Expressions:
       m_Expressions:

@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace GameOptionsUtility
 {
+
     public static class GameOptions
     {
         public class Preferences
@@ -15,6 +16,12 @@ namespace GameOptionsUtility
         public static AudioOptions audio;
 
         static GameOptions()
+        {
+            Initialize();
+        }
+
+        [RuntimeInitializeOnLoadMethod]
+        static void Initialize()
         {
             graphics = GraphicOptions.Load();
             graphics.Apply();
