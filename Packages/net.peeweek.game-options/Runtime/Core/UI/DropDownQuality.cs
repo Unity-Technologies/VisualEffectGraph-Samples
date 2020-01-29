@@ -6,10 +6,8 @@ using UnityEngine.UI;
 namespace GameOptionsUtility
 {
     [RequireComponent(typeof(Dropdown))]
-    public class DropDownTargetFramerate : MonoBehaviour
+    public class DropDownQuality : MonoBehaviour
     {
-        public int[] TargetFramerates = new int[4] { -1, 15, 30, 60 };
-        public string InfiniteText = "Infinite";
         private void OnEnable()
         {
             var dropdown = GetComponent<Dropdown>();
@@ -26,18 +24,17 @@ namespace GameOptionsUtility
         public void InitializeEntries(Dropdown dropdown)
         {
             dropdown.options.Clear();
-            foreach(var framerate in TargetFramerates)
-            {
-                dropdown.options.Add(new Dropdown.OptionData(framerate == -1? InfiniteText : framerate.ToString()));
-            }
 
-            int current = GameOptions.graphics.targetFrameRate;
-            dropdown.SetValueWithoutNotify(dropdown.options.FindIndex(o => o.text == current.ToString()));
+            foreach(var quality in QualitySettings.names)
+                dropdown.options.Add(new Dropdown.OptionData(quality));
+
+            int current = GameOption.Get<GraphicOption>().quality;
+            dropdown.SetValueWithoutNotify(current);
         }
 
         void UpdateOptions(int value)
         {
-            GameOptions.graphics.targetFrameRate = TargetFramerates[value];
+            GameOption.Get<GraphicOption>().quality = value;
         }
     }
 

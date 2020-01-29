@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace GameOptionsUtility
 {
-    public class GraphicOptions : ScriptableObject
+    internal class GraphicOption : GameOption
     {
         public class Preferences
         {
@@ -15,6 +15,8 @@ namespace GameOptionsUtility
             public const string resolutionWidth = prefix + "ResolutionWidth";
             public const string resolutionHeight = prefix + "ResolutionHeight";
             public const string refreshRate = prefix + "RefreshRate";
+            public const string quality = prefix + "Quality";
+
         }
 
         public FullScreenMode fullScreenMode
@@ -50,6 +52,11 @@ namespace GameOptionsUtility
             get { return PlayerPrefs.GetInt(Preferences.refreshRate, m_DefaultRefreshRate); }
             set { PlayerPrefs.SetInt(Preferences.refreshRate, value); }
         }
+        public int quality
+        {
+            get { return PlayerPrefs.GetInt(Preferences.quality, QualitySettings.GetQualityLevel()); }
+            set { PlayerPrefs.SetInt(Preferences.quality, value);  QualitySettings.SetQualityLevel(value); }
+        }
 
         [Header("Defaults")]
         [SerializeField]
@@ -66,24 +73,12 @@ namespace GameOptionsUtility
         protected int m_DefaultHeight = 720;
         [SerializeField]
         protected int m_DefaultRefreshRate = 60;
-        [SerializeField]
-        protected int m_DefaultMonitor = 0;
 
-        public static GraphicOptions Load()
+        public override void Apply()
         {
-            var graphics = Resources.Load<GraphicOptions>(nameof(GraphicOptions));
-            if (graphics == null)
-            {
-                graphics = CreateInstance<GraphicOptions>();
-            }
-            return graphics;
-        }
-
-        public void Apply()
-        {
+            Screen.SetResolution(width, height, fullScreenMode, refreshRate);
             QualitySettings.vSyncCount = vSync ? 1 : 0;
             Application.targetFrameRate = targetFrameRate;
-            Screen.SetResolution(width, height, fullScreenMode, refreshRate);
         }
     }
 }

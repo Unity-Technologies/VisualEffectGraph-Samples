@@ -5,7 +5,7 @@ using UnityEngine.Audio;
 
 namespace GameOptionsUtility
 {
-    public class AudioOptions : ScriptableObject
+    internal class AudioOption : GameOption
     {
         public class Preferences
         {
@@ -18,7 +18,7 @@ namespace GameOptionsUtility
             if (m_Parameters.Any(o => o.Parameter == paramName))
             {
                 var param = m_Parameters.First(o => o.Parameter == paramName);
-                return PlayerPrefs.GetFloat(Preferences.parameterPrefix + param, param.Value);
+                return PlayerPrefs.GetFloat(Preferences.parameterPrefix + paramName, param.Value);
             }
             else
                 return 0;
@@ -66,17 +66,8 @@ namespace GameOptionsUtility
             public string Parameter;
             public float Value;
         }
-        public static AudioOptions Load()
-        {
-            var audioOptions = Resources.Load<AudioOptions>(nameof(AudioOptions));
-            if (audioOptions == null)
-            {
-                audioOptions = CreateInstance<AudioOptions>();
-            }
-            return audioOptions;
-        }
 
-        public void Apply()
+        public override void Apply()
         {
             foreach(var parameter in m_Parameters)
             {

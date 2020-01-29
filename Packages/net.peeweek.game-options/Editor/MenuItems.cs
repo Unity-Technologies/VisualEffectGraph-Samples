@@ -3,29 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-namespace GameOptionsUtility.Editor
+namespace GameOptionsUtility
 {
-    static class MenuItems
+    internal static class MenuItems
     {
         [MenuItem("Assets/Create/Default Graphics Options")]
-        static void CreateDefaultGraphicsOptions()
+        internal static void CreateDefaultGraphicsOptions()
         {
-
             System.IO.Directory.CreateDirectory($"{Application.dataPath}/Resources");
-            var asset = ScriptableObject.CreateInstance<GraphicOptions>();
-            AssetDatabase.CreateAsset(asset, $"Assets/Resources/{nameof(GraphicOptions)}.asset");
+            var asset = ScriptableObject.CreateInstance<GraphicOption>();
+            AssetDatabase.CreateAsset(asset, $"Assets/Resources/{nameof(GraphicOption)}.asset");
             EditorGUIUtility.PingObject(asset);
             Selection.activeObject = asset;
         }
 
 
         [MenuItem("Assets/Create/Default Audio Options")]
-        static void CreateDefaultAudioOptions()
+        internal static void CreateDefaultAudioOptions()
         {
 
             System.IO.Directory.CreateDirectory($"{Application.dataPath}/Resources");
-            var asset = ScriptableObject.CreateInstance<AudioOptions>();
-            AssetDatabase.CreateAsset(asset, $"Assets/Resources/{nameof(AudioOptions)}.asset");
+            var asset = ScriptableObject.CreateInstance<AudioOption>();
+            AssetDatabase.CreateAsset(asset, $"Assets/Resources/{nameof(AudioOption)}.asset");
             EditorGUIUtility.PingObject(asset);
             Selection.activeObject = asset;
         }

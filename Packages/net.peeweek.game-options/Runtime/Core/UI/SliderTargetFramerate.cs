@@ -13,6 +13,7 @@ namespace GameOptionsUtility
         private void OnEnable()
         {
             var slider = GetComponent<Slider>();
+            InitializeEntries(slider);
             slider.onValueChanged.AddListener(UpdateOptions);
             UpdateOptions(slider.value);
         }
@@ -22,9 +23,14 @@ namespace GameOptionsUtility
             GetComponent<Slider>().onValueChanged.RemoveListener(UpdateOptions);
         }
 
+        void InitializeEntries(Slider slider)
+        {
+            slider.value = GameOption.Get<GraphicOption>().targetFrameRate;
+        }
+
         void UpdateOptions(float value)
         {
-            GameOptions.graphics.targetFrameRate = (int)value;
+            GameOption.Get<GraphicOption>().targetFrameRate = (int)value;
         }
     }
 

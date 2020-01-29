@@ -36,7 +36,7 @@ namespace GameOptionsUtility
             }
 
             slider.wholeNumbers = IntegerSliderValues;
-            slider.SetValueWithoutNotify(ParameterToSlider(GameOptions.audio.GetParameter(Parameter)));
+            slider.SetValueWithoutNotify(ParameterToSlider(GameOption.Get<AudioOption>().GetParameter(Parameter)));
         }
 
         private void OnDisable()
@@ -46,7 +46,7 @@ namespace GameOptionsUtility
 
         void UpdateOptions(float value)
         {
-            GameOptions.audio.SetParameter(Parameter,SliderToParameter(value), ApplyParameter);
+            GameOption.Get<AudioOption>().SetParameter(Parameter,SliderToParameter(value), ApplyParameter);
         }
 
         float ParameterToSlider(float value)

@@ -6,10 +6,8 @@ using UnityEngine.UI;
 namespace GameOptionsUtility
 {
     [RequireComponent(typeof(Dropdown))]
-    public class DropDownResolution : MonoBehaviour
+    public class DropDownRefreshRate : MonoBehaviour
     {
-        public DropDownRefreshRate dropDownRefreshRate;
-
         private void OnEnable()
         {
             var dropdown = GetComponent<Dropdown>();
@@ -30,35 +28,25 @@ namespace GameOptionsUtility
             dropdown.options.Clear();
             int selected = 0;
             int i = 0;
-            foreach (var res in Screen.resolutions.OrderByDescending(o => o.width))
+            foreach (var res in Screen.resolutions)
             {
-                string option = $"{res.width}x{res.height}";
-
-                if (!dropdown.options.Any(o => o.text == option))
+                if(res.width == GameOption.Get<GraphicOption>().width && res.height == GameOption.Get<GraphicOption>().height)
                 {
-                    dropdown.options.Add(new Dropdown.OptionData(option));
-                    if (res.width == GameOptions.graphics.width && res.height == GameOptions.graphics.height)
+                    if (!dropdown.options.Any(o => o.text == res.refreshRate.ToString()))
+                        dropdown.options.Add(new Dropdown.OptionData(res.refreshRate.ToString()));
+
+                    if (GameOption.Get<GraphicOption>().refreshRate == res.refreshRate)
                         selected = i;
+
                     i++;
                 }
-
             }
-
             dropdown.SetValueWithoutNotify(selected);
-
-            if (dropDownRefreshRate != null)
-            {
-                dropDownRefreshRate.InitializeEntries();
-            }
-
         }
 
         void UpdateOptions(int value)
         {
-            string option = GetComponent<Dropdown>().options[value].text;
-            string[] values = option.Split('x');
-            GameOptions.graphics.width = int.Parse(values[0]);
-            GameOptions.graphics.height = int.Parse(values[1]);
+            GameOption.Get<GraphicOption>().refreshRate = int.Parse(GetComponent<Dropdown>().options[value].text);
         }
     }
 
