@@ -26,6 +26,8 @@ There are also pre-built binaries for Windows and macOS available.
         - Toggle Demo Mode
         - Toggle FPS Counter
         - Take Screenshot
+  - **Known Issues**:
+    - Ellen Hologram not working properly on macOS/metal
 
 - #### The 2019.1 Release! ( 5.8.2-preview rev1 - 2019-03-19 )
 
