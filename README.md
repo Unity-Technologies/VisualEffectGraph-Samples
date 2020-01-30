@@ -28,6 +28,7 @@ There are also pre-built binaries for Windows and macOS available.
         - Take Screenshot
   - **Known Issues**:
     - Ellen Hologram not working properly on macOS/metal
+    - Linux Vulkan rendering is mostly broken
 
 - #### The 2019.1 Release! ( 5.8.2-preview rev1 - 2019-03-19 )
 
