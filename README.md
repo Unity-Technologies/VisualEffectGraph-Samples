@@ -6,14 +6,14 @@ There are also pre-built binaries for Windows and macOS available.
 
 ### Changelog
 
-- #### 2019.3.0 Release ! (7.1.8 rev1 2020-01-30)
+- #### 2019.3.0 Release : (7.1.8 rev1 2020-01-30)
 
   - **New Samples**
-    - **Bonfire** : Small Scene with Fire and smoke featuring custom VFX ShaderGraph rendering (Using CC0 Assets from [Kenney](https://kenney.nl))
-    - **RibbonPack** : Dancing Balls of multi-colored trails featuring the new ParticleStrips.
+    - **Bonfire** : Small Scene with Fire and smoke featuring custom VFX Shader Graph rendering (Featuring CC0 Assets from [Kenney](https://kenney.nl))
+    - **Ribbon Pack** : Balls of Unraveling multi-colored trails featuring the new Particle Strips.
     - **Ellen Hologram** : Holographic reprojection of moving characters from [3D Game Kit](https://learn.unity.com/project/3d-game-kit)
   - **General Improvements**
-    - Other Samples were updated and polished to match new features
+    - Other Samples were updated and polished to match new features:
       - Added Motion Vectors / Motion blur in Butterflies, Portal, SpaceshipHoloTable, UnityLogo, Volumetric, VoxelizedTerrain
       - Reduced texture size of the SpaceshipHoloTable environment
       - Rebuilt all assets
