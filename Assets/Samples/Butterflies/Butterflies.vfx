@@ -4465,9 +4465,9 @@ VisualEffectResource:
       deltaTime) /*Mode:Relative */\n{\n    velocity += (Velocity - velocity) * min(1.0f,Drag
       * deltaTime / mass);\n}\nvoid Turbulence_18D(float3 position, inout float3
       velocity, float mass, float4x4 InvFieldTransform, float4x4 FieldTransform,
-      float Intensity, float Drag, float frequency, float roughness, float lacunarity,
-      int octaves, float deltaTime) /*Mode:Relative NoiseType:Value */\n{\n    float3
-      vectorFieldCoord = mul(InvFieldTransform, float4(position,1.0f)).xyz;\n   
+      float Intensity, float Drag, float frequency, int octaves, float roughness,
+      float lacunarity, float deltaTime) /*Mode:Relative NoiseType:Value */\n{\n   
+      float3 vectorFieldCoord = mul(InvFieldTransform, float4(position,1.0f)).xyz;\n   
       \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord + 0.5f, frequency,
       octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
       * Intensity;\n    \n    velocity += (value - velocity) * min(1.0f,Drag * deltaTime
@@ -4525,8 +4525,8 @@ VisualEffectResource:
       -1, -1);\n\t\t\t    float3 tmp_cz = tmp_cw + tmp_cy;\n\t\t\t    Force_1( /*inout
       */attributes.velocity, attributes.mass, tmp_cz, (float)1, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
-      InvFieldTransform_b, FieldTransform_b, (float)1, (float)1, (float)1.5, (float)0.5,
-      (float)2, (int)1, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t    float3 tmp_bd
+      InvFieldTransform_b, FieldTransform_b, (float)1, (float)1, (float)1.5, (int)1,
+      (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t    float3 tmp_bd
       = attributes.velocity * attributes.velocity;\n\t\t\t    float tmp_be = tmp_bd[2];\n\t\t\t   
       float tmp_bf = tmp_bd[1];\n\t\t\t    float tmp_bg = tmp_be + tmp_bf;\n\t\t\t   
       float tmp_bh = tmp_bd[0];\n\t\t\t    float tmp_bi = tmp_bg + tmp_bh;\n\t\t\t   
@@ -4596,7 +4596,7 @@ VisualEffectResource:
       tmp_cw + tmp_cy;\n\t\t    Force_1( /*inout */attributes.velocity, attributes.mass,
       tmp_cz, (float)1, deltaTime_a);\n\t\t}\n\t\t{\n\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_b, FieldTransform_b,
-      (float)1, (float)1, (float)1.5, (float)0.5, (float)2, (int)1, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
+      (float)1, (float)1, (float)1.5, (int)1, (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
       float3 tmp_bd = attributes.velocity * attributes.velocity;\n\t\t    float tmp_be
       = tmp_bd[2];\n\t\t    float tmp_bf = tmp_bd[1];\n\t\t    float tmp_bg = tmp_be
       + tmp_bf;\n\t\t    float tmp_bh = tmp_bd[0];\n\t\t    float tmp_bi = tmp_bg
@@ -24331,6 +24331,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
