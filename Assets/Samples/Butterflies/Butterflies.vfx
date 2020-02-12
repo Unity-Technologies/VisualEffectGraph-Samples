@@ -4465,9 +4465,9 @@ VisualEffectResource:
       deltaTime) /*Mode:Relative */\n{\n    velocity += (Velocity - velocity) * min(1.0f,Drag
       * deltaTime / mass);\n}\nvoid Turbulence_18D(float3 position, inout float3
       velocity, float mass, float4x4 InvFieldTransform, float4x4 FieldTransform,
-      float Intensity, float Drag, float frequency, float roughness, float lacunarity,
-      int octaves, float deltaTime) /*Mode:Relative NoiseType:Value */\n{\n    float3
-      vectorFieldCoord = mul(InvFieldTransform, float4(position,1.0f)).xyz;\n   
+      float Intensity, float Drag, float frequency, int octaves, float roughness,
+      float lacunarity, float deltaTime) /*Mode:Relative NoiseType:Value */\n{\n   
+      float3 vectorFieldCoord = mul(InvFieldTransform, float4(position,1.0f)).xyz;\n   
       \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord + 0.5f, frequency,
       octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
       * Intensity;\n    \n    velocity += (value - velocity) * min(1.0f,Drag * deltaTime
@@ -4525,8 +4525,8 @@ VisualEffectResource:
       -1, -1);\n\t\t\t    float3 tmp_cz = tmp_cw + tmp_cy;\n\t\t\t    Force_1( /*inout
       */attributes.velocity, attributes.mass, tmp_cz, (float)1, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
-      InvFieldTransform_b, FieldTransform_b, (float)1, (float)1, (float)1.5, (float)0.5,
-      (float)2, (int)1, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t    float3 tmp_bd
+      InvFieldTransform_b, FieldTransform_b, (float)1, (float)1, (float)1.5, (int)1,
+      (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t    float3 tmp_bd
       = attributes.velocity * attributes.velocity;\n\t\t\t    float tmp_be = tmp_bd[2];\n\t\t\t   
       float tmp_bf = tmp_bd[1];\n\t\t\t    float tmp_bg = tmp_be + tmp_bf;\n\t\t\t   
       float tmp_bh = tmp_bd[0];\n\t\t\t    float tmp_bi = tmp_bg + tmp_bh;\n\t\t\t   
@@ -4596,7 +4596,7 @@ VisualEffectResource:
       tmp_cw + tmp_cy;\n\t\t    Force_1( /*inout */attributes.velocity, attributes.mass,
       tmp_cz, (float)1, deltaTime_a);\n\t\t}\n\t\t{\n\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_b, FieldTransform_b,
-      (float)1, (float)1, (float)1.5, (float)0.5, (float)2, (int)1, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
+      (float)1, (float)1, (float)1.5, (int)1, (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
       float3 tmp_bd = attributes.velocity * attributes.velocity;\n\t\t    float tmp_be
       = tmp_bd[2];\n\t\t    float tmp_bf = tmp_bd[1];\n\t\t    float tmp_bg = tmp_be
       + tmp_bf;\n\t\t    float tmp_bh = tmp_bd[0];\n\t\t    float tmp_bi = tmp_bg
@@ -5302,7 +5302,7 @@ VisualEffectResource:
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
       undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"MotionVectors\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t
-      WriteMask 176\n\t\t\t Ref 160\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
+      WriteMask 40\n\t\t\t Ref 32\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
       On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH
       VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#pragma target 4.5\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t#pragma
       multi_compile _ WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\t#define NEEDS_NORMAL\tdefined(WRITE_NORMAL_BUFFER)
@@ -5619,8 +5619,8 @@ VisualEffectResource:
       = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
       undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
-      { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
-      7\n\t\t\t\tRef  2\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
+      { \"LightMode\"=\"GBuffer\" }\n\t\t\n\t\t    Stencil\n\t\t    {\n\t\t     WriteMask
+      6\n\t\t     Ref 2\n\t\t     Comp Always\n\t\t     Pass Replace\n\t\t    }\n\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
       target 4.5\n\t\t\t\n\t\t\t#pragma multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma
       multi_compile _ DEBUG_DISPLAY\n\t\t\t\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t\t\n\t\t\t#define
       HDRP_NEEDS_UVS (HDRP_USE_BASE_COLOR_MAP || HDRP_USE_MASK_MAP || USE_NORMAL_MAP
@@ -7238,7 +7238,7 @@ VisualEffectResource:
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
       undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"MotionVectors\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t
-      WriteMask 176\n\t\t\t Ref 160\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
+      WriteMask 40\n\t\t\t Ref 32\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
       On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH
       VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#pragma target 4.5\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t#pragma
       multi_compile _ WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\t#define NEEDS_NORMAL\tdefined(WRITE_NORMAL_BUFFER)
@@ -7555,8 +7555,8 @@ VisualEffectResource:
       = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
       undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
-      { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
-      7\n\t\t\t\tRef  2\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
+      { \"LightMode\"=\"GBuffer\" }\n\t\t\n\t\t    Stencil\n\t\t    {\n\t\t     WriteMask
+      6\n\t\t     Ref 2\n\t\t     Comp Always\n\t\t     Pass Replace\n\t\t    }\n\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
       target 4.5\n\t\t\t\n\t\t\t#pragma multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma
       multi_compile _ DEBUG_DISPLAY\n\t\t\t\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t\t\n\t\t\t#define
       HDRP_NEEDS_UVS (HDRP_USE_BASE_COLOR_MAP || HDRP_USE_MASK_MAP || USE_NORMAL_MAP
@@ -9046,7 +9046,7 @@ VisualEffectResource:
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
       undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"MotionVectors\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t
-      WriteMask 176\n\t\t\t Ref 160\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
+      WriteMask 40\n\t\t\t Ref 32\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
       On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH
       VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\n\t\t\t#pragma target 4.5\n\t\t\t#define
       UNITY_MATERIAL_LIT\n\t\t\t#pragma multi_compile _ WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\tstruct
@@ -9301,13 +9301,13 @@ VisualEffectResource:
       = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
       undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
-      { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
-      7\n\t\t\t\tRef  2\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
-      target 4.5\n\t\t\t\n\t\t\t#pragma multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma
-      multi_compile _ DEBUG_DISPLAY\n\t\t\t\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t\n\t\t\t#define
-      HDRP_NEEDS_UVS (HDRP_USE_BASE_COLOR_MAP || HDRP_USE_MASK_MAP || USE_NORMAL_MAP
-      || HDRP_USE_EMISSIVE_MAP)\n\t\t\t#define HDRP_USE_EMISSIVE (HDRP_USE_EMISSIVE_MAP
-      || HDRP_USE_EMISSIVE_COLOR || HDRP_USE_ADDITIONAL_EMISSIVE_COLOR)\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\tstruct
+      { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t    Stencil\n\t\t    {\n\t\t    
+      WriteMask 6\n\t\t     Ref 2\n\t\t     Comp Always\n\t\t     Pass Replace\n\t\t   
+      }\n\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t\n\t\t\t#pragma
+      multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma multi_compile _ DEBUG_DISPLAY\n\t\t\t\n\t\t\t#define
+      UNITY_MATERIAL_LIT\n\t\t\t\n\t\t\t#define HDRP_NEEDS_UVS (HDRP_USE_BASE_COLOR_MAP
+      || HDRP_USE_MASK_MAP || USE_NORMAL_MAP || HDRP_USE_EMISSIVE_MAP)\n\t\t\t#define
+      HDRP_USE_EMISSIVE (HDRP_USE_EMISSIVE_MAP || HDRP_USE_EMISSIVE_COLOR || HDRP_USE_ADDITIONAL_EMISSIVE_COLOR)\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\tstruct
       ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t#if
       (VFX_NEEDS_COLOR_INTERPOLATOR && HDRP_USE_BASE_COLOR) || HDRP_USE_ADDITIONAL_BASE_COLOR\n\t\t\t\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float4 color : COLOR0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t#if HDRP_MATERIAL_TYPE_SPECULAR\n\t\t\t\t\t\t\tVFX_OPTIONAL_INTERPOLATION
@@ -24331,6 +24331,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity

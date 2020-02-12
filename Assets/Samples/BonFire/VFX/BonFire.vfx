@@ -1388,9 +1388,9 @@ VisualEffectResource:
       deltaTime) /*Mode:Relative */\n{\n    velocity += (Velocity - velocity) * min(1.0f,Drag
       * deltaTime / mass);\n}\nvoid Turbulence_18C(float3 position, inout float3
       velocity, float mass, float4x4 InvFieldTransform, float4x4 FieldTransform,
-      float Intensity, float Drag, float frequency, float roughness, float lacunarity,
-      int octaves, float deltaTime) /*Mode:Relative NoiseType:Perlin */\n{\n    float3
-      vectorFieldCoord = mul(InvFieldTransform, float4(position,1.0f)).xyz;\n   
+      float Intensity, float Drag, float frequency, int octaves, float roughness,
+      float lacunarity, float deltaTime) /*Mode:Relative NoiseType:Perlin */\n{\n   
+      float3 vectorFieldCoord = mul(InvFieldTransform, float4(position,1.0f)).xyz;\n   
       \n    float3 value = GeneratePerlinCurlNoise(vectorFieldCoord + 0.5f, frequency,
       octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
       * Intensity;\n    \n    velocity += (value - velocity) * min(1.0f,Drag * deltaTime
@@ -1425,7 +1425,7 @@ VisualEffectResource:
       tmp_bt);\n\t\t\t    Force_1( /*inout */attributes.velocity, attributes.mass,
       tmp_bu, (float)0.5, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t    Turbulence_18C(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_b, FieldTransform_b,
-      (float)5, (float)1, (float)3, (float)0.5, (float)2, (int)3, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
+      (float)5, (float)1, (float)3, (int)3, (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\t\tAge(
       /*inout */attributes.age, deltaTime_a);\n\t\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\t\n\r\n\r\n\t\t\tif (attributes.alive)\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store3((index
@@ -1465,8 +1465,8 @@ VisualEffectResource:
       float3 tmp_bu = mul((float3x3)uniform_b, tmp_bt);\n\t\t    Force_1( /*inout
       */attributes.velocity, attributes.mass, tmp_bu, (float)0.5, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
       Turbulence_18C(attributes.position,  /*inout */attributes.velocity, attributes.mass,
-      InvFieldTransform_b, FieldTransform_b, (float)5, (float)1, (float)3, (float)0.5,
-      (float)2, (int)3, deltaTime_a);\n\t\t}\n\t\tEulerIntegration( /*inout */attributes.position,
+      InvFieldTransform_b, FieldTransform_b, (float)5, (float)1, (float)3, (int)3,
+      (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\tEulerIntegration( /*inout */attributes.position,
       attributes.velocity, deltaTime_a);\n\t\tAge( /*inout */attributes.age, deltaTime_a);\n\t\tReap(attributes.age,
       attributes.lifetime,  /*inout */attributes.alive);\n\t\t\n\r\n\t\tattributeBuffer.Store3((index
       * 0x4 + 0x0) << 2,asuint(attributes.position));\n\t\tattributeBuffer.Store3((index
@@ -4770,7 +4770,7 @@ VisualEffectResource:
       m_NamedObject:
         m_Array:
         - m_ExpressionIndex: 47
-          m_Value: {fileID: 2800000, guid: fcecce6d2c9be8d418a27f0658a2210d, type: 3}
+          m_Value: {fileID: 2800000, guid: 46c0dd137cb0dfb4782f9acac67b7423, type: 3}
         - m_ExpressionIndex: 48
           m_Value: {fileID: 10300, guid: 0000000000000000f000000000000000, type: 0}
         - m_ExpressionIndex: 55
@@ -4778,7 +4778,7 @@ VisualEffectResource:
         - m_ExpressionIndex: 56
           m_Value: {fileID: 2800000, guid: ee05b597174590c41a0929d87f45e68b, type: 3}
         - m_ExpressionIndex: 83
-          m_Value: {fileID: 2800000, guid: fcecce6d2c9be8d418a27f0658a2210d, type: 3}
+          m_Value: {fileID: 2800000, guid: 46c0dd137cb0dfb4782f9acac67b7423, type: 3}
         - m_ExpressionIndex: 84
           m_Value: {fileID: 10300, guid: 0000000000000000f000000000000000, type: 0}
         - m_ExpressionIndex: 87
@@ -8032,6 +8032,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
@@ -12310,6 +12316,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity

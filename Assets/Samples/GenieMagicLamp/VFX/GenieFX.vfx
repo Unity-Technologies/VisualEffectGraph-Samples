@@ -3126,8 +3126,8 @@ VisualEffectResource:
       deltaSpeed = tgtSpeed - spdNormal;\n    velocity += sign(deltaSpeed) * min(abs(deltaSpeed),deltaTime
       * lerp(stickForce,attractionForce,ratio)) * dir / mass ;\n}\nvoid Turbulence_18D(float3
       position, inout float3 velocity, float mass, float4x4 InvFieldTransform, float4x4
-      FieldTransform, float Intensity, float Drag, float frequency, float roughness,
-      float lacunarity, int octaves, float deltaTime) /*Mode:Relative NoiseType:Value
+      FieldTransform, float Intensity, float Drag, float frequency, int octaves,
+      float roughness, float lacunarity, float deltaTime) /*Mode:Relative NoiseType:Value
       */\n{\n    float3 vectorFieldCoord = mul(InvFieldTransform, float4(position,1.0f)).xyz;\n   
       \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord + 0.5f, frequency,
       octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
@@ -3178,7 +3178,7 @@ VisualEffectResource:
       * (float)40;\n\t\t\t    float tmp_ca = tmp_bw * (float)15;\n\t\t\t    float
       tmp_cb = max(tmp_ca, (float)0);\n\t\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_c, FieldTransform_c,
-      tmp_by, tmp_cb, (float)1.5, (float)1, (float)2, (int)4, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
+      tmp_by, tmp_cb, (float)1.5, (int)4, (float)1, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\t\tAge(
       /*inout */attributes.age, deltaTime_a);\n\t\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\t\n\r\n\r\n\t\t\tif (attributes.alive)\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store3((index
@@ -3233,7 +3233,7 @@ VisualEffectResource:
       float tmp_by = tmp_bw * (float)40;\n\t\t    float tmp_ca = tmp_bw * (float)15;\n\t\t   
       float tmp_cb = max(tmp_ca, (float)0);\n\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_c, FieldTransform_c,
-      tmp_by, tmp_cb, (float)1.5, (float)1, (float)2, (int)4, deltaTime_a);\n\t\t}\n\t\tEulerIntegration(
+      tmp_by, tmp_cb, (float)1.5, (int)4, (float)1, (float)2, deltaTime_a);\n\t\t}\n\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\tAge(
       /*inout */attributes.age, deltaTime_a);\n\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\n\r\n\t\tattributeBuffer.Store3((index *
@@ -7366,11 +7366,11 @@ VisualEffectResource:
       playSystems: 
       stopSystems: 00000000
     - name: Start
-      playSystems: 020000000300000000000000
+      playSystems: 030000000200000000000000
       stopSystems: 
     - name: Stop
       playSystems: 
-      stopSystems: 020000000300000001000000
+      stopSystems: 030000000200000001000000
     m_RuntimeVersion: 10
     m_RendererSettings:
       motionVectorGenerationMode: 0
@@ -33979,6 +33979,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity

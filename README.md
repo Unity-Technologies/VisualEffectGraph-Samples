@@ -2,10 +2,22 @@
 
 In this project you will be able to access sample scenes and effects made with the Visual Effect Graph. You can download snapshots of these samples by using the [release](https://github.com/Unity-Technologies/VisualEffectGraph-Samples/releases) tab, or by cloning this repository.
 
-There are also pre-built binaries for Windows and macOS available.
+There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
+- #### 2019.3 Update: (7.2.0 rev1 2020-02-12)
+
+  - **Updated HD Render Pipeline / Visual Effect Graph to 7.2.0**
+  - **Fixes and Improvements**
+  - Rebuilt all Visual Effects
+    - Upgraded all HDRP materials to 7.2.0
+    - Fixed Ambient Lighting in GrassWind
+    - Fixed SSS Profile for Chomper Character in EllenHologram
+    - Fixed UI Labels in Voxelized Terrain that disappeared in 1440p
+    - Fixed Bonfire Fire Shader : was using a texture that was removed from HD Render Pipeline Package
+    - Removed unused Custom Render Texture + Shaders in SpaceshipHoloTable
+  
 - #### 2019.3.0 Release : (7.1.8 rev1 2020-01-30)
 
   - **New Samples**

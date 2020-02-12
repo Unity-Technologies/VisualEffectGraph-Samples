@@ -12015,7 +12015,7 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\r\nvoid
       Turbulence_18D(float3 position, inout float3 velocity, float mass, float4x4
       InvFieldTransform, float4x4 FieldTransform, float Intensity, float Drag, float
-      frequency, float roughness, float lacunarity, int octaves, float deltaTime)
+      frequency, int octaves, float roughness, float lacunarity, float deltaTime)
       /*Mode:Relative NoiseType:Value */\n{\n    float3 vectorFieldCoord = mul(InvFieldTransform,
       float4(position,1.0f)).xyz;\n    \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord
       + 0.5f, frequency, octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
@@ -12081,7 +12081,7 @@ VisualEffectResource:
       float tmp_bn = tmp_bl / (float)0.600000024;\n\t\t\t    float tmp_bp = tmp_bn
       * (float)20;\n\t\t\t    float tmp_bq = tmp_bf * tmp_bp;\n\t\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_a, FieldTransform_a,
-      tmp_bq, (float)1, (float)1.5, (float)0.5, (float)2, (int)2, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t   
+      tmp_bq, (float)1, (float)1.5, (int)2, (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t   
       float tmp_be = attributes.position[1];\n\t\t\t    bool tmp_bg = tmp_be > (float)0.0199999996;\n\t\t\t   
       float tmp_bi = tmp_bg ? (float)-9.81000042 : (float)0;\n\t\t\t    float3 tmp_bj
       = float3((float)0, tmp_bi, (float)0);\n\t\t\t    float3 tmp_bk = mul((float3x3)uniform_e,
@@ -12132,7 +12132,7 @@ VisualEffectResource:
       / (float)0.600000024;\n\t\t    float tmp_bp = tmp_bn * (float)20;\n\t\t   
       float tmp_bq = tmp_bf * tmp_bp;\n\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_a, FieldTransform_a,
-      tmp_bq, (float)1, (float)1.5, (float)0.5, (float)2, (int)2, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
+      tmp_bq, (float)1, (float)1.5, (int)2, (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
       float tmp_be = attributes.position[1];\n\t\t    bool tmp_bg = tmp_be > (float)0.0199999996;\n\t\t   
       float tmp_bi = tmp_bg ? (float)-9.81000042 : (float)0;\n\t\t    float3 tmp_bj
       = float3((float)0, tmp_bi, (float)0);\n\t\t    float3 tmp_bk = mul((float3x3)uniform_e,
@@ -13256,7 +13256,7 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
+        data[3]: 5
       - op: 1
         valueIndex: 174
         data[0]: -1
@@ -13352,7 +13352,7 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 5
+        data[3]: 1
       - op: 1
         valueIndex: 228
         data[0]: -1
@@ -13415,8 +13415,6 @@ VisualEffectResource:
           m_Value: 0.96
         - m_ExpressionIndex: 70
           m_Value: 400000
-        - m_ExpressionIndex: 71
-          m_Value: 2
         - m_ExpressionIndex: 77
           m_Value: 1
         - m_ExpressionIndex: 78
@@ -13427,6 +13425,8 @@ VisualEffectResource:
           m_Value: 0.04
         - m_ExpressionIndex: 86
           m_Value: 1.5
+        - m_ExpressionIndex: 87
+          m_Value: 2
       m_Vector2f:
         m_Array:
         - m_ExpressionIndex: 67
@@ -13475,7 +13475,7 @@ VisualEffectResource:
           m_Value: 4294967295
       m_Int:
         m_Array:
-        - m_ExpressionIndex: 87
+        - m_ExpressionIndex: 71
           m_Value: 2
       m_Matrix4x4f:
         m_Array:
@@ -25618,6 +25618,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity

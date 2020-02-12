@@ -749,7 +749,7 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\r\nvoid
       Turbulence_18D(float3 position, inout float3 velocity, float mass, float4x4
       InvFieldTransform, float4x4 FieldTransform, float Intensity, float Drag, float
-      frequency, float roughness, float lacunarity, int octaves, float deltaTime)
+      frequency, int octaves, float roughness, float lacunarity, float deltaTime)
       /*Mode:Relative NoiseType:Value */\n{\n    float3 vectorFieldCoord = mul(InvFieldTransform,
       float4(position,1.0f)).xyz;\n    \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord
       + 0.5f, frequency, octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
@@ -786,8 +786,8 @@ VisualEffectResource:
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n           
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
-      InvFieldTransform_a, FieldTransform_a, (float)1, (float)1, (float)1.5, (float)0.5,
-      (float)2, (int)3, deltaTime_a);\n\t\t\t}\n\t\t\tAttributeFromCurve_45ABB90F(
+      InvFieldTransform_a, FieldTransform_a, (float)1, (float)1, (float)1.5, (int)3,
+      (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\tAttributeFromCurve_45ABB90F(
       /*inout */attributes.size, attributes.age, attributes.lifetime, Size_b);\n\t\t\t{\n\t\t\t   
       attributes.eventCount = 0u;\n\t\t\t    GPUEventRate_1( /*inout */attributes.rateCount_c, 
       /*inout */attributes.eventCount, (float)30, deltaTime_a);\n\t\t\t    eventCount_a
@@ -831,9 +831,9 @@ VisualEffectResource:
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
-      InvFieldTransform_a, FieldTransform_a, (float)1, (float)1, (float)1.5, (float)0.5,
-      (float)2, (int)3, deltaTime_a);\n\t\t}\n\t\tAttributeFromCurve_45ABB90F( /*inout
-      */attributes.size, attributes.age, attributes.lifetime, Size_b);\n\t\t{\n\t\t   
+      InvFieldTransform_a, FieldTransform_a, (float)1, (float)1, (float)1.5, (int)3,
+      (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\tAttributeFromCurve_45ABB90F(
+      /*inout */attributes.size, attributes.age, attributes.lifetime, Size_b);\n\t\t{\n\t\t   
       attributes.eventCount = 0u;\n\t\t    GPUEventRate_1( /*inout */attributes.rateCount_c, 
       /*inout */attributes.eventCount, (float)30, deltaTime_a);\n\t\t    eventCount_a
       += attributes.eventCount;\n\t\t}\n\t\tEulerIntegration( /*inout */attributes.position,
@@ -968,7 +968,7 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\r\nvoid
       Turbulence_18D(float3 position, inout float3 velocity, float mass, float4x4
       InvFieldTransform, float4x4 FieldTransform, float Intensity, float Drag, float
-      frequency, float roughness, float lacunarity, int octaves, float deltaTime)
+      frequency, int octaves, float roughness, float lacunarity, float deltaTime)
       /*Mode:Relative NoiseType:Value */\n{\n    float3 vectorFieldCoord = mul(InvFieldTransform,
       float4(position,1.0f)).xyz;\n    \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord
       + 0.5f, frequency, octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
@@ -995,7 +995,7 @@ VisualEffectResource:
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
       InvFieldTransform_a, FieldTransform_a, (float)0.0500000007, (float)1, (float)1,
-      (float)0.5, (float)2, (int)3, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
+      (int)3, (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\t\tAge(
       /*inout */attributes.age, deltaTime_a);\n\t\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\t\n\r\n\r\n\t\t\tif (attributes.alive)\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store3((index
@@ -1026,7 +1026,7 @@ VisualEffectResource:
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
       InvFieldTransform_a, FieldTransform_a, (float)0.0500000007, (float)1, (float)1,
-      (float)0.5, (float)2, (int)3, deltaTime_a);\n\t\t}\n\t\tEulerIntegration( /*inout
+      (int)3, (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\tEulerIntegration( /*inout
       */attributes.position, attributes.velocity, deltaTime_a);\n\t\tAge( /*inout
       */attributes.age, deltaTime_a);\n\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\n\r\n\t\tattributeBuffer.Store3((index *
@@ -1601,8 +1601,8 @@ VisualEffectResource:
       = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
       undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
-      { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
-      7\n\t\t\t\tRef  2\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
+      { \"LightMode\"=\"GBuffer\" }\n\t\t\n\t\t    Stencil\n\t\t    {\n\t\t     WriteMask
+      6\n\t\t     Ref 2\n\t\t     Comp Always\n\t\t     Pass Replace\n\t\t    }\n\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
       target 4.5\n\t\t\t\n\t\t\t#pragma multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma
       multi_compile _ DEBUG_DISPLAY\n\t\t\t\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t\t\n\t\t\t#define
       HDRP_NEEDS_UVS (HDRP_USE_BASE_COLOR_MAP || HDRP_USE_MASK_MAP || USE_NORMAL_MAP
@@ -2572,7 +2572,7 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 5
+        data[3]: 1
       - op: 1
         valueIndex: 95
         data[0]: -1
@@ -2584,7 +2584,7 @@ VisualEffectResource:
         data[0]: -1
         data[1]: -1
         data[2]: -1
-        data[3]: 1
+        data[3]: 5
       - op: 1
         valueIndex: 98
         data[0]: -1
@@ -2705,8 +2705,8 @@ VisualEffectResource:
           m_Value: 30
         - m_ExpressionIndex: 31
           m_Value: 0.01
-        - m_ExpressionIndex: 35
-          m_Value: 0.5
+        - m_ExpressionIndex: 33
+          m_Value: 2
         - m_ExpressionIndex: 39
           m_Value: 20
         - m_ExpressionIndex: 40
@@ -2714,7 +2714,7 @@ VisualEffectResource:
         - m_ExpressionIndex: 41
           m_Value: 6.2831855
         - m_ExpressionIndex: 42
-          m_Value: 2
+          m_Value: 0.5
         - m_ExpressionIndex: 43
           m_Value: 1
         - m_ExpressionIndex: 44
@@ -2757,7 +2757,7 @@ VisualEffectResource:
           m_Value: 1078544746
       m_Int:
         m_Array:
-        - m_ExpressionIndex: 33
+        - m_ExpressionIndex: 35
           m_Value: 3
       m_Matrix4x4f:
         m_Array: []
@@ -6454,6 +6454,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
@@ -8260,6 +8266,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
