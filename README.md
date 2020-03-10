@@ -6,6 +6,14 @@ There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
+- #### 2019.3 Release 2 : (7.2.1 rev1 2020-03-10)
+
+  - **Updated HD Render Pipeline / Visual Effect Graph to 7.2.1**
+  - **Notable Changes : **
+    - Rebuilt all Visual Effects
+    - Upgraded all HDRP materials to 7.2.1
+    - Added **Magic Book** Sample
+  
 - #### 2019.3 Update: (7.2.0 rev1 2020-02-12)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 7.2.0**
