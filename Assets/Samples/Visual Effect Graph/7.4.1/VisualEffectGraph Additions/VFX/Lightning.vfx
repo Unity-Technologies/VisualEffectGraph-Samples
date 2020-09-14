@@ -202,17 +202,20 @@ VisualEffectResource:
       /*attribute:stripProgress Composition:Overwrite Random:Off AttributeType:Float
       */\n{\n    stripProgress = _StripProgress;\n}\nvoid SetAttribute_F0142CB9(inout
       float lifetime, float Lifetime) /*attribute:lifetime Composition:Overwrite
-      Source:Slot Random:Off channels:XYZ */\n{\n    lifetime = Lifetime;\n}\n\n\r\n\r\n#if
-      HAS_STRIPS\r\nbool GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
-      relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
-      1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT) // strip
-      is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
-      -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
+      Source:Slot Random:Off channels:XYZ */\n{\n    lifetime = Lifetime;\n}\n\n\r\n\r\n//
+      Due to a bug in HLSL compiler, disable spurious \"unitialized variable\" due
+      to mid function return statement\r\n#pragma warning(push)\r\n#pragma warning(disable
+      : 4000)\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout uint particleIndex,
+      uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
+      stripIndex), 1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT)
+      // strip is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
+      stripIndex), -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -266,7 +269,7 @@ VisualEffectResource:
       float uniform_b;\n    float uniform_c;\n    float uniform_d;\n    float deltaTime_b;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float stripProgress;\n    float lifetime;\n    float3 position;\n   
       float age;\n    bool alive;\n};\n\nstruct SourceAttributes\n{\n};\n\nTexture2D
-      texture_b;\nSamplerState samplertexture_b;\nfloat4 texture_b_TexelSize;\n\n\r\n\r\n#define
+      texture_a;\nSamplerState samplertexture_a;\nfloat4 texture_a_TexelSize;\n\n\n\r\n\r\n#define
       USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT && !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer
       attributeBuffer;\r\n\r\n#if USE_DEAD_LIST\r\nRWStructuredBuffer<uint> deadListOut;\r\n#endif\r\n\r\n#if
       VFX_HAS_INDIRECT_DRAW\r\nRWStructuredBuffer<uint> indirectBuffer;\r\n#endif\r\n\r\n#if
@@ -298,7 +301,7 @@ VisualEffectResource:
       = (uint)tmp_ba;\n\t\t\t    uint tmp_bd = tmp_bb > (uint)0 ? tmp_bb : (uint)0;\n\t\t\t   
       uint tmp_be = tmp_bd < asuint(uniform_c) ? tmp_bd : asuint(uniform_c);\n\t\t\t   
       float tmp_bf = (float)tmp_be;\n\t\t\t    float3 tmp_bh = float3(tmp_bf, (float)0,
-      (float)0);\n\t\t\t    float4 tmp_bi = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bh);\n\t\t\t   
+      (float)0);\n\t\t\t    float4 tmp_bi = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bh);\n\t\t\t   
       float tmp_bj = tmp_bi[0];\n\t\t\t    float tmp_bk = tmp_bi[1];\n\t\t\t    float
       tmp_bl = tmp_bi[2];\n\t\t\t    float3 tmp_bm = float3(tmp_bj, tmp_bk, tmp_bl);\n\t\t\t   
       float tmp_bo = frac(tmp_ba);\n\t\t\t    float tmp_bp = max(tmp_bo, (float)0);\n\t\t\t   
@@ -309,14 +312,14 @@ VisualEffectResource:
       int tmp_bz = tmp_bx + (int)1;\n\t\t\t    int tmp_cb = max(tmp_bz, (int)0);\n\t\t\t   
       int tmp_cc = min(tmp_cb, asint(uniform_d));\n\t\t\t    uint tmp_cd = (uint)tmp_cc;\n\t\t\t   
       float tmp_ce = (float)tmp_cd;\n\t\t\t    float3 tmp_cf = float3(tmp_ce, (float)0,
-      (float)0);\n\t\t\t    float4 tmp_cg = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_cf);\n\t\t\t   
+      (float)0);\n\t\t\t    float4 tmp_cg = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_cf);\n\t\t\t   
       float tmp_ch = tmp_cg[0];\n\t\t\t    float tmp_ci = tmp_cg[1];\n\t\t\t    float
       tmp_cj = tmp_cg[2];\n\t\t\t    float3 tmp_ck = float3(tmp_ch, tmp_ci, tmp_cj);\n\t\t\t   
       uint tmp_cm = tmp_bb + (uint)4294967295;\n\t\t\t    int tmp_cn = (int)tmp_cm;\n\t\t\t   
       int tmp_co = max(tmp_cn, (int)0);\n\t\t\t    int tmp_cp = min(tmp_co, asint(uniform_d));\n\t\t\t   
       uint tmp_cq = (uint)tmp_cp;\n\t\t\t    float tmp_cr = (float)tmp_cq;\n\t\t\t   
       float3 tmp_cs = float3(tmp_cr, (float)0, (float)0);\n\t\t\t    float4 tmp_ct
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_cs);\n\t\t\t    float tmp_cu
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_cs);\n\t\t\t    float tmp_cu
       = tmp_ct[0];\n\t\t\t    float tmp_cv = tmp_ct[1];\n\t\t\t    float tmp_cw =
       tmp_ct[2];\n\t\t\t    float3 tmp_cx = float3(tmp_cu, tmp_cv, tmp_cw);\n\t\t\t   
       float3 tmp_cy = tmp_ck - tmp_cx;\n\t\t\t    float3 tmp_cz = tmp_cy * tmp_cy;\n\t\t\t   
@@ -344,7 +347,7 @@ VisualEffectResource:
       int tmp_eq = max(tmp_ep, (int)0);\n\t\t\t    int tmp_er = min(tmp_eq, asint(uniform_d));\n\t\t\t   
       uint tmp_es = (uint)tmp_er;\n\t\t\t    float tmp_et = (float)tmp_es;\n\t\t\t   
       float3 tmp_eu = float3(tmp_et, (float)0, (float)0);\n\t\t\t    float4 tmp_ev
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_eu);\n\t\t\t    float tmp_ew
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_eu);\n\t\t\t    float tmp_ew
       = tmp_ev[0];\n\t\t\t    float tmp_ex = tmp_ev[1];\n\t\t\t    float tmp_ey =
       tmp_ev[2];\n\t\t\t    float3 tmp_ez = float3(tmp_ew, tmp_ex, tmp_ey);\n\t\t\t   
       float3 tmp_fa = tmp_ez - tmp_bm;\n\t\t\t    float3 tmp_fb = tmp_fa * tmp_fa;\n\t\t\t   
@@ -402,7 +405,7 @@ VisualEffectResource:
       > (uint)0 ? tmp_bb : (uint)0;\n\t\t    uint tmp_be = tmp_bd < asuint(uniform_c)
       ? tmp_bd : asuint(uniform_c);\n\t\t    float tmp_bf = (float)tmp_be;\n\t\t   
       float3 tmp_bh = float3(tmp_bf, (float)0, (float)0);\n\t\t    float4 tmp_bi
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bh);\n\t\t    float tmp_bj =
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bh);\n\t\t    float tmp_bj =
       tmp_bi[0];\n\t\t    float tmp_bk = tmp_bi[1];\n\t\t    float tmp_bl = tmp_bi[2];\n\t\t   
       float3 tmp_bm = float3(tmp_bj, tmp_bk, tmp_bl);\n\t\t    float tmp_bo = frac(tmp_ba);\n\t\t   
       float tmp_bp = max(tmp_bo, (float)0);\n\t\t    float tmp_bq = min(tmp_bp, (float)1);\n\t\t   
@@ -413,14 +416,14 @@ VisualEffectResource:
       max(tmp_bz, (int)0);\n\t\t    int tmp_cc = min(tmp_cb, asint(uniform_d));\n\t\t   
       uint tmp_cd = (uint)tmp_cc;\n\t\t    float tmp_ce = (float)tmp_cd;\n\t\t   
       float3 tmp_cf = float3(tmp_ce, (float)0, (float)0);\n\t\t    float4 tmp_cg
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_cf);\n\t\t    float tmp_ch =
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_cf);\n\t\t    float tmp_ch =
       tmp_cg[0];\n\t\t    float tmp_ci = tmp_cg[1];\n\t\t    float tmp_cj = tmp_cg[2];\n\t\t   
       float3 tmp_ck = float3(tmp_ch, tmp_ci, tmp_cj);\n\t\t    uint tmp_cm = tmp_bb
       + (uint)4294967295;\n\t\t    int tmp_cn = (int)tmp_cm;\n\t\t    int tmp_co
       = max(tmp_cn, (int)0);\n\t\t    int tmp_cp = min(tmp_co, asint(uniform_d));\n\t\t   
       uint tmp_cq = (uint)tmp_cp;\n\t\t    float tmp_cr = (float)tmp_cq;\n\t\t   
       float3 tmp_cs = float3(tmp_cr, (float)0, (float)0);\n\t\t    float4 tmp_ct
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_cs);\n\t\t    float tmp_cu =
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_cs);\n\t\t    float tmp_cu =
       tmp_ct[0];\n\t\t    float tmp_cv = tmp_ct[1];\n\t\t    float tmp_cw = tmp_ct[2];\n\t\t   
       float3 tmp_cx = float3(tmp_cu, tmp_cv, tmp_cw);\n\t\t    float3 tmp_cy = tmp_ck
       - tmp_cx;\n\t\t    float3 tmp_cz = tmp_cy * tmp_cy;\n\t\t    float tmp_da =
@@ -447,7 +450,7 @@ VisualEffectResource:
       max(tmp_ep, (int)0);\n\t\t    int tmp_er = min(tmp_eq, asint(uniform_d));\n\t\t   
       uint tmp_es = (uint)tmp_er;\n\t\t    float tmp_et = (float)tmp_es;\n\t\t   
       float3 tmp_eu = float3(tmp_et, (float)0, (float)0);\n\t\t    float4 tmp_ev
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_eu);\n\t\t    float tmp_ew =
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_eu);\n\t\t    float tmp_ew =
       tmp_ev[0];\n\t\t    float tmp_ex = tmp_ev[1];\n\t\t    float tmp_ey = tmp_ev[2];\n\t\t   
       float3 tmp_ez = float3(tmp_ew, tmp_ex, tmp_ey);\n\t\t    float3 tmp_fa = tmp_ez
       - tmp_bm;\n\t\t    float3 tmp_fb = tmp_fa * tmp_fa;\n\t\t    float tmp_fc =
@@ -485,7 +488,7 @@ VisualEffectResource:
     name: '[Ark Base]Output ParticleStrip Quad'
     source: "Shader \"Hidden/VFX/Lightning/Ark Base/Output ParticleStrip Quad\"\n{\r\n\tSubShader\r\n\t{\t\r\n\t\tCull
       Off\r\n\t\t\r\n\t\tTags { \"Queue\"=\"Transparent+0\" \"IgnoreProjector\"=\"True\"
-      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
+      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
       SrcAlpha OneMinusSrcAlpha \n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t\n\t\t#define
       NB_THREADS_PER_GROUP 64\n\t\t#define HAS_ATTRIBUTES 1\n\t\t#define VFX_PASSDEPTH_ACTUAL
       (0)\n\t\t#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n\t\t#define VFX_PASSDEPTH_SELECTION
@@ -501,9 +504,9 @@ VisualEffectResource:
       1u\n\t\t#define PARTICLE_PER_STRIP_COUNT 1024u\n\t\t#define VFX_COLORMAPPING_DEFAULT
       1\n\t\t#define IS_TRANSPARENT_PARTICLE 1\n\t\t#define VFX_BLENDMODE_ALPHA 1\n\t\t#define
       VFX_BYPASS_EXPOSURE 1\n\t\t#define HAS_STRIPS 1\n\t\t#define VFX_STRIPS_UV_STRECHED
-      1\n\t\t#define VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      1\n\t\t#define VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_WORLD_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
-      float4 Size_b;\n\t\t    float4 uniform_c;\n\t\t    float4 uniform_d;\n\t\t   
+      float4 Size_b;\n\t\t    float4 uniform_a;\n\t\t    float4 uniform_b;\n\t\t   
       float4 Alpha_g;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct Attributes\n\t\t{\n\t\t   
       float stripProgress;\n\t\t    float lifetime;\n\t\t    float3 position;\n\t\t   
       float3 color;\n\t\t    float alpha;\n\t\t    float3 axisX;\n\t\t    float3
@@ -511,7 +514,7 @@ VisualEffectResource:
       float angleZ;\n\t\t    float pivotX;\n\t\t    float pivotY;\n\t\t    float
       pivotZ;\n\t\t    float size;\n\t\t    float scaleX;\n\t\t    float scaleY;\n\t\t   
       float scaleZ;\n\t\t    float age;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
-      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\n\t\t\n\t\t#define
+      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
       VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
       HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
       VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
@@ -547,8 +550,8 @@ VisualEffectResource:
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
       cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
-      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
-      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t#define
+      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -650,7 +653,7 @@ VisualEffectResource:
       /*inout */attributes.scaleY);\n\t\t\t\t{\n\t\t\t\t    SetAttribute_FDD06EC7(
       /*inout */attributes.color, float3(2.76078439, 34.8862762, 64));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
       float tmp_bd = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_be
-      = SampleCurve(uniform_c,tmp_bd);\n\t\t\t\t    float tmp_bg = tmp_be + (float)-0.0250000004;\n\t\t\t\t   
+      = SampleCurve(uniform_a,tmp_bd);\n\t\t\t\t    float tmp_bg = tmp_be + (float)-0.0250000004;\n\t\t\t\t   
       float tmp_bh = attributes.stripProgress - tmp_bg;\n\t\t\t\t    float tmp_bj
       = tmp_be + (float)0.0250000004;\n\t\t\t\t    float tmp_bk = tmp_bj - tmp_bg;\n\t\t\t\t   
       float tmp_bl = tmp_bh / tmp_bk;\n\t\t\t\t    float tmp_bn = max(tmp_bl, (float)0);\n\t\t\t\t   
@@ -661,7 +664,7 @@ VisualEffectResource:
       */attributes.alpha, tmp_bt);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_ba
       = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_bc = attributes.stripProgress
       * (float)0.200000003;\n\t\t\t\t    float tmp_bd = tmp_ba - tmp_bc;\n\t\t\t\t   
-      float tmp_be = SampleCurve(uniform_d,tmp_bd);\n\t\t\t\t    float3 tmp_bf =
+      float tmp_be = SampleCurve(uniform_b,tmp_bd);\n\t\t\t\t    float3 tmp_bf =
       float3(tmp_be, tmp_be, tmp_be);\n\t\t\t\t    SetAttribute_545F0ED( /*inout
       */attributes.color, tmp_bf);\n\t\t\t\t}\n\t\t\t\tAttributeFromCurve_7BA3F6A(
       /*inout */attributes.alpha, attributes.age, attributes.lifetime, Alpha_g);\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t#if
@@ -741,21 +744,40 @@ VisualEffectResource:
       = uvData.blend;\n\t\t\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS && defined(VFX_VARYING_MOTIONVECTORSCALE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_MOTIONVECTORSCALE
       = motionVectorScale * invFlipBookSize;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t   
       \n\t\t\t    \n\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tfloat4 frag(ps_input i) : SV_TARGET\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t   
-      #ifdef VFX_SHADERGRAPH\n\t\t\t        \n\t\t\t        \n\t\t\t        \n\t\t\t       
-      \n\t\t\t        float alpha = OUTSG.;\n\t\t\t    #else\n\t\t\t        float
-      alpha = VFXGetFragmentColor(i).a;\n\t\t\t        alpha *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t   
-      #endif\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\n\t\t\t\t#if VFX_PASSDEPTH
-      == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2 velocity =
-      (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) - (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
-      _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined \n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#define
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH 1\n\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t#define VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH
+      0\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#ifdef VFX_SHADERGRAPH\n\t\t\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t   
+      #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t    // We need the depth color as SV_Target0
+      for alpha to coverage\n\t\t\t\t\t    , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target1\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      // When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t    #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t   
+      , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      , out float4 dummy : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outSelection : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t   
+      #ifdef VFX_SHADERGRAPH\n\t\t\t\t\t        \n\t\t\t\t\t        \n\t\t\t\t\t       
+      float alpha = OUTSG.;\n\t\t\t\t\t    #else\n\t\t\t\t\t        float alpha =
+      VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\t#if VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
+      velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\toutSelection
+      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t#ifndef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\t\tdummy
+      = (float4)0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined \n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
       Forward pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"ForwardOnly\"
       }\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t#pragma multi_compile
       _ DEBUG_DISPLAY\n\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos :
@@ -888,7 +910,7 @@ VisualEffectResource:
       /*inout */attributes.scaleY);\n\t\t\t\t{\n\t\t\t\t    SetAttribute_FDD06EC7(
       /*inout */attributes.color, float3(2.76078439, 34.8862762, 64));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
       float tmp_bd = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_be
-      = SampleCurve(uniform_c,tmp_bd);\n\t\t\t\t    float tmp_bg = tmp_be + (float)-0.0250000004;\n\t\t\t\t   
+      = SampleCurve(uniform_a,tmp_bd);\n\t\t\t\t    float tmp_bg = tmp_be + (float)-0.0250000004;\n\t\t\t\t   
       float tmp_bh = attributes.stripProgress - tmp_bg;\n\t\t\t\t    float tmp_bj
       = tmp_be + (float)0.0250000004;\n\t\t\t\t    float tmp_bk = tmp_bj - tmp_bg;\n\t\t\t\t   
       float tmp_bl = tmp_bh / tmp_bk;\n\t\t\t\t    float tmp_bn = max(tmp_bl, (float)0);\n\t\t\t\t   
@@ -899,7 +921,7 @@ VisualEffectResource:
       */attributes.alpha, tmp_bt);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_ba
       = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_bc = attributes.stripProgress
       * (float)0.200000003;\n\t\t\t\t    float tmp_bd = tmp_ba - tmp_bc;\n\t\t\t\t   
-      float tmp_be = SampleCurve(uniform_d,tmp_bd);\n\t\t\t\t    float3 tmp_bf =
+      float tmp_be = SampleCurve(uniform_b,tmp_bd);\n\t\t\t\t    float3 tmp_bf =
       float3(tmp_be, tmp_be, tmp_be);\n\t\t\t\t    SetAttribute_545F0ED( /*inout
       */attributes.color, tmp_bf);\n\t\t\t\t}\n\t\t\t\tAttributeFromCurve_7BA3F6A(
       /*inout */attributes.alpha, attributes.age, attributes.lifetime, Alpha_g);\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t#if
@@ -1050,17 +1072,20 @@ VisualEffectResource:
       Source:Slot Random:Uniform channels:XYZ */\n{\n    age = lerp(A,B,RAND);\n}\nvoid
       SetAttribute_F01429A3(inout float lifetime, inout uint seed, float A, float
       B) /*attribute:lifetime Composition:Overwrite Source:Slot Random:Uniform channels:XYZ
-      */\n{\n    lifetime = lerp(A,B,RAND);\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool
-      GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
+      */\n{\n    lifetime = lerp(A,B,RAND);\n}\n\n\r\n\r\n// Due to a bug in HLSL
+      compiler, disable spurious \"unitialized variable\" due to mid function return
+      statement\r\n#pragma warning(push)\r\n#pragma warning(disable : 4000)\r\n#if
+      HAS_STRIPS\r\nbool GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
       relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
       1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT) // strip
       is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
       -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -1120,8 +1145,8 @@ VisualEffectResource:
       uniform_d;\n    float deltaTime_d;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       float3 velocity;\n    float age;\n    float lifetime;\n    float stripProgress;\n   
       float3 position;\n    float3 direction;\n    float rateCount_d;\n    uint eventCount;\n   
-      bool alive;\n};\n\nstruct SourceAttributes\n{\n};\n\nTexture2D texture_b;\nSamplerState
-      samplertexture_b;\nfloat4 texture_b_TexelSize;\nAppendStructuredBuffer<uint>
+      bool alive;\n};\n\nstruct SourceAttributes\n{\n};\n\nTexture2D texture_a;\nSamplerState
+      samplertexture_a;\nfloat4 texture_a_TexelSize;\n\nAppendStructuredBuffer<uint>
       eventListOut_a;\n\n\r\n\r\n#define USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT &&
       !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer attributeBuffer;\r\n\r\n#if USE_DEAD_LIST\r\nRWStructuredBuffer<uint>
       deadListOut;\r\n#endif\r\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\nRWStructuredBuffer<uint>
@@ -1169,7 +1194,7 @@ VisualEffectResource:
       uint tmp_t = tmp_r > (uint)0 ? tmp_r : (uint)0;\n\t\t\t    uint tmp_u = tmp_t
       < asuint(uniform_c) ? tmp_t : asuint(uniform_c);\n\t\t\t    float tmp_v = (float)tmp_u;\n\t\t\t   
       float3 tmp_x = float3(tmp_v, (float)0, (float)0);\n\t\t\t    float4 tmp_y =
-      LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_x);\n\t\t\t    float tmp_z = tmp_y[0];\n\t\t\t   
+      LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_x);\n\t\t\t    float tmp_z = tmp_y[0];\n\t\t\t   
       float tmp_ba = tmp_y[1];\n\t\t\t    float tmp_bb = tmp_y[2];\n\t\t\t    float3
       tmp_bc = float3(tmp_z, tmp_ba, tmp_bb);\n\t\t\t    float tmp_be = frac(tmp_q);\n\t\t\t   
       float tmp_bf = max(tmp_be, (float)0);\n\t\t\t    float tmp_bg = min(tmp_bf,
@@ -1180,14 +1205,14 @@ VisualEffectResource:
       int tmp_br = max(tmp_bp, (int)0);\n\t\t\t    int tmp_bs = min(tmp_br, asint(uniform_d));\n\t\t\t   
       uint tmp_bt = (uint)tmp_bs;\n\t\t\t    float tmp_bu = (float)tmp_bt;\n\t\t\t   
       float3 tmp_bv = float3(tmp_bu, (float)0, (float)0);\n\t\t\t    float4 tmp_bw
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bv);\n\t\t\t    float tmp_bx
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bv);\n\t\t\t    float tmp_bx
       = tmp_bw[0];\n\t\t\t    float tmp_by = tmp_bw[1];\n\t\t\t    float tmp_bz =
       tmp_bw[2];\n\t\t\t    float3 tmp_ca = float3(tmp_bx, tmp_by, tmp_bz);\n\t\t\t   
       uint tmp_cc = tmp_r + (uint)4294967295;\n\t\t\t    int tmp_cd = (int)tmp_cc;\n\t\t\t   
       int tmp_ce = max(tmp_cd, (int)0);\n\t\t\t    int tmp_cf = min(tmp_ce, asint(uniform_d));\n\t\t\t   
       uint tmp_cg = (uint)tmp_cf;\n\t\t\t    float tmp_ch = (float)tmp_cg;\n\t\t\t   
       float3 tmp_ci = float3(tmp_ch, (float)0, (float)0);\n\t\t\t    float4 tmp_cj
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ci);\n\t\t\t    float tmp_ck
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ci);\n\t\t\t    float tmp_ck
       = tmp_cj[0];\n\t\t\t    float tmp_cl = tmp_cj[1];\n\t\t\t    float tmp_cm =
       tmp_cj[2];\n\t\t\t    float3 tmp_cn = float3(tmp_ck, tmp_cl, tmp_cm);\n\t\t\t   
       float3 tmp_co = tmp_ca - tmp_cn;\n\t\t\t    float3 tmp_cp = tmp_co * tmp_co;\n\t\t\t   
@@ -1215,7 +1240,7 @@ VisualEffectResource:
       tmp_eg = max(tmp_ef, (int)0);\n\t\t\t    int tmp_eh = min(tmp_eg, asint(uniform_d));\n\t\t\t   
       uint tmp_ei = (uint)tmp_eh;\n\t\t\t    float tmp_ej = (float)tmp_ei;\n\t\t\t   
       float3 tmp_ek = float3(tmp_ej, (float)0, (float)0);\n\t\t\t    float4 tmp_el
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ek);\n\t\t\t    float tmp_em
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ek);\n\t\t\t    float tmp_em
       = tmp_el[0];\n\t\t\t    float tmp_en = tmp_el[1];\n\t\t\t    float tmp_eo =
       tmp_el[2];\n\t\t\t    float3 tmp_ep = float3(tmp_em, tmp_en, tmp_eo);\n\t\t\t   
       float3 tmp_eq = tmp_ep - tmp_bc;\n\t\t\t    float3 tmp_er = tmp_eq * tmp_eq;\n\t\t\t   
@@ -1251,21 +1276,21 @@ VisualEffectResource:
       tmp_bd = tmp_bb > (uint)0 ? tmp_bb : (uint)0;\n\t\t\t    uint tmp_be = tmp_bd
       < asuint(uniform_c) ? tmp_bd : asuint(uniform_c);\n\t\t\t    float tmp_bf =
       (float)tmp_be;\n\t\t\t    float3 tmp_bg = float3(tmp_bf, (float)0, (float)0);\n\t\t\t   
-      float4 tmp_bh = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bg);\n\t\t\t   
+      float4 tmp_bh = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bg);\n\t\t\t   
       float tmp_bi = tmp_bh[0];\n\t\t\t    float tmp_bj = tmp_bh[1];\n\t\t\t    float
       tmp_bk = tmp_bh[2];\n\t\t\t    float3 tmp_bl = float3(tmp_bi, tmp_bj, tmp_bk);\n\t\t\t   
       int tmp_bm = (int)tmp_bb;\n\t\t\t    int tmp_bo = tmp_bm + (int)1;\n\t\t\t   
       int tmp_bq = max(tmp_bo, (int)0);\n\t\t\t    int tmp_br = min(tmp_bq, asint(uniform_d));\n\t\t\t   
       uint tmp_bs = (uint)tmp_br;\n\t\t\t    float tmp_bt = (float)tmp_bs;\n\t\t\t   
       float3 tmp_bu = float3(tmp_bt, (float)0, (float)0);\n\t\t\t    float4 tmp_bv
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bu);\n\t\t\t    float tmp_bw
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bu);\n\t\t\t    float tmp_bw
       = tmp_bv[0];\n\t\t\t    float tmp_bx = tmp_bv[1];\n\t\t\t    float tmp_by =
       tmp_bv[2];\n\t\t\t    float3 tmp_bz = float3(tmp_bw, tmp_bx, tmp_by);\n\t\t\t   
       uint tmp_cb = tmp_bb + (uint)4294967295;\n\t\t\t    int tmp_cc = (int)tmp_cb;\n\t\t\t   
       int tmp_cd = max(tmp_cc, (int)0);\n\t\t\t    int tmp_ce = min(tmp_cd, asint(uniform_d));\n\t\t\t   
       uint tmp_cf = (uint)tmp_ce;\n\t\t\t    float tmp_cg = (float)tmp_cf;\n\t\t\t   
       float3 tmp_ch = float3(tmp_cg, (float)0, (float)0);\n\t\t\t    float4 tmp_ci
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ch);\n\t\t\t    float tmp_cj
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ch);\n\t\t\t    float tmp_cj
       = tmp_ci[0];\n\t\t\t    float tmp_ck = tmp_ci[1];\n\t\t\t    float tmp_cl =
       tmp_ci[2];\n\t\t\t    float3 tmp_cm = float3(tmp_cj, tmp_ck, tmp_cl);\n\t\t\t   
       float3 tmp_cn = tmp_bz - tmp_cm;\n\t\t\t    float3 tmp_co = tmp_cn * tmp_cn;\n\t\t\t   
@@ -1292,7 +1317,7 @@ VisualEffectResource:
       int tmp_ee = (int)tmp_ed;\n\t\t\t    int tmp_ef = max(tmp_ee, (int)0);\n\t\t\t   
       int tmp_eg = min(tmp_ef, asint(uniform_d));\n\t\t\t    uint tmp_eh = (uint)tmp_eg;\n\t\t\t   
       float tmp_ei = (float)tmp_eh;\n\t\t\t    float3 tmp_ej = float3(tmp_ei, (float)0,
-      (float)0);\n\t\t\t    float4 tmp_ek = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ej);\n\t\t\t   
+      (float)0);\n\t\t\t    float4 tmp_ek = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ej);\n\t\t\t   
       float tmp_el = tmp_ek[0];\n\t\t\t    float tmp_em = tmp_ek[1];\n\t\t\t    float
       tmp_en = tmp_ek[2];\n\t\t\t    float3 tmp_eo = float3(tmp_el, tmp_em, tmp_en);\n\t\t\t   
       float3 tmp_ep = tmp_eo - tmp_bl;\n\t\t\t    float3 tmp_eq = tmp_ep * tmp_ep;\n\t\t\t   
@@ -1324,16 +1349,16 @@ VisualEffectResource:
       * 0x8 + 0x84) << 2,asuint(attributes.stripProgress));\n\t\t\t\tattributeBuffer.Store3((index
       * 0x8 + 0x80) << 2,asuint(attributes.position));\n\t\t\t\tattributeBuffer.Store3((index
       * 0x4 + 0x180) << 2,asuint(attributes.direction));\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x85) << 2,asuint(attributes.rateCount_d));\n\t\t\t\tfor (uint i =
-      0; i < eventCount_a; ++i) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if
+      * 0x8 + 0x85) << 2,asuint(attributes.rateCount_d));\n\t\t\t\tfor (uint ia =
+      0; ia < eventCount_a; ++ia) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if
       VFX_HAS_INDIRECT_DRAW\r\n                uint indirectIndex = indirectBuffer.IncrementCounter();\r\n\t\t\t\tindirectBuffer[indirectIndex]
       = index;\r\n#endif\r\n\r\n#if HAS_STRIPS\t\t\t\r\n\t\t\t\tuint relativeIndexInStrip
       = GetRelativeIndex(index, stripData);\r\n\t\t\t\tInterlockedMin(STRIP_DATA(STRIP_MIN_ALIVE,
       stripData.stripIndex), relativeIndexInStrip);\r\n\t\t\t\tInterlockedMax(STRIP_DATA(STRIP_MAX_ALIVE,
       stripData.stripIndex), relativeIndexInStrip);\r\n#endif\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x86) << 2,uint(attributes.alive));\n\t\t\t\tfor (uint i = 0; i < eventCount_a;
-      ++i) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if USE_DEAD_LIST && !VFX_USE_STRIPALIVE_CURRENT\r\n\t\t\t\tuint
-      deadIndex = deadListOut.IncrementCounter();\r\n\t\t\t\tdeadListOut[deadIndex]
+      * 0x8 + 0x86) << 2,uint(attributes.alive));\n\t\t\t\tfor (uint ia = 0; ia <
+      eventCount_a; ++ia) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if USE_DEAD_LIST
+      && !VFX_USE_STRIPALIVE_CURRENT\r\n\t\t\t\tuint deadIndex = deadListOut.IncrementCounter();\r\n\t\t\t\tdeadListOut[deadIndex]
       = index;\r\n#endif\r\n\t\t\t}\r\n\t\t}\r\n#if USE_DEAD_LIST && VFX_USE_STRIPALIVE_CURRENT\r\n       
       else if (attributes.stripAlive)\r\n        {\r\n            if (STRIP_DATA_X(attachedStripDataBuffer,
       STRIP_MIN_ALIVE, index) == ~1) // Attached strip is no longer alive, recycle
@@ -1357,7 +1382,7 @@ VisualEffectResource:
       = attributes.stripProgress * uniform_b;\n\t\t    uint tmp_r = (uint)tmp_q;\n\t\t   
       uint tmp_t = tmp_r > (uint)0 ? tmp_r : (uint)0;\n\t\t    uint tmp_u = tmp_t
       < asuint(uniform_c) ? tmp_t : asuint(uniform_c);\n\t\t    float tmp_v = (float)tmp_u;\n\t\t   
-      float3 tmp_x = float3(tmp_v, (float)0, (float)0);\n\t\t    float4 tmp_y = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_x);\n\t\t   
+      float3 tmp_x = float3(tmp_v, (float)0, (float)0);\n\t\t    float4 tmp_y = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_x);\n\t\t   
       float tmp_z = tmp_y[0];\n\t\t    float tmp_ba = tmp_y[1];\n\t\t    float tmp_bb
       = tmp_y[2];\n\t\t    float3 tmp_bc = float3(tmp_z, tmp_ba, tmp_bb);\n\t\t   
       float tmp_be = frac(tmp_q);\n\t\t    float tmp_bf = max(tmp_be, (float)0);\n\t\t   
@@ -1368,14 +1393,14 @@ VisualEffectResource:
       tmp_bn + (int)1;\n\t\t    int tmp_br = max(tmp_bp, (int)0);\n\t\t    int tmp_bs
       = min(tmp_br, asint(uniform_d));\n\t\t    uint tmp_bt = (uint)tmp_bs;\n\t\t   
       float tmp_bu = (float)tmp_bt;\n\t\t    float3 tmp_bv = float3(tmp_bu, (float)0,
-      (float)0);\n\t\t    float4 tmp_bw = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bv);\n\t\t   
+      (float)0);\n\t\t    float4 tmp_bw = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bv);\n\t\t   
       float tmp_bx = tmp_bw[0];\n\t\t    float tmp_by = tmp_bw[1];\n\t\t    float
       tmp_bz = tmp_bw[2];\n\t\t    float3 tmp_ca = float3(tmp_bx, tmp_by, tmp_bz);\n\t\t   
       uint tmp_cc = tmp_r + (uint)4294967295;\n\t\t    int tmp_cd = (int)tmp_cc;\n\t\t   
       int tmp_ce = max(tmp_cd, (int)0);\n\t\t    int tmp_cf = min(tmp_ce, asint(uniform_d));\n\t\t   
       uint tmp_cg = (uint)tmp_cf;\n\t\t    float tmp_ch = (float)tmp_cg;\n\t\t   
       float3 tmp_ci = float3(tmp_ch, (float)0, (float)0);\n\t\t    float4 tmp_cj
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ci);\n\t\t    float tmp_ck =
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ci);\n\t\t    float tmp_ck =
       tmp_cj[0];\n\t\t    float tmp_cl = tmp_cj[1];\n\t\t    float tmp_cm = tmp_cj[2];\n\t\t   
       float3 tmp_cn = float3(tmp_ck, tmp_cl, tmp_cm);\n\t\t    float3 tmp_co = tmp_ca
       - tmp_cn;\n\t\t    float3 tmp_cp = tmp_co * tmp_co;\n\t\t    float tmp_cq =
@@ -1401,7 +1426,7 @@ VisualEffectResource:
       tmp_r + (uint)2;\n\t\t    int tmp_ef = (int)tmp_ee;\n\t\t    int tmp_eg = max(tmp_ef,
       (int)0);\n\t\t    int tmp_eh = min(tmp_eg, asint(uniform_d));\n\t\t    uint
       tmp_ei = (uint)tmp_eh;\n\t\t    float tmp_ej = (float)tmp_ei;\n\t\t    float3
-      tmp_ek = float3(tmp_ej, (float)0, (float)0);\n\t\t    float4 tmp_el = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ek);\n\t\t   
+      tmp_ek = float3(tmp_ej, (float)0, (float)0);\n\t\t    float4 tmp_el = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ek);\n\t\t   
       float tmp_em = tmp_el[0];\n\t\t    float tmp_en = tmp_el[1];\n\t\t    float
       tmp_eo = tmp_el[2];\n\t\t    float3 tmp_ep = float3(tmp_em, tmp_en, tmp_eo);\n\t\t   
       float3 tmp_eq = tmp_ep - tmp_bc;\n\t\t    float3 tmp_er = tmp_eq * tmp_eq;\n\t\t   
@@ -1436,20 +1461,20 @@ VisualEffectResource:
       uint tmp_bd = tmp_bb > (uint)0 ? tmp_bb : (uint)0;\n\t\t    uint tmp_be = tmp_bd
       < asuint(uniform_c) ? tmp_bd : asuint(uniform_c);\n\t\t    float tmp_bf = (float)tmp_be;\n\t\t   
       float3 tmp_bg = float3(tmp_bf, (float)0, (float)0);\n\t\t    float4 tmp_bh
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bg);\n\t\t    float tmp_bi =
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bg);\n\t\t    float tmp_bi =
       tmp_bh[0];\n\t\t    float tmp_bj = tmp_bh[1];\n\t\t    float tmp_bk = tmp_bh[2];\n\t\t   
       float3 tmp_bl = float3(tmp_bi, tmp_bj, tmp_bk);\n\t\t    int tmp_bm = (int)tmp_bb;\n\t\t   
       int tmp_bo = tmp_bm + (int)1;\n\t\t    int tmp_bq = max(tmp_bo, (int)0);\n\t\t   
       int tmp_br = min(tmp_bq, asint(uniform_d));\n\t\t    uint tmp_bs = (uint)tmp_br;\n\t\t   
       float tmp_bt = (float)tmp_bs;\n\t\t    float3 tmp_bu = float3(tmp_bt, (float)0,
-      (float)0);\n\t\t    float4 tmp_bv = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_bu);\n\t\t   
+      (float)0);\n\t\t    float4 tmp_bv = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_bu);\n\t\t   
       float tmp_bw = tmp_bv[0];\n\t\t    float tmp_bx = tmp_bv[1];\n\t\t    float
       tmp_by = tmp_bv[2];\n\t\t    float3 tmp_bz = float3(tmp_bw, tmp_bx, tmp_by);\n\t\t   
       uint tmp_cb = tmp_bb + (uint)4294967295;\n\t\t    int tmp_cc = (int)tmp_cb;\n\t\t   
       int tmp_cd = max(tmp_cc, (int)0);\n\t\t    int tmp_ce = min(tmp_cd, asint(uniform_d));\n\t\t   
       uint tmp_cf = (uint)tmp_ce;\n\t\t    float tmp_cg = (float)tmp_cf;\n\t\t   
       float3 tmp_ch = float3(tmp_cg, (float)0, (float)0);\n\t\t    float4 tmp_ci
-      = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ch);\n\t\t    float tmp_cj =
+      = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ch);\n\t\t    float tmp_cj =
       tmp_ci[0];\n\t\t    float tmp_ck = tmp_ci[1];\n\t\t    float tmp_cl = tmp_ci[2];\n\t\t   
       float3 tmp_cm = float3(tmp_cj, tmp_ck, tmp_cl);\n\t\t    float3 tmp_cn = tmp_bz
       - tmp_cm;\n\t\t    float3 tmp_co = tmp_cn * tmp_cn;\n\t\t    float tmp_cp =
@@ -1475,7 +1500,7 @@ VisualEffectResource:
       int tmp_ee = (int)tmp_ed;\n\t\t    int tmp_ef = max(tmp_ee, (int)0);\n\t\t   
       int tmp_eg = min(tmp_ef, asint(uniform_d));\n\t\t    uint tmp_eh = (uint)tmp_eg;\n\t\t   
       float tmp_ei = (float)tmp_eh;\n\t\t    float3 tmp_ej = float3(tmp_ei, (float)0,
-      (float)0);\n\t\t    float4 tmp_ek = LoadTexture(VFX_SAMPLER(texture_b),(int3)tmp_ej);\n\t\t   
+      (float)0);\n\t\t    float4 tmp_ek = LoadTexture(VFX_SAMPLER(texture_a),(int3)tmp_ej);\n\t\t   
       float tmp_el = tmp_ek[0];\n\t\t    float tmp_em = tmp_ek[1];\n\t\t    float
       tmp_en = tmp_ek[2];\n\t\t    float3 tmp_eo = float3(tmp_el, tmp_em, tmp_en);\n\t\t   
       float3 tmp_ep = tmp_eo - tmp_bl;\n\t\t    float3 tmp_eq = tmp_ep * tmp_ep;\n\t\t   
@@ -1506,8 +1531,8 @@ VisualEffectResource:
       * 0x8 + 0x80) << 2,asuint(attributes.position));\n\t\tattributeBuffer.Store3((index
       * 0x4 + 0x180) << 2,asuint(attributes.direction));\n\t\tattributeBuffer.Store((index
       * 0x8 + 0x85) << 2,asuint(attributes.rateCount_d));\n\t\tattributeBuffer.Store((index
-      * 0x8 + 0x86) << 2,uint(attributes.alive));\n\t\tfor (uint i = 0; i < eventCount_a;
-      ++i) eventListOut_a.Append(index);\n\t\t\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\n       
+      * 0x8 + 0x86) << 2,uint(attributes.alive));\n\t\tfor (uint ia = 0; ia < eventCount_a;
+      ++ia) eventListOut_a.Append(index);\n\t\t\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\n       
       uint indirectIndex = indirectBuffer.IncrementCounter();\r\n\t\tindirectBuffer[indirectIndex]
       = index;\r\n#endif\r\n#endif\r\n\t}\r\n}\r\n"
   - compute: 1
@@ -1547,16 +1572,19 @@ VisualEffectResource:
       Source:Slot Random:Uniform channels:XYZ */\n{\n    lifetime = lerp(A,B,RAND);\n}\nvoid
       SetCustomAttribute_A2581241(inout float rateCount_c, float _RateCount_c) /*attribute:rateCount_c
       Composition:Overwrite Random:Off AttributeType:Float */\n{\n    rateCount_c
-      = _RateCount_c;\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout
-      uint particleIndex, uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
+      = _RateCount_c;\n}\n\n\r\n\r\n// Due to a bug in HLSL compiler, disable spurious
+      \"unitialized variable\" due to mid function return statement\r\n#pragma warning(push)\r\n#pragma
+      warning(disable : 4000)\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout uint
+      particleIndex, uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
       stripIndex), 1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT)
       // strip is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
       stripIndex), -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -1612,7 +1640,7 @@ VisualEffectResource:
       1\n#define VFX_USE_ALPHA_CURRENT 1\n#define VFX_USE_AGE_CURRENT 1\n#define
       VFX_USE_EVENTCOUNT_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT 1\n#define VFX_USE_STRIPALIVE_CURRENT
       1\n#define VFX_WORLD_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float4 Alpha_b;\n    float3 uniform_b;\n    float deltaTime_c;\nCBUFFER_END\n\nstruct
+      float4 Alpha_b;\n    float3 uniform_a;\n    float deltaTime_c;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float3 position;\n    float3 velocity;\n    float lifetime;\n   
       float rateCount_c;\n    float alpha;\n    float age;\n    uint eventCount;\n   
       bool alive;\n    bool stripAlive;\n};\n\nstruct SourceAttributes\n{\n};\n\nAppendStructuredBuffer<uint>
@@ -1663,7 +1691,7 @@ VisualEffectResource:
       float tmp_u = tmp_q[2];\n\t\t\t    float tmp_v = tmp_u * (float)2;\n\t\t\t   
       float tmp_w = tmp_q[3];\n\t\t\t    float tmp_x = tmp_w * (float)2;\n\t\t\t   
       float3 tmp_y = float3(tmp_t, tmp_v, tmp_x);\n\t\t\t    float3 tmp_z = tmp_y
-      * uniform_b;\n\t\t\t    float3 tmp_bb = tmp_z * float3(2, 2, 2);\n\t\t\t   
+      * uniform_a;\n\t\t\t    float3 tmp_bb = tmp_z * float3(2, 2, 2);\n\t\t\t   
       SetAttribute_C707D62A( /*inout */attributes.position, tmp_bb);\n\t\t\t}\n\t\t\tAttributeFromCurve_7BA3F6A(
       /*inout */attributes.alpha, attributes.age, attributes.lifetime, Alpha_b);\n\t\t\t{\n\t\t\t   
       attributes.eventCount = 0u;\n\t\t\t    GPUEventRate_1( /*inout */attributes.rateCount_c, 
@@ -1676,16 +1704,16 @@ VisualEffectResource:
       * 0x8 + 0x3) << 2,asuint(attributes.rateCount_c));\n\t\t\t\tattributeBuffer.Store((index
       * 0x2 + 0x9601) << 2,asuint(attributes.alpha));\n\t\t\t\tattributeBuffer.Store((index
       * 0x8 + 0x4) << 2,asuint(attributes.age));\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x6) << 2,uint(attributes.stripAlive));\n\t\t\t\tfor (uint i = 0; i
-      < eventCount_a; ++i) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\n               
+      * 0x8 + 0x6) << 2,uint(attributes.stripAlive));\n\t\t\t\tfor (uint ia = 0;
+      ia < eventCount_a; ++ia) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\n               
       uint indirectIndex = indirectBuffer.IncrementCounter();\r\n\t\t\t\tindirectBuffer[indirectIndex]
       = index;\r\n#endif\r\n\r\n#if HAS_STRIPS\t\t\t\r\n\t\t\t\tuint relativeIndexInStrip
       = GetRelativeIndex(index, stripData);\r\n\t\t\t\tInterlockedMin(STRIP_DATA(STRIP_MIN_ALIVE,
       stripData.stripIndex), relativeIndexInStrip);\r\n\t\t\t\tInterlockedMax(STRIP_DATA(STRIP_MAX_ALIVE,
       stripData.stripIndex), relativeIndexInStrip);\r\n#endif\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store((index
-      * 0x8 + 0x5) << 2,uint(attributes.alive));\n\t\t\t\tfor (uint i = 0; i < eventCount_a;
-      ++i) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if USE_DEAD_LIST && !VFX_USE_STRIPALIVE_CURRENT\r\n\t\t\t\tuint
-      deadIndex = deadListOut.IncrementCounter();\r\n\t\t\t\tdeadListOut[deadIndex]
+      * 0x8 + 0x5) << 2,uint(attributes.alive));\n\t\t\t\tfor (uint ia = 0; ia <
+      eventCount_a; ++ia) eventListOut_a.Append(index);\n\t\t\t\t\n\r\n#if USE_DEAD_LIST
+      && !VFX_USE_STRIPALIVE_CURRENT\r\n\t\t\t\tuint deadIndex = deadListOut.IncrementCounter();\r\n\t\t\t\tdeadListOut[deadIndex]
       = index;\r\n#endif\r\n\t\t\t}\r\n\t\t}\r\n#if USE_DEAD_LIST && VFX_USE_STRIPALIVE_CURRENT\r\n       
       else if (attributes.stripAlive)\r\n        {\r\n            if (STRIP_DATA_X(attachedStripDataBuffer,
       STRIP_MIN_ALIVE, index) == ~1) // Attached strip is no longer alive, recycle
@@ -1710,7 +1738,7 @@ VisualEffectResource:
       float tmp_r = tmp_q[1];\n\t\t    float tmp_t = tmp_r * (float)2;\n\t\t    float
       tmp_u = tmp_q[2];\n\t\t    float tmp_v = tmp_u * (float)2;\n\t\t    float tmp_w
       = tmp_q[3];\n\t\t    float tmp_x = tmp_w * (float)2;\n\t\t    float3 tmp_y
-      = float3(tmp_t, tmp_v, tmp_x);\n\t\t    float3 tmp_z = tmp_y * uniform_b;\n\t\t   
+      = float3(tmp_t, tmp_v, tmp_x);\n\t\t    float3 tmp_z = tmp_y * uniform_a;\n\t\t   
       float3 tmp_bb = tmp_z * float3(2, 2, 2);\n\t\t    SetAttribute_C707D62A( /*inout
       */attributes.position, tmp_bb);\n\t\t}\n\t\tAttributeFromCurve_7BA3F6A( /*inout
       */attributes.alpha, attributes.age, attributes.lifetime, Alpha_b);\n\t\t{\n\t\t   
@@ -1724,8 +1752,8 @@ VisualEffectResource:
       * 0x2 + 0x9601) << 2,asuint(attributes.alpha));\n\t\tattributeBuffer.Store((index
       * 0x8 + 0x4) << 2,asuint(attributes.age));\n\t\tattributeBuffer.Store((index
       * 0x8 + 0x5) << 2,uint(attributes.alive));\n\t\tattributeBuffer.Store((index
-      * 0x8 + 0x6) << 2,uint(attributes.stripAlive));\n\t\tfor (uint i = 0; i < eventCount_a;
-      ++i) eventListOut_a.Append(index);\n\t\t\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\n       
+      * 0x8 + 0x6) << 2,uint(attributes.stripAlive));\n\t\tfor (uint ia = 0; ia <
+      eventCount_a; ++ia) eventListOut_a.Append(index);\n\t\t\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\n       
       uint indirectIndex = indirectBuffer.IncrementCounter();\r\n\t\tindirectBuffer[indirectIndex]
       = index;\r\n#endif\r\n#endif\r\n\t}\r\n}\r\n"
   - compute: 1
@@ -1758,16 +1786,20 @@ VisualEffectResource:
       Composition:Overwrite Source:Source Random:Off channels:XYZ */\n{\n    alpha
       = Value;\n}\nvoid SetAttribute_F0142CB9(inout float lifetime, float Lifetime)
       /*attribute:lifetime Composition:Overwrite Source:Slot Random:Off channels:XYZ
-      */\n{\n    lifetime = Lifetime;\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout
-      uint particleIndex, uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
-      stripIndex), 1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT)
-      // strip is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
-      stripIndex), -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
+      */\n{\n    lifetime = Lifetime;\n}\n\n\r\n\r\n// Due to a bug in HLSL compiler,
+      disable spurious \"unitialized variable\" due to mid function return statement\r\n#pragma
+      warning(push)\r\n#pragma warning(disable : 4000)\r\n#if HAS_STRIPS\r\nbool
+      GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
+      relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
+      1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT) // strip
+      is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
+      -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -1869,7 +1901,7 @@ VisualEffectResource:
     name: '[System 4]Output ParticleStrip Quad'
     source: "Shader \"Hidden/VFX/Lightning/System 4/Output ParticleStrip Quad\"\n{\r\n\tSubShader\r\n\t{\t\r\n\t\tCull
       Off\r\n\t\t\r\n\t\tTags { \"Queue\"=\"Transparent+0\" \"IgnoreProjector\"=\"True\"
-      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
+      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
       SrcAlpha OneMinusSrcAlpha \n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t\n\t\t#define
       NB_THREADS_PER_GROUP 64\n\t\t#define HAS_ATTRIBUTES 1\n\t\t#define VFX_PASSDEPTH_ACTUAL
       (0)\n\t\t#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n\t\t#define VFX_PASSDEPTH_SELECTION
@@ -1885,7 +1917,7 @@ VisualEffectResource:
       PARTICLE_PER_STRIP_COUNT 200u\n\t\t#define VFX_COLORMAPPING_DEFAULT 1\n\t\t#define
       IS_TRANSPARENT_PARTICLE 1\n\t\t#define VFX_BLENDMODE_ALPHA 1\n\t\t#define VFX_BYPASS_EXPOSURE
       1\n\t\t#define HAS_STRIPS 1\n\t\t#define VFX_STRIPS_UV_STRECHED 1\n\t\t#define
-      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_WORLD_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
       float4 Alpha_e;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct Attributes\n\t\t{\n\t\t   
       float3 position;\n\t\t    float alpha;\n\t\t    float lifetime;\n\t\t    float3
@@ -1894,7 +1926,7 @@ VisualEffectResource:
       pivotX;\n\t\t    float pivotY;\n\t\t    float pivotZ;\n\t\t    float size;\n\t\t   
       float scaleX;\n\t\t    float scaleY;\n\t\t    float scaleZ;\n\t\t    float
       age;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
-      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\n\t\t\n\t\t#define
+      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
       VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
       HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
       VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
@@ -1930,8 +1962,8 @@ VisualEffectResource:
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
       cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
-      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
-      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t#define
+      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -2101,21 +2133,40 @@ VisualEffectResource:
       = uvData.blend;\n\t\t\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS && defined(VFX_VARYING_MOTIONVECTORSCALE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_MOTIONVECTORSCALE
       = motionVectorScale * invFlipBookSize;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t   
       \n\t\t\t    \n\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tfloat4 frag(ps_input i) : SV_TARGET\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t   
-      #ifdef VFX_SHADERGRAPH\n\t\t\t        \n\t\t\t        \n\t\t\t        \n\t\t\t       
-      \n\t\t\t        float alpha = OUTSG.;\n\t\t\t    #else\n\t\t\t        float
-      alpha = VFXGetFragmentColor(i).a;\n\t\t\t        alpha *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t   
-      #endif\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\n\t\t\t\t#if VFX_PASSDEPTH
-      == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2 velocity =
-      (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) - (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
-      _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined \n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#define
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH 1\n\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t#define VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH
+      0\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#ifdef VFX_SHADERGRAPH\n\t\t\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t   
+      #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t    // We need the depth color as SV_Target0
+      for alpha to coverage\n\t\t\t\t\t    , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target1\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      // When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t    #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t   
+      , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      , out float4 dummy : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outSelection : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t   
+      #ifdef VFX_SHADERGRAPH\n\t\t\t\t\t        \n\t\t\t\t\t        \n\t\t\t\t\t       
+      float alpha = OUTSG.;\n\t\t\t\t\t    #else\n\t\t\t\t\t        float alpha =
+      VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\t#if VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
+      velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\toutSelection
+      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t#ifndef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\t\tdummy
+      = (float4)0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined \n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
       Forward pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"ForwardOnly\"
       }\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t#pragma multi_compile
       _ DEBUG_DISPLAY\n\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos :
@@ -3598,7 +3649,7 @@ VisualEffectResource:
         index: 10
       - nameId: deltaTime_b
         index: 30
-      - nameId: texture_b
+      - nameId: texture_a
         index: 12
       params: []
       processor: {fileID: 0}
@@ -3613,9 +3664,9 @@ VisualEffectResource:
       values:
       - nameId: Size_b
         index: 62
-      - nameId: uniform_c
+      - nameId: uniform_a
         index: 20
-      - nameId: uniform_d
+      - nameId: uniform_b
         index: 31
       - nameId: Alpha_g
         index: 59
@@ -3690,7 +3741,7 @@ VisualEffectResource:
         index: 36
       - nameId: deltaTime_d
         index: 30
-      - nameId: texture_b
+      - nameId: texture_a
         index: 12
       params: []
       processor: {fileID: 0}
@@ -3751,7 +3802,7 @@ VisualEffectResource:
         index: 7
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 32
       - nameId: Alpha_b
         index: 44

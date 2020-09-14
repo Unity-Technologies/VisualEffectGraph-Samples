@@ -336,8 +336,8 @@ VisualEffectResource:
       VFX_USE_PIVOTZ_CURRENT 1\n#define VFX_USE_SIZE_CURRENT 1\n#define VFX_USE_SCALEX_CURRENT
       1\n#define VFX_USE_SCALEZ_CURRENT 1\n#define VFX_USE_COLOR_CURRENT 1\n#define
       VFX_USE_SMOOTHNESS_CURRENT 1\n#define VFX_WORLD_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float3 uniform_b;\n    uint PADDING_0;\n    float3 uniform_c;\n    uint PADDING_1;\n   
-      float3 uniform_d;\n    uint PADDING_2;\nCBUFFER_END\n\nstruct Attributes\n{\n   
+      float3 uniform_a;\n    uint PADDING_0;\n    float3 uniform_b;\n    uint PADDING_1;\n   
+      float3 uniform_c;\n    uint PADDING_2;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       uint particleId;\n    float3 position;\n    float scaleY;\n    float alpha;\n   
       float pivotX;\n    float pivotY;\n    float pivotZ;\n    float size;\n    float
       scaleX;\n    float scaleZ;\n    float3 color;\n    float Smoothness;\n};\n\nstruct
@@ -358,16 +358,19 @@ VisualEffectResource:
       writeTargetPosition:False mode:Wrap */\n{\n    position += computedPosition;\n   
       \n}\nvoid SetAttribute_D5151645(inout float scaleY, float Scale) /*attribute:scale
       Composition:Overwrite Source:Slot Random:Off channels:Y */\n{\n    scaleY =
-      Scale.x;\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout uint particleIndex,
-      uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
+      Scale.x;\n}\n\n\r\n\r\n// Due to a bug in HLSL compiler, disable spurious \"unitialized
+      variable\" due to mid function return statement\r\n#pragma warning(push)\r\n#pragma
+      warning(disable : 4000)\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout uint
+      particleIndex, uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
       stripIndex), 1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT)
       // strip is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
       stripIndex), -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -410,9 +413,9 @@ VisualEffectResource:
       float3 tmp_bm = tmp_bk * float3(2, 2, 2);\n            float3 tmp_bo = tmp_bm
       - float3(1, 1, 1);\n            float tmp_bp = tmp_bo[0];\n            float3
       tmp_bq = float3(tmp_bp, tmp_bp, tmp_bp);\n            float3 tmp_br = tmp_bq
-      * uniform_c;\n            float3 tmp_bs = uniform_b + tmp_br;\n           
+      * uniform_b;\n            float3 tmp_bs = uniform_a + tmp_br;\n           
       float tmp_bt = tmp_bo[2];\n            float3 tmp_bu = float3(tmp_bt, tmp_bt,
-      tmp_bt);\n            float3 tmp_bv = tmp_bu * uniform_d;\n            float3
+      tmp_bt);\n            float3 tmp_bv = tmp_bu * uniform_c;\n            float3
       tmp_bw = tmp_bs + tmp_bv;\n            PositionSequential_913D42CB(attributes.particleId, 
       /*inout */attributes.position, tmp_bw);\n        }\n        {\n           
       SetAttribute_D5151645( /*inout */attributes.scaleY, (float)0);\n        }\n       
@@ -439,8 +442,8 @@ VisualEffectResource:
       1\n#define VFX_WORLD_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
       float2 uniform_b;\n    float2 uniform_c;\n    float uniform_d;\n    float Blend_a;\n   
       uint2 PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n    float3 position;\n   
-      float scaleY;\n};\n\nstruct SourceAttributes\n{\n};\n\nTexture2D texture_b;\nSamplerState
-      samplertexture_b;\nfloat4 texture_b_TexelSize;\n\n\r\n\r\n#define USE_DEAD_LIST
+      float scaleY;\n};\n\nstruct SourceAttributes\n{\n};\n\nTexture2D texture_a;\nSamplerState
+      samplertexture_a;\nfloat4 texture_a_TexelSize;\n\n\n\r\n\r\n#define USE_DEAD_LIST
       (VFX_USE_ALIVE_CURRENT && !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer attributeBuffer;\r\n\r\n#if
       USE_DEAD_LIST\r\nRWStructuredBuffer<uint> deadListOut;\r\n#endif\r\n\r\n#if
       VFX_HAS_INDIRECT_DRAW\r\nRWStructuredBuffer<uint> indirectBuffer;\r\n#endif\r\n\r\n#if
@@ -466,7 +469,7 @@ VisualEffectResource:
       float tmp_z = attributes.position[2];\n\t\t\t    float2 tmp_ba = float2(tmp_y,
       tmp_z);\n\t\t\t    float2 tmp_bb = tmp_ba / uniform_b;\n\t\t\t    float2 tmp_bc
       = tmp_bb - uniform_c;\n\t\t\t    float2 tmp_be = tmp_bc - float2(-1, -1);\n\t\t\t   
-      float2 tmp_bg = tmp_be / float2(2, 2);\n\t\t\t    float4 tmp_bi = SampleTexture(VFX_SAMPLER(texture_b),tmp_bg,(float)0);\n\t\t\t   
+      float2 tmp_bg = tmp_be / float2(2, 2);\n\t\t\t    float4 tmp_bi = SampleTexture(VFX_SAMPLER(texture_a),tmp_bg,(float)0);\n\t\t\t   
       float tmp_bj = tmp_bi[1];\n\t\t\t    float tmp_bk = tmp_bj * uniform_d;\n\t\t\t   
       float tmp_bl = saturate(tmp_bk);\n\t\t\t    SetAttribute_E0455982( /*inout
       */attributes.scaleY, tmp_bl, Blend_a);\n\t\t\t}\n\t\t\t\n\r\n\r\n\t\t\tif (attributes.alive)\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store((index
@@ -492,7 +495,7 @@ VisualEffectResource:
       float tmp_z = attributes.position[2];\n\t\t    float2 tmp_ba = float2(tmp_y,
       tmp_z);\n\t\t    float2 tmp_bb = tmp_ba / uniform_b;\n\t\t    float2 tmp_bc
       = tmp_bb - uniform_c;\n\t\t    float2 tmp_be = tmp_bc - float2(-1, -1);\n\t\t   
-      float2 tmp_bg = tmp_be / float2(2, 2);\n\t\t    float4 tmp_bi = SampleTexture(VFX_SAMPLER(texture_b),tmp_bg,(float)0);\n\t\t   
+      float2 tmp_bg = tmp_be / float2(2, 2);\n\t\t    float4 tmp_bi = SampleTexture(VFX_SAMPLER(texture_a),tmp_bg,(float)0);\n\t\t   
       float tmp_bj = tmp_bi[1];\n\t\t    float tmp_bk = tmp_bj * uniform_d;\n\t\t   
       float tmp_bl = saturate(tmp_bk);\n\t\t    SetAttribute_E0455982( /*inout */attributes.scaleY,
       tmp_bl, Blend_a);\n\t\t}\n\t\t\n\r\n\t\tattributeBuffer.Store((index * 0x1
@@ -503,7 +506,7 @@ VisualEffectResource:
     name: '[System 1]Output Particle Lit Cube'
     source: "Shader \"Hidden/VFX/VoxelizedTerrain/System 1/Output Particle Lit Cube\"\n{\r\n\tSubShader\r\n\t{\t\r\n\t\tCull
       Back\r\n\t\t\r\n\t\tTags { \"Queue\"=\"Geometry+0\" \"IgnoreProjector\"=\"False\"
-      \"RenderType\"=\"Opaque\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tZTest
+      \"RenderType\"=\"Opaque\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tZTest
       LEqual\n\t\tZWrite On\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t\n\t\t#define
       NB_THREADS_PER_GROUP 64\n\t\t#define HAS_ATTRIBUTES 1\n\t\t#define VFX_PASSDEPTH_ACTUAL
       (0)\n\t\t#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n\t\t#define VFX_PASSDEPTH_SELECTION
@@ -520,10 +523,10 @@ VisualEffectResource:
       1\n\t\t#define HDRP_LIT 1\n\t\t#define HDRP_MATERIAL_TYPE_TRANSLUCENT 1\n\t\t#define
       HDRP_USE_BASE_COLOR_MAP 1\n\t\t#define HDRP_USE_BASE_COLOR_MAP_COLOR 1\n\t\t#define
       HDRP_USE_BASE_COLOR_MAP_ALPHA 1\n\t\t#define HDRP_USE_BASE_COLOR 1\n\t\t#define
-      IS_OPAQUE_NOT_SIMPLE_LIT_PARTICLE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      IS_OPAQUE_NOT_SIMPLE_LIT_PARTICLE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_WORLD_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
-      float4 uniform_e;\n\t\t    float Color_d;\n\t\t    float uniform_c;\n\t\t   
-      float uniform_d;\n\t\t    float uniform_f;\n\t\t    float currentFrameIndex;\n\t\t   
+      float4 uniform_c;\n\t\t    float Color_d;\n\t\t    float uniform_a;\n\t\t   
+      float uniform_b;\n\t\t    float uniform_d;\n\t\t    float currentFrameIndex;\n\t\t   
       uint3 PADDING_0;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct Attributes\n\t\t{\n\t\t   
       float3 position;\n\t\t    float scaleY;\n\t\t    float alpha;\n\t\t    bool
       alive;\n\t\t    float3 axisX;\n\t\t    float3 axisY;\n\t\t    float3 axisZ;\n\t\t   
@@ -531,7 +534,7 @@ VisualEffectResource:
       pivotX;\n\t\t    float pivotY;\n\t\t    float pivotZ;\n\t\t    float size;\n\t\t   
       float scaleX;\n\t\t    float scaleZ;\n\t\t    float3 color;\n\t\t    float
       Smoothness;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
-      baseColorMap;\n\t\tSamplerState samplerbaseColorMap;\n\t\tfloat4 baseColorMap_TexelSize;\n\t\t\n\n\t\t\n\t\t#define
+      baseColorMap;\n\t\tSamplerState samplerbaseColorMap;\n\t\tfloat4 baseColorMap_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
       VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
       HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
       VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
@@ -557,10 +560,11 @@ VisualEffectResource:
       builtInInterpolants.y\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
       cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#undef VFX_USE_RIM_LIGHT\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define
-      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
-      && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
-      must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t#define SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t\n\t\t\t#if
+      !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
+      VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
       SetAttribute_3278B22F(inout float size, float Size) /*attribute:size Composition:Overwrite
       Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    size = Size;\n\t\t\t}\n\t\t\tvoid
@@ -628,22 +632,22 @@ VisualEffectResource:
       /*inout */attributes.pivotZ, float3(0, -0.5, 0));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
       SetAttribute_D5151640( /*inout */attributes.scaleX,  /*inout */attributes.scaleZ,
       float2(0.00779999979, 0.00779999979));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    bool
-      tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
       ? tmp_bg : tmp_bi;\n\t\t\t\t    AttributeFromCurve_39BD5D15( /*inout */attributes.color, 
       /*inout */attributes.alpha, Color_d, tmp_bj);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      bool tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      bool tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
-      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_e,tmp_bj);\n\t\t\t\t   
+      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_c,tmp_bj);\n\t\t\t\t   
       SetCustomAttribute_CDCD03B1( /*inout */attributes.Smoothness, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      float tmp_ba = max(attributes.scaleY, uniform_c);\n\t\t\t\t    float tmp_bb
-      = uniform_f * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
+      float tmp_ba = max(attributes.scaleY, uniform_a);\n\t\t\t\t    float tmp_bb
+      = uniform_d * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
       tmp_bb);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_bb = attributes.scaleY
       / (float)0.00779999979;\n\t\t\t\t    float tmp_bc = floor(tmp_bb);\n\t\t\t\t   
       float tmp_bd = tmp_bc * (float)0.00779999979;\n\t\t\t\t    SetAttribute_D5151645(
@@ -727,36 +731,58 @@ VisualEffectResource:
       * float2(-i.VFX_VARYING_OFFSETS.z,1);\n\t\t\t\telse if (i.VFX_VARYING_FACEID
       == 1)\n\t\t\t\t\tuv = i.VFX_VARYING_OFFSETS.xz * float2(i.VFX_VARYING_OFFSETS.y,1);\n\t\t\t\telse\n\t\t\t\t\tuv
       = i.VFX_VARYING_OFFSETS.zy * float2(i.VFX_VARYING_OFFSETS.x,1);\n\t\t\t\treturn
-      uv * 0.5f + 0.5f;\n\t\t\t#else\n\t\t\t\treturn 0.0f;\n\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tfloat4 frag(ps_input i) : SV_Target0\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\tfloat
-      alpha = VFXGetFragmentColor(i).a;\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2
+      uv * 0.5f + 0.5f;\n\t\t\t#else\n\t\t\t\treturn 0.0f;\n\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\t\n\t\t\t#define
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH 0\n\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t#define VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH
+      0\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#ifdef VFX_SHADERGRAPH\n\t\t\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t   
+      #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t    // We need the depth color as SV_Target0
+      for alpha to coverage\n\t\t\t\t\t    , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target1\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      // When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t    #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t   
+      , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      , out float4 dummy : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outSelection : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t   
+      #ifdef VFX_SHADERGRAPH\n\t\t\t\t\t        \n\t\t\t\t\t        \n\t\t\t\t\t       
+      float alpha = OUTSG.;\n\t\t\t\t\t    #else\n\t\t\t\t\t        float alpha =
+      VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\t#if VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
       velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
-      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
-      _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\toutSelection
+      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t#ifndef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\t\tdummy
+      = (float4)0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined \n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
       Depth pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"DepthForwardOnly\"
       }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define
-      VFX_PASSDEPTH VFX_PASSDEPTH_ACTUAL\n\t\t\t#pragma target 4.5\n\t\t\t\n\t\t\tstruct
-      ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t#if USE_ALPHA_TEST
-      || VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha\n\t\t\t\t// y: alpha threshold\n\t\t\t\tnointerpolation
-      float2 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_PASSDEPTH
-      == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\tfloat4 cPosPrevious : TEXCOORD2;\n\t\t\t\tfloat4
-      cPosNonJiterred : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
+      VFX_PASSDEPTH VFX_PASSDEPTH_ACTUAL\n\t\t\t#pragma multi_compile _ WRITE_MSAA_DEPTH\n\t\t\t#pragma
+      target 4.5\n\t\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t#if
+      USE_ALPHA_TEST || VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha\n\t\t\t\t// y:
+      alpha threshold\n\t\t\t\tnointerpolation float2 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\tfloat4 cPosPrevious :
+      TEXCOORD2;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
       VFX_VARYING_PS_INPUTS ps_input\n\t\t\t#define VFX_VARYING_POSCS pos\n\t\t\t#define
       VFX_VARYING_ALPHA builtInInterpolants.x\n\t\t\t#define VFX_VARYING_ALPHATHRESHOLD
       builtInInterpolants.y\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
       cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#undef VFX_USE_RIM_LIGHT\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define
-      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
-      && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
-      must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t#define SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t\n\t\t\t#if
+      !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
+      VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
       SetAttribute_3278B22F(inout float size, float Size) /*attribute:size Composition:Overwrite
       Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    size = Size;\n\t\t\t}\n\t\t\tvoid
@@ -824,22 +850,22 @@ VisualEffectResource:
       /*inout */attributes.pivotZ, float3(0, -0.5, 0));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
       SetAttribute_D5151640( /*inout */attributes.scaleX,  /*inout */attributes.scaleZ,
       float2(0.00779999979, 0.00779999979));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    bool
-      tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
       ? tmp_bg : tmp_bi;\n\t\t\t\t    AttributeFromCurve_39BD5D15( /*inout */attributes.color, 
       /*inout */attributes.alpha, Color_d, tmp_bj);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      bool tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      bool tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
-      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_e,tmp_bj);\n\t\t\t\t   
+      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_c,tmp_bj);\n\t\t\t\t   
       SetCustomAttribute_CDCD03B1( /*inout */attributes.Smoothness, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      float tmp_ba = max(attributes.scaleY, uniform_c);\n\t\t\t\t    float tmp_bb
-      = uniform_f * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
+      float tmp_ba = max(attributes.scaleY, uniform_a);\n\t\t\t\t    float tmp_bb
+      = uniform_d * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
       tmp_bb);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_bb = attributes.scaleY
       / (float)0.00779999979;\n\t\t\t\t    float tmp_bc = floor(tmp_bb);\n\t\t\t\t   
       float tmp_bd = tmp_bc * (float)0.00779999979;\n\t\t\t\t    SetAttribute_D5151645(
@@ -923,37 +949,59 @@ VisualEffectResource:
       * float2(-i.VFX_VARYING_OFFSETS.z,1);\n\t\t\t\telse if (i.VFX_VARYING_FACEID
       == 1)\n\t\t\t\t\tuv = i.VFX_VARYING_OFFSETS.xz * float2(i.VFX_VARYING_OFFSETS.y,1);\n\t\t\t\telse\n\t\t\t\t\tuv
       = i.VFX_VARYING_OFFSETS.zy * float2(i.VFX_VARYING_OFFSETS.x,1);\n\t\t\t\treturn
-      uv * 0.5f + 0.5f;\n\t\t\t#else\n\t\t\t\treturn 0.0f;\n\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tfloat4 frag(ps_input i) : SV_Target0\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\tfloat
-      alpha = VFXGetFragmentColor(i).a;\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2
+      uv * 0.5f + 0.5f;\n\t\t\t#else\n\t\t\t\treturn 0.0f;\n\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\t\n\t\t\t#define
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH 0\n\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t#define VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH
+      0\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#ifdef VFX_SHADERGRAPH\n\t\t\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t   
+      #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t    // We need the depth color as SV_Target0
+      for alpha to coverage\n\t\t\t\t\t    , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target1\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      // When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t    #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t   
+      , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      , out float4 dummy : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outSelection : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t   
+      #ifdef VFX_SHADERGRAPH\n\t\t\t\t\t        \n\t\t\t\t\t        \n\t\t\t\t\t       
+      float alpha = OUTSG.;\n\t\t\t\t\t    #else\n\t\t\t\t\t        float alpha =
+      VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\t#if VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
       velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
-      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
-      _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\toutSelection
+      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t#ifndef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\t\tdummy
+      = (float4)0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined \n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"MotionVectors\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t
       WriteMask 40\n\t\t\t Ref 32\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
       On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH
-      VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#pragma target 4.5\n\t\t\t\n\t\t\tstruct
-      ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t#if USE_ALPHA_TEST
-      || VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha\n\t\t\t\t// y: alpha threshold\n\t\t\t\tnointerpolation
-      float2 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_PASSDEPTH
-      == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\tfloat4 cPosPrevious : TEXCOORD2;\n\t\t\t\tfloat4
-      cPosNonJiterred : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
+      VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#pragma multi_compile _ WRITE_MSAA_DEPTH\n\t\t\t#pragma
+      target 4.5\n\t\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t#if
+      USE_ALPHA_TEST || VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha\n\t\t\t\t// y:
+      alpha threshold\n\t\t\t\tnointerpolation float2 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\tfloat4 cPosPrevious :
+      TEXCOORD2;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
       VFX_VARYING_PS_INPUTS ps_input\n\t\t\t#define VFX_VARYING_POSCS pos\n\t\t\t#define
       VFX_VARYING_ALPHA builtInInterpolants.x\n\t\t\t#define VFX_VARYING_ALPHATHRESHOLD
       builtInInterpolants.y\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
       cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#undef VFX_USE_RIM_LIGHT\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define
-      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
-      && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
-      must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t#define SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t\n\t\t\t#if
+      !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
+      VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
       SetAttribute_3278B22F(inout float size, float Size) /*attribute:size Composition:Overwrite
       Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    size = Size;\n\t\t\t}\n\t\t\tvoid
@@ -1021,22 +1069,22 @@ VisualEffectResource:
       /*inout */attributes.pivotZ, float3(0, -0.5, 0));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
       SetAttribute_D5151640( /*inout */attributes.scaleX,  /*inout */attributes.scaleZ,
       float2(0.00779999979, 0.00779999979));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    bool
-      tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
       ? tmp_bg : tmp_bi;\n\t\t\t\t    AttributeFromCurve_39BD5D15( /*inout */attributes.color, 
       /*inout */attributes.alpha, Color_d, tmp_bj);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      bool tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      bool tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
-      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_e,tmp_bj);\n\t\t\t\t   
+      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_c,tmp_bj);\n\t\t\t\t   
       SetCustomAttribute_CDCD03B1( /*inout */attributes.Smoothness, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      float tmp_ba = max(attributes.scaleY, uniform_c);\n\t\t\t\t    float tmp_bb
-      = uniform_f * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
+      float tmp_ba = max(attributes.scaleY, uniform_a);\n\t\t\t\t    float tmp_bb
+      = uniform_d * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
       tmp_bb);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_bb = attributes.scaleY
       / (float)0.00779999979;\n\t\t\t\t    float tmp_bc = floor(tmp_bb);\n\t\t\t\t   
       float tmp_bd = tmp_bc * (float)0.00779999979;\n\t\t\t\t    SetAttribute_D5151645(
@@ -1120,19 +1168,40 @@ VisualEffectResource:
       * float2(-i.VFX_VARYING_OFFSETS.z,1);\n\t\t\t\telse if (i.VFX_VARYING_FACEID
       == 1)\n\t\t\t\t\tuv = i.VFX_VARYING_OFFSETS.xz * float2(i.VFX_VARYING_OFFSETS.y,1);\n\t\t\t\telse\n\t\t\t\t\tuv
       = i.VFX_VARYING_OFFSETS.zy * float2(i.VFX_VARYING_OFFSETS.x,1);\n\t\t\t\treturn
-      uv * 0.5f + 0.5f;\n\t\t\t#else\n\t\t\t\treturn 0.0f;\n\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tfloat4 frag(ps_input i) : SV_Target0\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\tfloat
-      alpha = VFXGetFragmentColor(i).a;\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2
+      uv * 0.5f + 0.5f;\n\t\t\t#else\n\t\t\t\treturn 0.0f;\n\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\t\n\t\t\t#define
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH 0\n\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t#define VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH
+      0\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#ifdef VFX_SHADERGRAPH\n\t\t\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t   
+      #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t    // We need the depth color as SV_Target0
+      for alpha to coverage\n\t\t\t\t\t    , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target1\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      // When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t    #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t   
+      , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      , out float4 dummy : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outSelection : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t   
+      #ifdef VFX_SHADERGRAPH\n\t\t\t\t\t        \n\t\t\t\t\t        \n\t\t\t\t\t       
+      float alpha = OUTSG.;\n\t\t\t\t\t    #else\n\t\t\t\t\t        float alpha =
+      VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\t#if VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
       velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
-      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
-      _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\toutSelection
+      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t#ifndef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\t\tdummy
+      = (float4)0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined \n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
       Forward pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t   
       Stencil\n\t\t    {\n\t\t     WriteMask 6\n\t\t     Ref 2\n\t\t     Comp Always\n\t\t    
       Pass Replace\n\t\t    }\n\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target
@@ -1241,22 +1310,22 @@ VisualEffectResource:
       /*inout */attributes.pivotZ, float3(0, -0.5, 0));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
       SetAttribute_D5151640( /*inout */attributes.scaleX,  /*inout */attributes.scaleZ,
       float2(0.00779999979, 0.00779999979));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    bool
-      tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
       ? tmp_bg : tmp_bi;\n\t\t\t\t    AttributeFromCurve_39BD5D15( /*inout */attributes.color, 
       /*inout */attributes.alpha, Color_d, tmp_bj);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      bool tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      bool tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
-      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_e,tmp_bj);\n\t\t\t\t   
+      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_c,tmp_bj);\n\t\t\t\t   
       SetCustomAttribute_CDCD03B1( /*inout */attributes.Smoothness, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      float tmp_ba = max(attributes.scaleY, uniform_c);\n\t\t\t\t    float tmp_bb
-      = uniform_f * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
+      float tmp_ba = max(attributes.scaleY, uniform_a);\n\t\t\t\t    float tmp_bb
+      = uniform_d * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
       tmp_bb);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_bb = attributes.scaleY
       / (float)0.00779999979;\n\t\t\t\t    float tmp_bc = floor(tmp_bb);\n\t\t\t\t   
       float tmp_bd = tmp_bc * (float)0.00779999979;\n\t\t\t\t    SetAttribute_D5151645(
@@ -1367,9 +1436,9 @@ VisualEffectResource:
       VFX_SHADERGRAPH\n\t\t\t\n\t\t\tvoid VFXGetHDRPLitData(out SurfaceData surfaceData,
       out BuiltinData builtinData, out BSDFData bsdfData, out PreLightData preLightData,
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
-      HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t\t{\n\t\t\t\t   
-      \n\t\t\t\t    diffusionProfileHash = (uint)1078544746;\n\t\t\t\t}\n\t\t\t\t\n
-      // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
+      HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\tuint diffusionProfileHash = (uint)0;\n\t\t\t{\n\t\t\t   
+      \n\t\t\t    diffusionProfileHash = (uint)1078544746;\n\t\t\t}\n\t\t\t\n //
+      Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst uint diffusionProfileHash
       = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\tfloat4
       posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
       _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\n\t\t\t\tfloat
@@ -1475,22 +1544,22 @@ VisualEffectResource:
       /*inout */attributes.pivotZ, float3(0, -0.5, 0));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
       SetAttribute_D5151640( /*inout */attributes.scaleX,  /*inout */attributes.scaleZ,
       float2(0.00779999979, 0.00779999979));\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    bool
-      tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
       ? tmp_bg : tmp_bi;\n\t\t\t\t    AttributeFromCurve_39BD5D15( /*inout */attributes.color, 
       /*inout */attributes.alpha, Color_d, tmp_bj);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      bool tmp_ba = attributes.scaleY >= uniform_c;\n\t\t\t\t    float tmp_bc = attributes.scaleY
-      - uniform_c;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_d;\n\t\t\t\t    float
+      bool tmp_ba = attributes.scaleY >= uniform_a;\n\t\t\t\t    float tmp_bc = attributes.scaleY
+      - uniform_a;\n\t\t\t\t    float tmp_bd = tmp_bc / uniform_b;\n\t\t\t\t    float
       tmp_bf = tmp_bd * (float)0.899999976;\n\t\t\t\t    float tmp_bg = (float)0.100000001
-      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_c;\n\t\t\t\t   
+      + tmp_bf;\n\t\t\t\t    float tmp_bh = attributes.scaleY / uniform_a;\n\t\t\t\t   
       float tmp_bi = tmp_bh * (float)0.100000001;\n\t\t\t\t    float tmp_bj = tmp_ba
-      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_e,tmp_bj);\n\t\t\t\t   
+      ? tmp_bg : tmp_bi;\n\t\t\t\t    float tmp_bk = SampleCurve(uniform_c,tmp_bj);\n\t\t\t\t   
       SetCustomAttribute_CDCD03B1( /*inout */attributes.Smoothness, tmp_bk);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t   
-      float tmp_ba = max(attributes.scaleY, uniform_c);\n\t\t\t\t    float tmp_bb
-      = uniform_f * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
+      float tmp_ba = max(attributes.scaleY, uniform_a);\n\t\t\t\t    float tmp_bb
+      = uniform_d * tmp_ba;\n\t\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
       tmp_bb);\n\t\t\t\t}\n\t\t\t\t{\n\t\t\t\t    float tmp_bb = attributes.scaleY
       / (float)0.00779999979;\n\t\t\t\t    float tmp_bc = floor(tmp_bb);\n\t\t\t\t   
       float tmp_bd = tmp_bc * (float)0.00779999979;\n\t\t\t\t    SetAttribute_D5151645(
@@ -1592,16 +1661,16 @@ VisualEffectResource:
       VFX_USE_SCALEX_CURRENT 1\n#define VFX_USE_SCALEZ_CURRENT 1\n#define VFX_USE_COLOR_CURRENT
       1\n#define VFX_USE_SMOOTHNESS_CURRENT 1\n#define VFX_WORLD_SPACE 1\n#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float4 uniform_e;\n    float Color_d;\n    float uniform_c;\n    float uniform_d;\n   
-      float uniform_f;\n    float currentFrameIndex;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct
+      float4 uniform_c;\n    float Color_d;\n    float uniform_a;\n    float uniform_b;\n   
+      float uniform_d;\n    float currentFrameIndex;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float3 position;\n    float scaleY;\n    float alpha;\n   
       bool alive;\n    float3 axisX;\n    float3 axisY;\n    float3 axisZ;\n    float
       angleX;\n    float angleY;\n    float angleZ;\n    float pivotX;\n    float
       pivotY;\n    float pivotZ;\n    float size;\n    float scaleX;\n    float scaleZ;\n   
       float3 color;\n    float Smoothness;\n};\n\nstruct SourceAttributes\n{\n};\n\nTexture2D
-      baseColorMap;\nSamplerState samplerbaseColorMap;\nfloat4 baseColorMap_TexelSize;\n\n\r\n#include
+      baseColorMap;\nSamplerState samplerbaseColorMap;\nfloat4 baseColorMap_TexelSize;\n\n\n\r\n#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\nByteAddressBuffer
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r\n\r\nByteAddressBuffer
       attributeBuffer;\r\nRWByteAddressBuffer elementToVFXBuffer;\r\n#if VFX_USE_ALIVE_CURRENT\r\nStructuredBuffer<uint>
       deadListOut;\r\n#endif\r\n\r\n#if VFX_HAS_INDIRECT_DRAW\r\nStructuredBuffer<uint>
       indirectBuffer;\r\n#endif\r\n\r\nCBUFFER_START(updateParams)\r\n\tuint nbMax;\r\n\tuint
@@ -1646,22 +1715,22 @@ VisualEffectResource:
       /*inout */attributes.pivotX,  /*inout */attributes.pivotY,  /*inout */attributes.pivotZ,
       float3(0, -0.5, 0));\n\t\t\t}\n\t\t\t{\n\t\t\t    SetAttribute_D5151640( /*inout
       */attributes.scaleX,  /*inout */attributes.scaleZ, float2(0.00779999979, 0.00779999979));\n\t\t\t}\n\t\t\t{\n\t\t\t   
-      bool tmp_bc = attributes.scaleY >= uniform_c;\n\t\t\t    float tmp_be = attributes.scaleY
-      - uniform_c;\n\t\t\t    float tmp_bf = tmp_be / uniform_d;\n\t\t\t    float
+      bool tmp_bc = attributes.scaleY >= uniform_a;\n\t\t\t    float tmp_be = attributes.scaleY
+      - uniform_a;\n\t\t\t    float tmp_bf = tmp_be / uniform_b;\n\t\t\t    float
       tmp_bh = tmp_bf * (float)0.899999976;\n\t\t\t    float tmp_bi = (float)0.100000001
-      + tmp_bh;\n\t\t\t    float tmp_bj = attributes.scaleY / uniform_c;\n\t\t\t   
+      + tmp_bh;\n\t\t\t    float tmp_bj = attributes.scaleY / uniform_a;\n\t\t\t   
       float tmp_bk = tmp_bj * (float)0.100000001;\n\t\t\t    float tmp_bl = tmp_bc
       ? tmp_bi : tmp_bk;\n\t\t\t    AttributeFromCurve_39BD5D15( /*inout */attributes.color, 
       /*inout */attributes.alpha, Color_d, tmp_bl);\n\t\t\t}\n\t\t\t{\n\t\t\t   
-      bool tmp_bc = attributes.scaleY >= uniform_c;\n\t\t\t    float tmp_be = attributes.scaleY
-      - uniform_c;\n\t\t\t    float tmp_bf = tmp_be / uniform_d;\n\t\t\t    float
+      bool tmp_bc = attributes.scaleY >= uniform_a;\n\t\t\t    float tmp_be = attributes.scaleY
+      - uniform_a;\n\t\t\t    float tmp_bf = tmp_be / uniform_b;\n\t\t\t    float
       tmp_bh = tmp_bf * (float)0.899999976;\n\t\t\t    float tmp_bi = (float)0.100000001
-      + tmp_bh;\n\t\t\t    float tmp_bj = attributes.scaleY / uniform_c;\n\t\t\t   
+      + tmp_bh;\n\t\t\t    float tmp_bj = attributes.scaleY / uniform_a;\n\t\t\t   
       float tmp_bk = tmp_bj * (float)0.100000001;\n\t\t\t    float tmp_bl = tmp_bc
-      ? tmp_bi : tmp_bk;\n\t\t\t    float tmp_bm = SampleCurve(uniform_e,tmp_bl);\n\t\t\t   
+      ? tmp_bi : tmp_bk;\n\t\t\t    float tmp_bm = SampleCurve(uniform_c,tmp_bl);\n\t\t\t   
       SetCustomAttribute_CDCD03B1( /*inout */attributes.Smoothness, tmp_bm);\n\t\t\t}\n\t\t\t{\n\t\t\t   
-      float tmp_bc = max(attributes.scaleY, uniform_c);\n\t\t\t    float tmp_bd =
-      uniform_f * tmp_bc;\n\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
+      float tmp_bc = max(attributes.scaleY, uniform_a);\n\t\t\t    float tmp_bd =
+      uniform_d * tmp_bc;\n\t\t\t    SetAttribute_D5151645( /*inout */attributes.scaleY,
       tmp_bd);\n\t\t\t}\n\t\t\t{\n\t\t\t    float tmp_bd = attributes.scaleY / (float)0.00779999979;\n\t\t\t   
       float tmp_be = floor(tmp_bd);\n\t\t\t    float tmp_bf = tmp_be * (float)0.00779999979;\n\t\t\t   
       SetAttribute_D5151645( /*inout */attributes.scaleY, tmp_bf);\n\t\t\t}\n\t\t\t\n\r\n\t\t\t\r\n\t\t\t\n\t\t\tfloat3
@@ -2370,11 +2439,11 @@ VisualEffectResource:
         index: 1
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 36
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 27
-      - nameId: uniform_d
+      - nameId: uniform_c
         index: 37
       params:
       - nameId: bounds_center
@@ -2397,7 +2466,7 @@ VisualEffectResource:
         index: 35
       - nameId: Blend_a
         index: 47
-      - nameId: texture_b
+      - nameId: texture_a
         index: 25
       params: []
       processor: {fileID: 0}
@@ -2415,13 +2484,13 @@ VisualEffectResource:
       values:
       - nameId: Color_d
         index: 52
-      - nameId: uniform_c
+      - nameId: uniform_a
         index: 18
-      - nameId: uniform_d
+      - nameId: uniform_b
         index: 20
-      - nameId: uniform_e
+      - nameId: uniform_c
         index: 39
-      - nameId: uniform_f
+      - nameId: uniform_d
         index: 9
       - nameId: currentFrameIndex
         index: 48
@@ -2447,13 +2516,13 @@ VisualEffectResource:
       values:
       - nameId: Color_d
         index: 52
-      - nameId: uniform_c
+      - nameId: uniform_a
         index: 18
-      - nameId: uniform_d
+      - nameId: uniform_b
         index: 20
-      - nameId: uniform_e
+      - nameId: uniform_c
         index: 39
-      - nameId: uniform_f
+      - nameId: uniform_d
         index: 9
       - nameId: currentFrameIndex
         index: 48

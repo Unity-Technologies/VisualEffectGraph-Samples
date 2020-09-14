@@ -158,17 +158,20 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\r\nvoid
       SetAttribute_F01429A3(inout float lifetime, inout uint seed, float A, float
       B) /*attribute:lifetime Composition:Overwrite Source:Slot Random:Uniform channels:XYZ
-      */\n{\n    lifetime = lerp(A,B,RAND);\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool
-      GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
+      */\n{\n    lifetime = lerp(A,B,RAND);\n}\n\n\r\n\r\n// Due to a bug in HLSL
+      compiler, disable spurious \"unitialized variable\" due to mid function return
+      statement\r\n#pragma warning(push)\r\n#pragma warning(disable : 4000)\r\n#if
+      HAS_STRIPS\r\nbool GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
       relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
       1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT) // strip
       is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
       -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -217,7 +220,7 @@ VisualEffectResource:
       1\n#define VFX_USE_PARTICLEID_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT 1\n#define
       VFX_USE_AGE_CURRENT 1\n#define VFX_HAS_INDIRECT_DRAW 1\n#define VFX_LOCAL_SPACE
       1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float uniform_b;\n    float uniform_c;\n    float Blend_a;\n    float deltaTime_b;\nCBUFFER_END\n\nstruct
+      float uniform_a;\n    float uniform_b;\n    float Blend_a;\n    float deltaTime_b;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float lifetime;\n    float angleZ;\n    uint particleId;\n   
       bool alive;\n    float age;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n\r\n#define
       USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT && !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer
@@ -247,8 +250,8 @@ VisualEffectResource:
       = attributes.position;\r\n#endif\r\n#if HAS_STRIPS\r\n            const StripData
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n           
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t   
-      uint tmp_ba = attributes.particleId ^ asuint(uniform_c);\n\t\t\t    float tmp_bb
-      = FixedRand(tmp_ba);\n\t\t\t    float tmp_bc = uniform_b + tmp_bb;\n\t\t\t   
+      uint tmp_ba = attributes.particleId ^ asuint(uniform_b);\n\t\t\t    float tmp_bb
+      = FixedRand(tmp_ba);\n\t\t\t    float tmp_bc = uniform_a + tmp_bb;\n\t\t\t   
       float2 tmp_bf = GeneratePerlinNoise(tmp_bc, float3(0.25, 0.5, 2).x, (int)3,
       float3(0.25, 0.5, 2).y, float3(0.25, 0.5, 2).z);\n\t\t\t    float tmp_bg =
       tmp_bf[0];\n\t\t\t    float tmp_bi = tmp_bg - (float)-1;\n\t\t\t    float tmp_bk
@@ -280,8 +283,8 @@ VisualEffectResource:
       = attributes.position;\r\n#endif\r\n#if HAS_STRIPS\r\n        const StripData
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
-      uint tmp_ba = attributes.particleId ^ asuint(uniform_c);\n\t\t    float tmp_bb
-      = FixedRand(tmp_ba);\n\t\t    float tmp_bc = uniform_b + tmp_bb;\n\t\t    float2
+      uint tmp_ba = attributes.particleId ^ asuint(uniform_b);\n\t\t    float tmp_bb
+      = FixedRand(tmp_ba);\n\t\t    float tmp_bc = uniform_a + tmp_bb;\n\t\t    float2
       tmp_bf = GeneratePerlinNoise(tmp_bc, float3(0.25, 0.5, 2).x, (int)3, float3(0.25,
       0.5, 2).y, float3(0.25, 0.5, 2).z);\n\t\t    float tmp_bg = tmp_bf[0];\n\t\t   
       float tmp_bi = tmp_bg - (float)-1;\n\t\t    float tmp_bk = tmp_bi / (float)2;\n\t\t   
@@ -298,7 +301,7 @@ VisualEffectResource:
     name: '[Flame]Output Particle Octagon'
     source: "Shader \"Hidden/VFX/BonFire/Flame/Output Particle Octagon\"\n{\r\n\tSubShader\r\n\t{\t\r\n\t\tCull
       Off\r\n\t\t\r\n\t\tTags { \"Queue\"=\"Transparent+0\" \"IgnoreProjector\"=\"True\"
-      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
+      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
       SrcAlpha OneMinusSrcAlpha \n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t\n\t\t#define
       NB_THREADS_PER_GROUP 64\n\t\t#define HAS_ATTRIBUTES 1\n\t\t#define VFX_PASSDEPTH_ACTUAL
       (0)\n\t\t#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n\t\t#define VFX_PASSDEPTH_SELECTION
@@ -316,7 +319,7 @@ VisualEffectResource:
       VFX_HAS_INDIRECT_DRAW 1\n\t\t#define VFX_BYPASS_EXPOSURE 1\n\t\t#define VFX_SHADERGRAPH
       1\n\t\t#define HAS_SHADERGRAPH_PARAM_COLOR 1\n\t\t#define HAS_SHADERGRAPH_PARAM_ALPHA
       1\n\t\t#define VFX_NEEDS_POSWS_INTERPOLATOR 1\n\t\t#define VFX_PRIMITIVE_OCTAGON
-      1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
       float4 Size_c;\n\t\t    float3 ParticleColor;\n\t\t    float Color_d;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct
       Attributes\n\t\t{\n\t\t    float lifetime;\n\t\t    uint seed;\n\t\t    float
@@ -327,16 +330,17 @@ VisualEffectResource:
       float size;\n\t\t    float scaleX;\n\t\t    float scaleY;\n\t\t    float scaleZ;\n\t\t   
       float age;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
       _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232;\n\t\tSamplerState sampler_DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232;\n\t\tfloat4
-      _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232_TexelSize;\n\t\tTexture2D
+      _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232_TexelSize;\n\t\t\n\t\tTexture2D
       _SampleTexture2D_4A9BDF8B_Texture_1;\n\t\tSamplerState sampler_SampleTexture2D_4A9BDF8B_Texture_1;\n\t\tfloat4
-      _SampleTexture2D_4A9BDF8B_Texture_1_TexelSize;\n\t\t\n\n\t\t\n\t\t#define VFX_NEEDS_COLOR_INTERPOLATOR
-      (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if HAS_STRIPS\n\t\t#define
-      VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define VFX_OPTIONAL_INTERPOLATION
-      nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer attributeBuffer;\t\n\t\t\n\t\t#if
-      VFX_HAS_INDIRECT_DRAW\n\t\tStructuredBuffer<uint> indirectBuffer;\t\n\t\t#endif\t\n\t\t\n\t\t#if
-      USE_DEAD_LIST_COUNT\n\t\tByteAddressBuffer deadListCount;\n\t\t#endif\n\t\t\n\t\t#if
-      HAS_STRIPS\n\t\tBuffer<uint> stripDataBuffer;\n\t\t#endif\n\t\t\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD
-      || USE_MOTION_VECTORS_PASS\n\t\tByteAddressBuffer elementToVFXBufferPrevious;\n\t\t#endif\n\t\t\n\t\tCBUFFER_START(outputParams)\n\t\t\tfloat
+      _SampleTexture2D_4A9BDF8B_Texture_1_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
+      VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
+      HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
+      VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
+      attributeBuffer;\t\n\t\t\n\t\t#if VFX_HAS_INDIRECT_DRAW\n\t\tStructuredBuffer<uint>
+      indirectBuffer;\t\n\t\t#endif\t\n\t\t\n\t\t#if USE_DEAD_LIST_COUNT\n\t\tByteAddressBuffer
+      deadListCount;\n\t\t#endif\n\t\t\n\t\t#if HAS_STRIPS\n\t\tBuffer<uint> stripDataBuffer;\n\t\t#endif\n\t\t\n\t\t#if
+      WRITE_MOTION_VECTOR_IN_FORWARD || USE_MOTION_VECTORS_PASS\n\t\tByteAddressBuffer
+      elementToVFXBufferPrevious;\n\t\t#endif\n\t\t\n\t\tCBUFFER_START(outputParams)\n\t\t\tfloat
       nbMax;\n\t\t\tfloat systemSeed;\n\t\tCBUFFER_END\n\t\t\n\t\t// Helper macros
       to always use a valid instanceID\n\t\t#if defined(UNITY_STEREO_INSTANCING_ENABLED)\n\t\t\t#define
       VFX_DECLARE_INSTANCE_ID     UNITY_VERTEX_INPUT_INSTANCE_ID\n\t\t\t#define VFX_GET_INSTANCE_ID(i)     
@@ -370,8 +374,8 @@ VisualEffectResource:
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
       cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
-      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
-      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t#define
+      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -578,211 +582,242 @@ VisualEffectResource:
       Threshold__ = (float)0.0700000003;\n\t\t\t    }\n\t\t\t    o.Threshold = Threshold__;float
       Feather__ = (float)0;{\n\t\t\t        \n\t\t\t        Feather__ = (float)0.0299999993;\n\t\t\t   
       }\n\t\t\t    o.Feather = Feather__;\n\n\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t\n\t\t\t#define
-      REQUIRE_DEPTH_TEXTURE\n\t\t\t\n\t\t\t\t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
-      SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\t//
-      Node: Add, DistortUV\n\t\t\tvoid Unity_Add_float2(float2 A, float2 B, out float2
-      Out)\n\t\t\t{\n\t\t\t    Out = A + B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Power\n\t\t\tvoid
-      Unity_Power_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t    Out
-      = pow(A, B);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Multiply, Feather Step\n\t\t\tvoid
-      Unity_Multiply_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t    Out
-      = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Saturate, SoftParticle\n\t\t\tvoid
-      Unity_Saturate_float(float In, out float Out)\n\t\t\t{\n\t\t\t    Out = saturate(In);\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Panner, DistortUV\n\t\t\tvoid Unity_Multiply_float(float2 A, float2 B,
-      out float2 Out)\n\t\t\t{\n\t\t\t    Out = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Panner\n\t\t\tvoid Unity_Fraction_float2(float2 In, out float2 Out)\n\t\t\t{\n\t\t\t   
-      Out = frac(In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Panner\n\t\t\tvoid Unity_Subtract_float2(float2
-      A, float2 B, out float2 Out)\n\t\t\t{\n\t\t\t    Out = A - B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Panner\n\t\t\tstruct Bindings_Panner_1224b3d01b774ba44839d1987de812cf\n\t\t\t{\n\t\t\t   
-      float3 TimeParameters;\n\t\t\t};\n\t\t\t\n\t\t\tvoid SG_Panner_1224b3d01b774ba44839d1987de812cf(float2
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#define
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH 1\n\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t#define VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH
+      0\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#ifdef VFX_SHADERGRAPH\n\t\t\t\t\t#define
+      REQUIRE_DEPTH_TEXTURE\n\t\t\t\t\t\n\t\t\t\t\t\t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t\t\t#ifndef
+      SHADERPASS\n\t\t\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\t\t\t//
+      Node: Add, DistortUV\n\t\t\t\t\tvoid Unity_Add_float2(float2 A, float2 B, out
+      float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A + B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Power\n\t\t\t\t\tvoid Unity_Power_float(float A, float B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = pow(A, B);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Multiply, Feather
+      Step\n\t\t\t\t\tvoid Unity_Multiply_float(float A, float B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = A * B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Saturate, SoftParticle\n\t\t\t\t\tvoid
+      Unity_Saturate_float(float In, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out
+      = saturate(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner, DistortUV\n\t\t\t\t\tvoid
+      Unity_Multiply_float(float2 A, float2 B, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = A * B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner\n\t\t\t\t\tvoid
+      Unity_Fraction_float2(float2 In, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = frac(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner\n\t\t\t\t\tvoid
+      Unity_Subtract_float2(float2 A, float2 B, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = A - B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner\n\t\t\t\t\tstruct
+      Bindings_Panner_1224b3d01b774ba44839d1987de812cf\n\t\t\t\t\t{\n\t\t\t\t\t   
+      float3 TimeParameters;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid SG_Panner_1224b3d01b774ba44839d1987de812cf(float2
       Vector2_352758C, float2 Vector2_F7669A8, Bindings_Panner_1224b3d01b774ba44839d1987de812cf
-      IN, out float2 UV_1)\n\t\t\t{\n\t\t\t    float2 _Property_53EDD1C7_Out_0 =
-      Vector2_352758C;\n\t\t\t    float2 _Property_A1AAFDED_Out_0 = Vector2_F7669A8;\n\t\t\t   
-      float2 _Multiply_4534B203_Out_2;\n\t\t\t    Unity_Multiply_float(_Property_A1AAFDED_Out_0,
-      (IN.TimeParameters.x.xx), _Multiply_4534B203_Out_2);\n\t\t\t    float2 _Fraction_2188FC18_Out_1;\n\t\t\t   
-      Unity_Fraction_float2(_Multiply_4534B203_Out_2, _Fraction_2188FC18_Out_1);\n\t\t\t   
-      float2 _Subtract_E35057A4_Out_2;\n\t\t\t    Unity_Subtract_float2(_Property_53EDD1C7_Out_0,
-      _Fraction_2188FC18_Out_1, _Subtract_E35057A4_Out_2);\n\t\t\t    UV_1 = _Subtract_E35057A4_Out_2;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: DistortUV\n\t\t\tvoid Unity_Remap_float2(float2 In, float2 InMinMax,
-      float2 OutMinMax, out float2 Out)\n\t\t\t{\n\t\t\t    Out = OutMinMax.x + (In
-      - InMinMax.x) * (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: DistortUV\n\t\t\tstruct Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      IN, out float2 UV_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float2 _Property_53EDD1C7_Out_0
+      = Vector2_352758C;\n\t\t\t\t\t    float2 _Property_A1AAFDED_Out_0 = Vector2_F7669A8;\n\t\t\t\t\t   
+      float2 _Multiply_4534B203_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_Property_A1AAFDED_Out_0,
+      (IN.TimeParameters.x.xx), _Multiply_4534B203_Out_2);\n\t\t\t\t\t    float2
+      _Fraction_2188FC18_Out_1;\n\t\t\t\t\t    Unity_Fraction_float2(_Multiply_4534B203_Out_2,
+      _Fraction_2188FC18_Out_1);\n\t\t\t\t\t    float2 _Subtract_E35057A4_Out_2;\n\t\t\t\t\t   
+      Unity_Subtract_float2(_Property_53EDD1C7_Out_0, _Fraction_2188FC18_Out_1, _Subtract_E35057A4_Out_2);\n\t\t\t\t\t   
+      UV_1 = _Subtract_E35057A4_Out_2;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node:
+      DistortUV\n\t\t\t\t\tvoid Unity_Remap_float2(float2 In, float2 InMinMax, float2
+      OutMinMax, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = OutMinMax.x +
+      (In - InMinMax.x) * (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: DistortUV\n\t\t\t\t\tstruct Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8(float2 Vector2_1F9DD4DE, float2
       Vector2_8964FCF, float2 Vector2_2116C7F9, TEXTURE2D_PARAM(Texture2D_EE616DFF,
       samplerTexture2D_EE616DFF), float4 Texture2D_EE616DFF_TexelSize, Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8
-      IN, out float2 UV_1)\n\t\t\t{\n\t\t\t    float2 _Property_70E8EE1E_Out_0 =
-      Vector2_1F9DD4DE;\n\t\t\t    float2 _Property_4425B43B_Out_0 = Vector2_2116C7F9;\n\t\t\t   
+      IN, out float2 UV_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float2 _Property_70E8EE1E_Out_0
+      = Vector2_1F9DD4DE;\n\t\t\t\t\t    float2 _Property_4425B43B_Out_0 = Vector2_2116C7F9;\n\t\t\t\t\t   
       float4 _SampleTexture2D_78F057A0_RGBA_0 = SAMPLE_TEXTURE2D(Texture2D_EE616DFF,
-      samplerTexture2D_EE616DFF, _Property_4425B43B_Out_0);\n\t\t\t    float _SampleTexture2D_78F057A0_R_4
-      = _SampleTexture2D_78F057A0_RGBA_0.r;\n\t\t\t    float _SampleTexture2D_78F057A0_G_5
-      = _SampleTexture2D_78F057A0_RGBA_0.g;\n\t\t\t    float _SampleTexture2D_78F057A0_B_6
-      = _SampleTexture2D_78F057A0_RGBA_0.b;\n\t\t\t    float _SampleTexture2D_78F057A0_A_7
-      = _SampleTexture2D_78F057A0_RGBA_0.a;\n\t\t\t    float2 _Vector2_A3C57E04_Out_0
-      = float2(_SampleTexture2D_78F057A0_R_4, _SampleTexture2D_78F057A0_G_5);\n\t\t\t   
-      float2 _Remap_41670B4C_Out_3;\n\t\t\t    Unity_Remap_float2(_Vector2_A3C57E04_Out_0,
-      float2 (0, 1), float2 (-1, 1), _Remap_41670B4C_Out_3);\n\t\t\t    float2 _Property_67D72C91_Out_0
-      = Vector2_8964FCF;\n\t\t\t    float2 _Multiply_8F67594_Out_2;\n\t\t\t    Unity_Multiply_float(_Remap_41670B4C_Out_3,
-      _Property_67D72C91_Out_0, _Multiply_8F67594_Out_2);\n\t\t\t    float2 _Add_AF7ED82E_Out_2;\n\t\t\t   
-      Unity_Add_float2(_Property_70E8EE1E_Out_0, _Multiply_8F67594_Out_2, _Add_AF7ED82E_Out_2);\n\t\t\t   
-      UV_1 = _Add_AF7ED82E_Out_2;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Saturate\n\t\t\tvoid
-      Unity_Saturate_float2(float2 In, out float2 Out)\n\t\t\t{\n\t\t\t    Out =
-      saturate(In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: One Minus\n\t\t\tvoid Unity_OneMinus_float(float
-      In, out float Out)\n\t\t\t{\n\t\t\t    Out = 1 - In;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: SoftParticle\n\t\t\tvoid Unity_SceneDepth_Eye_float(float4 UV, out float
-      Out)\n\t\t\t{\n\t\t\t    Out = LinearEyeDepth(SHADERGRAPH_SAMPLE_SCENE_DEPTH(UV.xy),
-      _ZBufferParams);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: SoftParticle\n\t\t\tstruct
-      Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b\n\t\t\t{\n\t\t\t    float4
-      ScreenPosition;\n\t\t\t};\n\t\t\t\n\t\t\tvoid SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
-      IN, out float depth_1)\n\t\t\t{\n\t\t\t    float4 _ScreenPosition_4A338A69_Out_0
-      = IN.ScreenPosition;\n\t\t\t    float _Split_E29E317D_R_1 = _ScreenPosition_4A338A69_Out_0[0];\n\t\t\t   
-      float _Split_E29E317D_G_2 = _ScreenPosition_4A338A69_Out_0[1];\n\t\t\t    float
-      _Split_E29E317D_B_3 = _ScreenPosition_4A338A69_Out_0[2];\n\t\t\t    float _Split_E29E317D_A_4
-      = _ScreenPosition_4A338A69_Out_0[3];\n\t\t\t    depth_1 = _Split_E29E317D_A_4;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: SoftParticle, Feather Step\n\t\t\tvoid Unity_Subtract_float(float A,
-      float B, out float Out)\n\t\t\t{\n\t\t\t    Out = A - B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: SoftParticle\n\t\t\tvoid Unity_Maximum_float(float A, float B, out float
-      Out)\n\t\t\t{\n\t\t\t    Out = max(A, B);\n\t\t\t}\n\t\t\t\n\t\t\t// Node:
-      SoftParticle\n\t\t\tvoid Unity_Divide_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t   
-      Out = A / B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: SoftParticle, Feather Step\n\t\t\tvoid
-      Unity_Smoothstep_float(float Edge1, float Edge2, float In, out float Out)\n\t\t\t{\n\t\t\t   
-      Out = smoothstep(Edge1, Edge2, In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: SoftParticle\n\t\t\tstruct
-      Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1\n\t\t\t{\n\t\t\t   
-      float4 ScreenPosition;\n\t\t\t};\n\t\t\t\n\t\t\tvoid SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(float
+      samplerTexture2D_EE616DFF, _Property_4425B43B_Out_0);\n\t\t\t\t\t    float
+      _SampleTexture2D_78F057A0_R_4 = _SampleTexture2D_78F057A0_RGBA_0.r;\n\t\t\t\t\t   
+      float _SampleTexture2D_78F057A0_G_5 = _SampleTexture2D_78F057A0_RGBA_0.g;\n\t\t\t\t\t   
+      float _SampleTexture2D_78F057A0_B_6 = _SampleTexture2D_78F057A0_RGBA_0.b;\n\t\t\t\t\t   
+      float _SampleTexture2D_78F057A0_A_7 = _SampleTexture2D_78F057A0_RGBA_0.a;\n\t\t\t\t\t   
+      float2 _Vector2_A3C57E04_Out_0 = float2(_SampleTexture2D_78F057A0_R_4, _SampleTexture2D_78F057A0_G_5);\n\t\t\t\t\t   
+      float2 _Remap_41670B4C_Out_3;\n\t\t\t\t\t    Unity_Remap_float2(_Vector2_A3C57E04_Out_0,
+      float2 (0, 1), float2 (-1, 1), _Remap_41670B4C_Out_3);\n\t\t\t\t\t    float2
+      _Property_67D72C91_Out_0 = Vector2_8964FCF;\n\t\t\t\t\t    float2 _Multiply_8F67594_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Remap_41670B4C_Out_3, _Property_67D72C91_Out_0, _Multiply_8F67594_Out_2);\n\t\t\t\t\t   
+      float2 _Add_AF7ED82E_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Property_70E8EE1E_Out_0,
+      _Multiply_8F67594_Out_2, _Add_AF7ED82E_Out_2);\n\t\t\t\t\t    UV_1 = _Add_AF7ED82E_Out_2;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Saturate\n\t\t\t\t\tvoid Unity_Saturate_float2(float2 In, out float2
+      Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = saturate(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: One Minus\n\t\t\t\t\tvoid Unity_OneMinus_float(float In, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = 1 - In;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: SoftParticle\n\t\t\t\t\tvoid
+      Unity_SceneDepth_Eye_float(float4 UV, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = LinearEyeDepth(SHADERGRAPH_SAMPLE_SCENE_DEPTH(UV.xy), _ZBufferParams);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle\n\t\t\t\t\tstruct Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b\n\t\t\t\t\t{\n\t\t\t\t\t   
+      float4 ScreenPosition;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
+      IN, out float depth_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float4 _ScreenPosition_4A338A69_Out_0
+      = IN.ScreenPosition;\n\t\t\t\t\t    float _Split_E29E317D_R_1 = _ScreenPosition_4A338A69_Out_0[0];\n\t\t\t\t\t   
+      float _Split_E29E317D_G_2 = _ScreenPosition_4A338A69_Out_0[1];\n\t\t\t\t\t   
+      float _Split_E29E317D_B_3 = _ScreenPosition_4A338A69_Out_0[2];\n\t\t\t\t\t   
+      float _Split_E29E317D_A_4 = _ScreenPosition_4A338A69_Out_0[3];\n\t\t\t\t\t   
+      depth_1 = _Split_E29E317D_A_4;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node:
+      SoftParticle, Feather Step\n\t\t\t\t\tvoid Unity_Subtract_float(float A, float
+      B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A - B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle\n\t\t\t\t\tvoid Unity_Maximum_float(float A, float B, out
+      float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = max(A, B);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle\n\t\t\t\t\tvoid Unity_Divide_float(float A, float B, out
+      float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A / B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle, Feather Step\n\t\t\t\t\tvoid Unity_Smoothstep_float(float
+      Edge1, float Edge2, float In, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out
+      = smoothstep(Edge1, Edge2, In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node:
+      SoftParticle\n\t\t\t\t\tstruct Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1\n\t\t\t\t\t{\n\t\t\t\t\t   
+      float4 ScreenPosition;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(float
       Vector1_1E6191B, Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1 IN,
-      out float Opacity_1)\n\t\t\t{\n\t\t\t    float _SceneDepth_D8E0E50A_Out_1;\n\t\t\t   
+      out float Opacity_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float _SceneDepth_D8E0E50A_Out_1;\n\t\t\t\t\t   
       Unity_SceneDepth_Eye_float(float4(IN.ScreenPosition.xy / IN.ScreenPosition.w,
-      0, 0), _SceneDepth_D8E0E50A_Out_1);\n\t\t\t    Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
-      _PixelDepth_64AD2AD5;\n\t\t\t    _PixelDepth_64AD2AD5.ScreenPosition = IN.ScreenPosition;\n\t\t\t   
-      float _PixelDepth_64AD2AD5_depth_1;\n\t\t\t    SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(_PixelDepth_64AD2AD5,
-      _PixelDepth_64AD2AD5_depth_1);\n\t\t\t    float _Subtract_7C133200_Out_2;\n\t\t\t   
-      Unity_Subtract_float(_SceneDepth_D8E0E50A_Out_1, _PixelDepth_64AD2AD5_depth_1,
-      _Subtract_7C133200_Out_2);\n\t\t\t    float _Property_4EA7E65F_Out_0 = Vector1_1E6191B;\n\t\t\t   
-      float _Maximum_87E9B207_Out_2;\n\t\t\t    Unity_Maximum_float(_Property_4EA7E65F_Out_0,
-      0.001, _Maximum_87E9B207_Out_2);\n\t\t\t    float _Divide_A3A47144_Out_2;\n\t\t\t   
-      Unity_Divide_float(_Subtract_7C133200_Out_2, _Maximum_87E9B207_Out_2, _Divide_A3A47144_Out_2);\n\t\t\t   
-      float _Smoothstep_254B27B2_Out_3;\n\t\t\t    Unity_Smoothstep_float(0, 1, _Divide_A3A47144_Out_2,
-      _Smoothstep_254B27B2_Out_3);\n\t\t\t    float _Saturate_3A4F4D3C_Out_1;\n\t\t\t   
-      Unity_Saturate_float(_Smoothstep_254B27B2_Out_3, _Saturate_3A4F4D3C_Out_1);\n\t\t\t   
-      Opacity_1 = _Saturate_3A4F4D3C_Out_1;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Feather
-      Step\n\t\t\tvoid Unity_Add_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t   
-      Out = A + B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Feather Step\n\t\t\tstruct Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      0, 0), _SceneDepth_D8E0E50A_Out_1);\n\t\t\t\t\t    Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
+      _PixelDepth_64AD2AD5;\n\t\t\t\t\t    _PixelDepth_64AD2AD5.ScreenPosition =
+      IN.ScreenPosition;\n\t\t\t\t\t    float _PixelDepth_64AD2AD5_depth_1;\n\t\t\t\t\t   
+      SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(_PixelDepth_64AD2AD5, _PixelDepth_64AD2AD5_depth_1);\n\t\t\t\t\t   
+      float _Subtract_7C133200_Out_2;\n\t\t\t\t\t    Unity_Subtract_float(_SceneDepth_D8E0E50A_Out_1,
+      _PixelDepth_64AD2AD5_depth_1, _Subtract_7C133200_Out_2);\n\t\t\t\t\t    float
+      _Property_4EA7E65F_Out_0 = Vector1_1E6191B;\n\t\t\t\t\t    float _Maximum_87E9B207_Out_2;\n\t\t\t\t\t   
+      Unity_Maximum_float(_Property_4EA7E65F_Out_0, 0.001, _Maximum_87E9B207_Out_2);\n\t\t\t\t\t   
+      float _Divide_A3A47144_Out_2;\n\t\t\t\t\t    Unity_Divide_float(_Subtract_7C133200_Out_2,
+      _Maximum_87E9B207_Out_2, _Divide_A3A47144_Out_2);\n\t\t\t\t\t    float _Smoothstep_254B27B2_Out_3;\n\t\t\t\t\t   
+      Unity_Smoothstep_float(0, 1, _Divide_A3A47144_Out_2, _Smoothstep_254B27B2_Out_3);\n\t\t\t\t\t   
+      float _Saturate_3A4F4D3C_Out_1;\n\t\t\t\t\t    Unity_Saturate_float(_Smoothstep_254B27B2_Out_3,
+      _Saturate_3A4F4D3C_Out_1);\n\t\t\t\t\t    Opacity_1 = _Saturate_3A4F4D3C_Out_1;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Feather Step\n\t\t\t\t\tvoid Unity_Add_float(float A, float B, out float
+      Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A + B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Feather Step\n\t\t\t\t\tstruct Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_FeatherStep_3fc231337476e5d4e868153ae13d3355(float Vector1_8D3A95EC, float
       Vector1_9B1ABA2C, float Vector1_78C972FB, Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
-      IN, out float OutVector4_1)\n\t\t\t{\n\t\t\t    float _Property_6AE77210_Out_0
-      = Vector1_9B1ABA2C;\n\t\t\t    float _Property_9733AD99_Out_0 = Vector1_78C972FB;\n\t\t\t   
-      float _Multiply_ABC033FF_Out_2;\n\t\t\t    Unity_Multiply_float(_Property_9733AD99_Out_0,
-      0.5, _Multiply_ABC033FF_Out_2);\n\t\t\t    float _Subtract_583838FC_Out_2;\n\t\t\t   
-      Unity_Subtract_float(_Property_6AE77210_Out_0, _Multiply_ABC033FF_Out_2, _Subtract_583838FC_Out_2);\n\t\t\t   
-      float _Add_2CD18BB_Out_2;\n\t\t\t    Unity_Add_float(_Property_6AE77210_Out_0,
-      _Multiply_ABC033FF_Out_2, _Add_2CD18BB_Out_2);\n\t\t\t    float _Property_B48290D_Out_0
-      = Vector1_8D3A95EC;\n\t\t\t    float _Smoothstep_306AAA2A_Out_3;\n\t\t\t   
+      IN, out float OutVector4_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float _Property_6AE77210_Out_0
+      = Vector1_9B1ABA2C;\n\t\t\t\t\t    float _Property_9733AD99_Out_0 = Vector1_78C972FB;\n\t\t\t\t\t   
+      float _Multiply_ABC033FF_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_Property_9733AD99_Out_0,
+      0.5, _Multiply_ABC033FF_Out_2);\n\t\t\t\t\t    float _Subtract_583838FC_Out_2;\n\t\t\t\t\t   
+      Unity_Subtract_float(_Property_6AE77210_Out_0, _Multiply_ABC033FF_Out_2, _Subtract_583838FC_Out_2);\n\t\t\t\t\t   
+      float _Add_2CD18BB_Out_2;\n\t\t\t\t\t    Unity_Add_float(_Property_6AE77210_Out_0,
+      _Multiply_ABC033FF_Out_2, _Add_2CD18BB_Out_2);\n\t\t\t\t\t    float _Property_B48290D_Out_0
+      = Vector1_8D3A95EC;\n\t\t\t\t\t    float _Smoothstep_306AAA2A_Out_3;\n\t\t\t\t\t   
       Unity_Smoothstep_float(_Subtract_583838FC_Out_2, _Add_2CD18BB_Out_2, _Property_B48290D_Out_0,
-      _Smoothstep_306AAA2A_Out_3);\n\t\t\t    OutVector4_1 = _Smoothstep_306AAA2A_Out_3;\n\t\t\t}\n\t\t\t\n\t\t\tstruct
-      SG_Input_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t{\n\t\t\t    float4 ScreenPosition;\n\t\t\t   
-      half4 uv0;\n\t\t\t    float3 TimeParameters;\n\t\t\t};\n\t\t\t\n\t\t\tstruct
-      SG_Output_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t{\n\t\t\t    float Alpha_4;\n\t\t\t};\n\t\t\t\n\t\t\tSG_Output_b0fc71eacd48a9f43947c48d630a7ca2
-      SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(\n\t\t\t    SG_Input_b0fc71eacd48a9f43947c48d630a7ca2
-      IN,\n\t\t\t    /* Property: DistortOffsetUV */ float2 DistortOffsetUV,\n\t\t\t   
-      /* Property: DeformExponent */ float DeformExponent,\n\t\t\t    /* Property:
-      DeformScale */ float DeformScale,\n\t\t\t    /* Property: ParticleAlpha */
-      float ParticleAlpha,\n\t\t\t    /* Property: FireSpeed */ float2 FireSpeed,\n\t\t\t   
-      /* Property: BaseOffsetUV */ float2 BaseOffsetUV,\n\t\t\t    /* Property: Threshold
-      */ float Threshold,\n\t\t\t    /* Property: Feather */ float Feather)\n\t\t\t{\n\t\t\t   
-      // Node: UV\n\t\t\t    float4 _UV_4279E0C7_Out_0 = IN.uv0;\n\t\t\t\n\t\t\t   
-      // Node: Split\n\t\t\t    float _Split_274EE367_R_1 = _UV_4279E0C7_Out_0[0];\n\t\t\t   
-      float _Split_274EE367_G_2 = _UV_4279E0C7_Out_0[1];\n\t\t\t    float _Split_274EE367_B_3
-      = _UV_4279E0C7_Out_0[2];\n\t\t\t    float _Split_274EE367_A_4 = _UV_4279E0C7_Out_0[3];\n\t\t\t\n\t\t\t   
-      // Node: Vector 2\n\t\t\t    float2 _Vector2_8ACD3440_Out_0 = float2(_Split_274EE367_R_1,
-      _Split_274EE367_G_2);\n\t\t\t\n\t\t\t    // Node: Property\n\t\t\t    float2
-      _Property_2E95E2D3_Out_0 = BaseOffsetUV;\n\t\t\t\n\t\t\t    // Node: Add\n\t\t\t   
-      float2 _Add_EEF91B7C_Out_2;\n\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
-      _Property_2E95E2D3_Out_0, _Add_EEF91B7C_Out_2);\n\t\t\t\n\t\t\t    // Node:
-      Property\n\t\t\t    float _Property_70B919A5_Out_0 = DeformExponent;\n\t\t\t\n\t\t\t   
-      // Node: Power\n\t\t\t    float _Power_5A7BC83_Out_2;\n\t\t\t    Unity_Power_float(_Split_274EE367_G_2,
-      _Property_70B919A5_Out_0, _Power_5A7BC83_Out_2);\n\t\t\t\n\t\t\t    // Node:
-      Property\n\t\t\t    float _Property_73BBDEB5_Out_0 = DeformScale;\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float _Multiply_38A02C91_Out_2;\n\t\t\t    Unity_Multiply_float(_Power_5A7BC83_Out_2,
-      _Property_73BBDEB5_Out_0, _Multiply_38A02C91_Out_2);\n\t\t\t\n\t\t\t    //
-      Node: Saturate\n\t\t\t    float _Saturate_85507911_Out_1;\n\t\t\t    Unity_Saturate_float(_Multiply_38A02C91_Out_2,
-      _Saturate_85507911_Out_1);\n\t\t\t\n\t\t\t    // Node: Property\n\t\t\t   
-      float2 _Property_279F561F_Out_0 = DistortOffsetUV;\n\t\t\t\n\t\t\t    // Node:
-      Add\n\t\t\t    float2 _Add_100415F0_Out_2;\n\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
-      _Property_279F561F_Out_0, _Add_100415F0_Out_2);\n\t\t\t\n\t\t\t    // Node:
-      Property\n\t\t\t    float2 _Property_A8A1AD38_Out_0 = FireSpeed;\n\t\t\t\n\t\t\t   
-      // Node: Panner\n\t\t\t    Bindings_Panner_1224b3d01b774ba44839d1987de812cf
-      _Panner_9656768F;\n\t\t\t    _Panner_9656768F.TimeParameters = IN.TimeParameters;\n\t\t\t   
-      float2 _Panner_9656768F_UV_1;\n\t\t\t    SG_Panner_1224b3d01b774ba44839d1987de812cf(_Add_100415F0_Out_2,
-      _Property_A8A1AD38_Out_0, _Panner_9656768F, _Panner_9656768F_UV_1);\n\t\t\t\n\t\t\t   
-      // Node: DistortUV\n\t\t\t    Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8
-      _DistortUV_2C72FFF1;\n\t\t\t    float2 _DistortUV_2C72FFF1_UV_1;\n\t\t\t   
+      _Smoothstep_306AAA2A_Out_3);\n\t\t\t\t\t    OutVector4_1 = _Smoothstep_306AAA2A_Out_3;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tstruct
+      SG_Input_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t\t\t{\n\t\t\t\t\t    float4
+      ScreenPosition;\n\t\t\t\t\t    half4 uv0;\n\t\t\t\t\t    float3 TimeParameters;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tstruct
+      SG_Output_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t\t\t{\n\t\t\t\t\t    float
+      Alpha_4;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tSG_Output_b0fc71eacd48a9f43947c48d630a7ca2
+      SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(\n\t\t\t\t\t    SG_Input_b0fc71eacd48a9f43947c48d630a7ca2
+      IN,\n\t\t\t\t\t    /* Property: DistortOffsetUV */ float2 DistortOffsetUV,\n\t\t\t\t\t   
+      /* Property: DeformExponent */ float DeformExponent,\n\t\t\t\t\t    /* Property:
+      DeformScale */ float DeformScale,\n\t\t\t\t\t    /* Property: ParticleAlpha
+      */ float ParticleAlpha,\n\t\t\t\t\t    /* Property: FireSpeed */ float2 FireSpeed,\n\t\t\t\t\t   
+      /* Property: BaseOffsetUV */ float2 BaseOffsetUV,\n\t\t\t\t\t    /* Property:
+      Threshold */ float Threshold,\n\t\t\t\t\t    /* Property: Feather */ float
+      Feather)\n\t\t\t\t\t{\n\t\t\t\t\t    // Node: UV\n\t\t\t\t\t    float4 _UV_4279E0C7_Out_0
+      = IN.uv0;\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Split\n\t\t\t\t\t    float _Split_274EE367_R_1
+      = _UV_4279E0C7_Out_0[0];\n\t\t\t\t\t    float _Split_274EE367_G_2 = _UV_4279E0C7_Out_0[1];\n\t\t\t\t\t   
+      float _Split_274EE367_B_3 = _UV_4279E0C7_Out_0[2];\n\t\t\t\t\t    float _Split_274EE367_A_4
+      = _UV_4279E0C7_Out_0[3];\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Vector 2\n\t\t\t\t\t   
+      float2 _Vector2_8ACD3440_Out_0 = float2(_Split_274EE367_R_1, _Split_274EE367_G_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_2E95E2D3_Out_0 = BaseOffsetUV;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Add\n\t\t\t\t\t    float2 _Add_EEF91B7C_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
+      _Property_2E95E2D3_Out_0, _Add_EEF91B7C_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_70B919A5_Out_0 = DeformExponent;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Power\n\t\t\t\t\t    float _Power_5A7BC83_Out_2;\n\t\t\t\t\t    Unity_Power_float(_Split_274EE367_G_2,
+      _Property_70B919A5_Out_0, _Power_5A7BC83_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_73BBDEB5_Out_0 = DeformScale;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_38A02C91_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Power_5A7BC83_Out_2, _Property_73BBDEB5_Out_0, _Multiply_38A02C91_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Saturate\n\t\t\t\t\t    float _Saturate_85507911_Out_1;\n\t\t\t\t\t   
+      Unity_Saturate_float(_Multiply_38A02C91_Out_2, _Saturate_85507911_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_279F561F_Out_0 = DistortOffsetUV;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Add\n\t\t\t\t\t    float2 _Add_100415F0_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
+      _Property_279F561F_Out_0, _Add_100415F0_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_A8A1AD38_Out_0 = FireSpeed;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Panner\n\t\t\t\t\t    Bindings_Panner_1224b3d01b774ba44839d1987de812cf
+      _Panner_9656768F;\n\t\t\t\t\t    _Panner_9656768F.TimeParameters = IN.TimeParameters;\n\t\t\t\t\t   
+      float2 _Panner_9656768F_UV_1;\n\t\t\t\t\t    SG_Panner_1224b3d01b774ba44839d1987de812cf(_Add_100415F0_Out_2,
+      _Property_A8A1AD38_Out_0, _Panner_9656768F, _Panner_9656768F_UV_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: DistortUV\n\t\t\t\t\t    Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8
+      _DistortUV_2C72FFF1;\n\t\t\t\t\t    float2 _DistortUV_2C72FFF1_UV_1;\n\t\t\t\t\t   
       SG_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8(_Add_EEF91B7C_Out_2, (_Saturate_85507911_Out_1.xx),
       _Panner_9656768F_UV_1, TEXTURE2D_ARGS(_DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232,
       sampler_DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232), _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232_TexelSize,
-      _DistortUV_2C72FFF1, _DistortUV_2C72FFF1_UV_1);\n\t\t\t\n\t\t\t    // Node:
-      Saturate\n\t\t\t    float2 _Saturate_91DC8C66_Out_1;\n\t\t\t    Unity_Saturate_float2(_DistortUV_2C72FFF1_UV_1,
-      _Saturate_91DC8C66_Out_1);\n\t\t\t\n\t\t\t    // Node: Sample Texture 2D\n\t\t\t   
-      float4 _SampleTexture2D_4A9BDF8B_RGBA_0 = SAMPLE_TEXTURE2D(_SampleTexture2D_4A9BDF8B_Texture_1,
-      sampler_SampleTexture2D_4A9BDF8B_Texture_1, _Saturate_91DC8C66_Out_1);\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_R_4 = _SampleTexture2D_4A9BDF8B_RGBA_0.r;\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_G_5 = _SampleTexture2D_4A9BDF8B_RGBA_0.g;\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_B_6 = _SampleTexture2D_4A9BDF8B_RGBA_0.b;\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_A_7 = _SampleTexture2D_4A9BDF8B_RGBA_0.a;\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_7F03C9CB_Out_0 = ParticleAlpha;\n\t\t\t\n\t\t\t   
-      // Node: One Minus\n\t\t\t    float _OneMinus_1590AA8C_Out_1;\n\t\t\t    Unity_OneMinus_float(_Split_274EE367_G_2,
-      _OneMinus_1590AA8C_Out_1);\n\t\t\t\n\t\t\t    // Node: SoftParticle\n\t\t\t   
-      Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1 _SoftParticle_D39EB39F;\n\t\t\t   
-      _SoftParticle_D39EB39F.ScreenPosition = IN.ScreenPosition;\n\t\t\t    float
-      _SoftParticle_D39EB39F_Opacity_1;\n\t\t\t    SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(1,
-      _SoftParticle_D39EB39F, _SoftParticle_D39EB39F_Opacity_1);\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float _Multiply_4ECA24BB_Out_2;\n\t\t\t    Unity_Multiply_float(_OneMinus_1590AA8C_Out_1,
-      _SoftParticle_D39EB39F_Opacity_1, _Multiply_4ECA24BB_Out_2);\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float _Multiply_F9DB30E5_Out_2;\n\t\t\t    Unity_Multiply_float(_Property_7F03C9CB_Out_0,
-      _Multiply_4ECA24BB_Out_2, _Multiply_F9DB30E5_Out_2);\n\t\t\t\n\t\t\t    //
-      Node: Multiply\n\t\t\t    float _Multiply_93F268F9_Out_2;\n\t\t\t    Unity_Multiply_float(_SampleTexture2D_4A9BDF8B_A_7,
-      _Multiply_F9DB30E5_Out_2, _Multiply_93F268F9_Out_2);\n\t\t\t\n\t\t\t    //
-      Node: Property\n\t\t\t    float _Property_5F6A51F7_Out_0 = Threshold;\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_62A4D7A0_Out_0 = Feather;\n\t\t\t\n\t\t\t   
-      // Node: Feather Step\n\t\t\t    Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
-      _FeatherStep_5C0A75C8;\n\t\t\t    float _FeatherStep_5C0A75C8_OutVector4_1;\n\t\t\t   
+      _DistortUV_2C72FFF1, _DistortUV_2C72FFF1_UV_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Saturate\n\t\t\t\t\t    float2 _Saturate_91DC8C66_Out_1;\n\t\t\t\t\t   
+      Unity_Saturate_float2(_DistortUV_2C72FFF1_UV_1, _Saturate_91DC8C66_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Sample Texture 2D\n\t\t\t\t\t    float4 _SampleTexture2D_4A9BDF8B_RGBA_0
+      = SAMPLE_TEXTURE2D(_SampleTexture2D_4A9BDF8B_Texture_1, sampler_SampleTexture2D_4A9BDF8B_Texture_1,
+      _Saturate_91DC8C66_Out_1);\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_R_4
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.r;\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_G_5
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.g;\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_B_6
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.b;\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_A_7
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.a;\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Property\n\t\t\t\t\t   
+      float _Property_7F03C9CB_Out_0 = ParticleAlpha;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: One Minus\n\t\t\t\t\t    float _OneMinus_1590AA8C_Out_1;\n\t\t\t\t\t   
+      Unity_OneMinus_float(_Split_274EE367_G_2, _OneMinus_1590AA8C_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: SoftParticle\n\t\t\t\t\t    Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1
+      _SoftParticle_D39EB39F;\n\t\t\t\t\t    _SoftParticle_D39EB39F.ScreenPosition
+      = IN.ScreenPosition;\n\t\t\t\t\t    float _SoftParticle_D39EB39F_Opacity_1;\n\t\t\t\t\t   
+      SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(1, _SoftParticle_D39EB39F,
+      _SoftParticle_D39EB39F_Opacity_1);\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Multiply\n\t\t\t\t\t   
+      float _Multiply_4ECA24BB_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_OneMinus_1590AA8C_Out_1,
+      _SoftParticle_D39EB39F_Opacity_1, _Multiply_4ECA24BB_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_F9DB30E5_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Property_7F03C9CB_Out_0, _Multiply_4ECA24BB_Out_2, _Multiply_F9DB30E5_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_93F268F9_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_SampleTexture2D_4A9BDF8B_A_7, _Multiply_F9DB30E5_Out_2,
+      _Multiply_93F268F9_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Property\n\t\t\t\t\t   
+      float _Property_5F6A51F7_Out_0 = Threshold;\n\t\t\t\t\t\n\t\t\t\t\t    // Node:
+      Property\n\t\t\t\t\t    float _Property_62A4D7A0_Out_0 = Feather;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Feather Step\n\t\t\t\t\t    Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
+      _FeatherStep_5C0A75C8;\n\t\t\t\t\t    float _FeatherStep_5C0A75C8_OutVector4_1;\n\t\t\t\t\t   
       SG_FeatherStep_3fc231337476e5d4e868153ae13d3355(_Multiply_93F268F9_Out_2, _Property_5F6A51F7_Out_0,
-      _Property_62A4D7A0_Out_0, _FeatherStep_5C0A75C8, _FeatherStep_5C0A75C8_OutVector4_1);\n\t\t\t\n\t\t\t   
-      // Node: One Minus\n\t\t\t    float _OneMinus_1C63F447_Out_1;\n\t\t\t    Unity_OneMinus_float(_OneMinus_1590AA8C_Out_1,
-      _OneMinus_1C63F447_Out_1);\n\t\t\t\n\t\t\t    // Node: Multiply\n\t\t\t   
-      float _Multiply_8DEC96D7_Out_2;\n\t\t\t    Unity_Multiply_float(_FeatherStep_5C0A75C8_OutVector4_1,
-      _OneMinus_1C63F447_Out_1, _Multiply_8DEC96D7_Out_2);\n\t\t\t\n\t\t\t    //
-      Visual Effect Master\n\t\t\t    SG_Output_b0fc71eacd48a9f43947c48d630a7ca2
-      OUT;\n\t\t\t    OUT.Alpha_4 = _Multiply_8DEC96D7_Out_2;\n\t\t\t    return OUT;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tfloat4 frag(ps_input i) : SV_TARGET\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t   
-      #ifdef VFX_SHADERGRAPH\n\t\t\t        float2 DistortOffsetUV = i.DistortOffsetUV;float
+      _Property_62A4D7A0_Out_0, _FeatherStep_5C0A75C8, _FeatherStep_5C0A75C8_OutVector4_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: One Minus\n\t\t\t\t\t    float _OneMinus_1C63F447_Out_1;\n\t\t\t\t\t   
+      Unity_OneMinus_float(_OneMinus_1590AA8C_Out_1, _OneMinus_1C63F447_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_8DEC96D7_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_FeatherStep_5C0A75C8_OutVector4_1, _OneMinus_1C63F447_Out_1,
+      _Multiply_8DEC96D7_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Visual Effect Master\n\t\t\t\t\t   
+      SG_Output_b0fc71eacd48a9f43947c48d630a7ca2 OUT;\n\t\t\t\t\t    OUT.Alpha_4
+      = _Multiply_8DEC96D7_Out_2;\n\t\t\t\t\t    return OUT;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t   
+      #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t    // We need the depth color as SV_Target0
+      for alpha to coverage\n\t\t\t\t\t    , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target1\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      // When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t    #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t   
+      , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      , out float4 dummy : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outSelection : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t   
+      #ifdef VFX_SHADERGRAPH\n\t\t\t\t\t        float2 DistortOffsetUV = i.DistortOffsetUV;float
       DeformExponent = i.DeformExponent;float DeformScale = i.DeformScale;float ParticleAlpha
       = i.ParticleAlpha;float2 FireSpeed = i.FireSpeed;float2 BaseOffsetUV = i.BaseOffsetUV;float
-      Threshold = i.Threshold;float Feather = i.Feather;\n\t\t\t        \n\t\t\t       
-      //Call Shader Graph\n\t\t\t        SG_Input_b0fc71eacd48a9f43947c48d630a7ca2
-      INSG = (SG_Input_b0fc71eacd48a9f43947c48d630a7ca2)0;\n\t\t\t        float3
-      posRelativeWS = VFXGetPositionRWS(i.VFX_VARYING_POSWS);\n\t\t\t        float3
-      posAbsoluteWS = VFXGetPositionAWS(i.VFX_VARYING_POSWS);\n\t\t\t        INSG.ScreenPosition
-      = ComputeScreenPos(VFXTransformPositionWorldToClip(i.VFX_VARYING_POSWS), _ProjectionParams.x);\n\t\t\t       
-      INSG.uv0.xy = i.uv;\n\t\t\t        INSG.TimeParameters = _TimeParameters.xyz;\n\t\t\t       
-      \n\t\t\t        SG_Output_b0fc71eacd48a9f43947c48d630a7ca2 OUTSG = SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(INSG,DistortOffsetUV,
+      Threshold = i.Threshold;float Feather = i.Feather;\n\t\t\t\t\t        //Call
+      Shader Graph\n\t\t\t\t\t        SG_Input_b0fc71eacd48a9f43947c48d630a7ca2 INSG
+      = (SG_Input_b0fc71eacd48a9f43947c48d630a7ca2)0;\n\t\t\t\t\t        float3 posRelativeWS
+      = VFXGetPositionRWS(i.VFX_VARYING_POSWS);\n\t\t\t\t\t        float3 posAbsoluteWS
+      = VFXGetPositionAWS(i.VFX_VARYING_POSWS);\n\t\t\t\t\t        INSG.ScreenPosition
+      = ComputeScreenPos(VFXTransformPositionWorldToClip(i.VFX_VARYING_POSWS), _ProjectionParams.x);\n\t\t\t\t\t       
+      INSG.uv0.xy = i.uv;\n\t\t\t\t\t        INSG.TimeParameters = _TimeParameters.xyz;\n\t\t\t\t\t       
+      \n\t\t\t\t\t        SG_Output_b0fc71eacd48a9f43947c48d630a7ca2 OUTSG = SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(INSG,DistortOffsetUV,
       DeformExponent, DeformScale, ParticleAlpha, FireSpeed, BaseOffsetUV, Threshold,
-      Feather);\n\t\t\t        \n\n\t\t\t        \n\t\t\t        float alpha = OUTSG.Alpha_4;\n\t\t\t   
-      #else\n\t\t\t        float alpha = VFXGetFragmentColor(i).a;\n\t\t\t       
-      alpha *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t    #endif\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\n\t\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2
+      Feather);\n\t\t\t\t\t        \n\t\t\t\n\t\t\t\t\t        float alpha = OUTSG.Alpha_4;\n\t\t\t\t\t   
+      #else\n\t\t\t\t\t        float alpha = VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\t#if
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
       velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
-      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
-      _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined \n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\toutSelection
+      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t#ifndef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\t\tdummy
+      = (float4)0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined \n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
       Forward pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"ForwardOnly\"
       }\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t#pragma multi_compile
       _ DEBUG_DISPLAY\n\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos :
@@ -1029,8 +1064,9 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t#if
       VFX_SHADERGRAPH\n\t\t\t#define REQUIRE_DEPTH_TEXTURE\n\t\t\t\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
       SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
@@ -1304,16 +1340,19 @@ VisualEffectResource:
       /*attribute:size Composition:Overwrite AlphaComposition:Overwrite SampleMode:Random
       Mode:PerComponent ColorMode:ColorAndAlpha channels:XYZ */\n{\n    float t =
       RAND;\n    float value = 0.0f;\n    value = SampleCurve(Size, t);\n    size
-      = value;\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout uint particleIndex,
-      uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
+      = value;\n}\n\n\r\n\r\n// Due to a bug in HLSL compiler, disable spurious \"unitialized
+      variable\" due to mid function return statement\r\n#pragma warning(push)\r\n#pragma
+      warning(disable : 4000)\r\n#if HAS_STRIPS\r\nbool GetParticleIndex(inout uint
+      particleIndex, uint stripIndex)\r\n{\r\n\tuint relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
       stripIndex), 1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT)
       // strip is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX,
       stripIndex), -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -1372,8 +1411,8 @@ VisualEffectResource:
       1\n#define VFX_USE_LIFETIME_CURRENT 1\n#define VFX_USE_MASS_CURRENT 1\n#define
       VFX_USE_PARTICLEID_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT 1\n#define VFX_USE_AGE_CURRENT
       1\n#define VFX_HAS_INDIRECT_DRAW 1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float4x4 uniform_b;\n    float4x4 InvFieldTransform_b;\n    float4x4 FieldTransform_b;\n   
-      float uniform_c;\n    float uniform_d;\n    float deltaTime_a;\n    uint PADDING_0;\nCBUFFER_END\n\nstruct
+      float4x4 uniform_a;\n    float4x4 InvFieldTransform_b;\n    float4x4 FieldTransform_b;\n   
+      float uniform_b;\n    float uniform_c;\n    float deltaTime_a;\n    uint PADDING_0;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float3 position;\n    float3 velocity;\n    float lifetime;\n   
       float mass;\n    uint particleId;\n    bool alive;\n    float age;\n};\n\nstruct
       SourceAttributes\n{\n};\n\n\n\r\n\r\n#define USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT
@@ -1415,13 +1454,13 @@ VisualEffectResource:
       HAS_STRIPS\r\n            const StripData stripData = GetStripDataFromParticleIndex(index,
       PARTICLE_PER_STRIP_COUNT);\r\n            InitStripAttributes(index, attributes,
       stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t    uint tmp_bf = attributes.particleId
-      ^ asuint(uniform_d);\n\t\t\t    float tmp_bg = FixedRand(tmp_bf);\n\t\t\t   
-      float tmp_bh = uniform_c + tmp_bg;\n\t\t\t    float2 tmp_bk = GeneratePerlinNoise(tmp_bh,
+      ^ asuint(uniform_c);\n\t\t\t    float tmp_bg = FixedRand(tmp_bf);\n\t\t\t   
+      float tmp_bh = uniform_b + tmp_bg;\n\t\t\t    float2 tmp_bk = GeneratePerlinNoise(tmp_bh,
       float3(0.25, 0.5, 2).x, (int)3, float3(0.25, 0.5, 2).y, float3(0.25, 0.5, 2).z);\n\t\t\t   
       float tmp_bl = tmp_bk[0];\n\t\t\t    float tmp_bn = tmp_bl - (float)-1;\n\t\t\t   
       float tmp_bp = tmp_bn / (float)2;\n\t\t\t    float3 tmp_bq = float3(tmp_bp,
       tmp_bp, tmp_bp);\n\t\t\t    float3 tmp_bs = tmp_bq * float3(2, -1, 0);\n\t\t\t   
-      float3 tmp_bt = float3(1, 1, 0) + tmp_bs;\n\t\t\t    float3 tmp_bu = mul((float3x3)uniform_b,
+      float3 tmp_bt = float3(1, 1, 0) + tmp_bs;\n\t\t\t    float3 tmp_bu = mul((float3x3)uniform_a,
       tmp_bt);\n\t\t\t    Force_1( /*inout */attributes.velocity, attributes.mass,
       tmp_bu, (float)0.5, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t    Turbulence_18C(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_b, FieldTransform_b,
@@ -1455,14 +1494,14 @@ VisualEffectResource:
       = attributes.position;\r\n#endif\r\n#if HAS_STRIPS\r\n        const StripData
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
-      uint tmp_bf = attributes.particleId ^ asuint(uniform_d);\n\t\t    float tmp_bg
-      = FixedRand(tmp_bf);\n\t\t    float tmp_bh = uniform_c + tmp_bg;\n\t\t    float2
+      uint tmp_bf = attributes.particleId ^ asuint(uniform_c);\n\t\t    float tmp_bg
+      = FixedRand(tmp_bf);\n\t\t    float tmp_bh = uniform_b + tmp_bg;\n\t\t    float2
       tmp_bk = GeneratePerlinNoise(tmp_bh, float3(0.25, 0.5, 2).x, (int)3, float3(0.25,
       0.5, 2).y, float3(0.25, 0.5, 2).z);\n\t\t    float tmp_bl = tmp_bk[0];\n\t\t   
       float tmp_bn = tmp_bl - (float)-1;\n\t\t    float tmp_bp = tmp_bn / (float)2;\n\t\t   
       float3 tmp_bq = float3(tmp_bp, tmp_bp, tmp_bp);\n\t\t    float3 tmp_bs = tmp_bq
       * float3(2, -1, 0);\n\t\t    float3 tmp_bt = float3(1, 1, 0) + tmp_bs;\n\t\t   
-      float3 tmp_bu = mul((float3x3)uniform_b, tmp_bt);\n\t\t    Force_1( /*inout
+      float3 tmp_bu = mul((float3x3)uniform_a, tmp_bt);\n\t\t    Force_1( /*inout
       */attributes.velocity, attributes.mass, tmp_bu, (float)0.5, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
       Turbulence_18C(attributes.position,  /*inout */attributes.velocity, attributes.mass,
       InvFieldTransform_b, FieldTransform_b, (float)5, (float)1, (float)3, (int)3,
@@ -1479,7 +1518,7 @@ VisualEffectResource:
     name: '[Embers]Output Particle Quad'
     source: "Shader \"Hidden/VFX/BonFire/Embers/Output Particle Quad\"\n{\r\n\tSubShader\r\n\t{\t\r\n\t\tCull
       Off\r\n\t\t\r\n\t\tTags { \"Queue\"=\"Transparent+0\" \"IgnoreProjector\"=\"True\"
-      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
+      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
       SrcAlpha OneMinusSrcAlpha \n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t\n\t\t#define
       NB_THREADS_PER_GROUP 64\n\t\t#define HAS_ATTRIBUTES 1\n\t\t#define VFX_PASSDEPTH_ACTUAL
       (0)\n\t\t#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n\t\t#define VFX_PASSDEPTH_SELECTION
@@ -1498,7 +1537,7 @@ VisualEffectResource:
       VFX_HAS_INDIRECT_DRAW 1\n\t\t#define VFX_BYPASS_EXPOSURE 1\n\t\t#define USE_DEAD_LIST_COUNT
       1\n\t\t#define VFX_SHADERGRAPH 1\n\t\t#define HAS_SHADERGRAPH_PARAM_COLOR 1\n\t\t#define
       HAS_SHADERGRAPH_PARAM_ALPHA 1\n\t\t#define VFX_NEEDS_POSWS_INTERPOLATOR 1\n\t\t#define
-      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
       float4 Size_b;\n\t\t    float3 ParticleColor;\n\t\t    float Color_c;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct
       Attributes\n\t\t{\n\t\t    float3 position;\n\t\t    uint seed;\n\t\t    float3
@@ -1509,16 +1548,17 @@ VisualEffectResource:
       float pivotZ;\n\t\t    float scaleX;\n\t\t    float scaleY;\n\t\t    float
       scaleZ;\n\t\t    float age;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
       _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232;\n\t\tSamplerState sampler_DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232;\n\t\tfloat4
-      _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232_TexelSize;\n\t\tTexture2D
+      _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232_TexelSize;\n\t\t\n\t\tTexture2D
       _SampleTexture2D_4A9BDF8B_Texture_1;\n\t\tSamplerState sampler_SampleTexture2D_4A9BDF8B_Texture_1;\n\t\tfloat4
-      _SampleTexture2D_4A9BDF8B_Texture_1_TexelSize;\n\t\t\n\n\t\t\n\t\t#define VFX_NEEDS_COLOR_INTERPOLATOR
-      (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if HAS_STRIPS\n\t\t#define
-      VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define VFX_OPTIONAL_INTERPOLATION
-      nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer attributeBuffer;\t\n\t\t\n\t\t#if
-      VFX_HAS_INDIRECT_DRAW\n\t\tStructuredBuffer<uint> indirectBuffer;\t\n\t\t#endif\t\n\t\t\n\t\t#if
-      USE_DEAD_LIST_COUNT\n\t\tByteAddressBuffer deadListCount;\n\t\t#endif\n\t\t\n\t\t#if
-      HAS_STRIPS\n\t\tBuffer<uint> stripDataBuffer;\n\t\t#endif\n\t\t\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD
-      || USE_MOTION_VECTORS_PASS\n\t\tByteAddressBuffer elementToVFXBufferPrevious;\n\t\t#endif\n\t\t\n\t\tCBUFFER_START(outputParams)\n\t\t\tfloat
+      _SampleTexture2D_4A9BDF8B_Texture_1_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
+      VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
+      HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
+      VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
+      attributeBuffer;\t\n\t\t\n\t\t#if VFX_HAS_INDIRECT_DRAW\n\t\tStructuredBuffer<uint>
+      indirectBuffer;\t\n\t\t#endif\t\n\t\t\n\t\t#if USE_DEAD_LIST_COUNT\n\t\tByteAddressBuffer
+      deadListCount;\n\t\t#endif\n\t\t\n\t\t#if HAS_STRIPS\n\t\tBuffer<uint> stripDataBuffer;\n\t\t#endif\n\t\t\n\t\t#if
+      WRITE_MOTION_VECTOR_IN_FORWARD || USE_MOTION_VECTORS_PASS\n\t\tByteAddressBuffer
+      elementToVFXBufferPrevious;\n\t\t#endif\n\t\t\n\t\tCBUFFER_START(outputParams)\n\t\t\tfloat
       nbMax;\n\t\t\tfloat systemSeed;\n\t\tCBUFFER_END\n\t\t\n\t\t// Helper macros
       to always use a valid instanceID\n\t\t#if defined(UNITY_STEREO_INSTANCING_ENABLED)\n\t\t\t#define
       VFX_DECLARE_INSTANCE_ID     UNITY_VERTEX_INPUT_INSTANCE_ID\n\t\t\t#define VFX_GET_INSTANCE_ID(i)     
@@ -1552,8 +1592,8 @@ VisualEffectResource:
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
       cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
-      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
-      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t#define
+      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -1747,211 +1787,242 @@ VisualEffectResource:
       }\n\t\t\t    o.Threshold = Threshold__;float Feather__ = (float)0;{\n\t\t\t       
       \n\t\t\t        Feather__ = (float)0.0700000003;\n\t\t\t    }\n\t\t\t    o.Feather
       = Feather__;\n\n\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t\n\t\t\t#define
-      REQUIRE_DEPTH_TEXTURE\n\t\t\t\n\t\t\t\t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
-      SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\t//
-      Node: Add, DistortUV\n\t\t\tvoid Unity_Add_float2(float2 A, float2 B, out float2
-      Out)\n\t\t\t{\n\t\t\t    Out = A + B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Power\n\t\t\tvoid
-      Unity_Power_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t    Out
-      = pow(A, B);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Multiply, Feather Step\n\t\t\tvoid
-      Unity_Multiply_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t    Out
-      = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Saturate, SoftParticle\n\t\t\tvoid
-      Unity_Saturate_float(float In, out float Out)\n\t\t\t{\n\t\t\t    Out = saturate(In);\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Panner, DistortUV\n\t\t\tvoid Unity_Multiply_float(float2 A, float2 B,
-      out float2 Out)\n\t\t\t{\n\t\t\t    Out = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Panner\n\t\t\tvoid Unity_Fraction_float2(float2 In, out float2 Out)\n\t\t\t{\n\t\t\t   
-      Out = frac(In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Panner\n\t\t\tvoid Unity_Subtract_float2(float2
-      A, float2 B, out float2 Out)\n\t\t\t{\n\t\t\t    Out = A - B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Panner\n\t\t\tstruct Bindings_Panner_1224b3d01b774ba44839d1987de812cf\n\t\t\t{\n\t\t\t   
-      float3 TimeParameters;\n\t\t\t};\n\t\t\t\n\t\t\tvoid SG_Panner_1224b3d01b774ba44839d1987de812cf(float2
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#define
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH 1\n\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t#define VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH
+      0\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#ifdef VFX_SHADERGRAPH\n\t\t\t\t\t#define
+      REQUIRE_DEPTH_TEXTURE\n\t\t\t\t\t\n\t\t\t\t\t\t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t\t\t#ifndef
+      SHADERPASS\n\t\t\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\t\t\t//
+      Node: Add, DistortUV\n\t\t\t\t\tvoid Unity_Add_float2(float2 A, float2 B, out
+      float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A + B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Power\n\t\t\t\t\tvoid Unity_Power_float(float A, float B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = pow(A, B);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Multiply, Feather
+      Step\n\t\t\t\t\tvoid Unity_Multiply_float(float A, float B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = A * B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Saturate, SoftParticle\n\t\t\t\t\tvoid
+      Unity_Saturate_float(float In, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out
+      = saturate(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner, DistortUV\n\t\t\t\t\tvoid
+      Unity_Multiply_float(float2 A, float2 B, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = A * B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner\n\t\t\t\t\tvoid
+      Unity_Fraction_float2(float2 In, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = frac(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner\n\t\t\t\t\tvoid
+      Unity_Subtract_float2(float2 A, float2 B, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = A - B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Panner\n\t\t\t\t\tstruct
+      Bindings_Panner_1224b3d01b774ba44839d1987de812cf\n\t\t\t\t\t{\n\t\t\t\t\t   
+      float3 TimeParameters;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid SG_Panner_1224b3d01b774ba44839d1987de812cf(float2
       Vector2_352758C, float2 Vector2_F7669A8, Bindings_Panner_1224b3d01b774ba44839d1987de812cf
-      IN, out float2 UV_1)\n\t\t\t{\n\t\t\t    float2 _Property_53EDD1C7_Out_0 =
-      Vector2_352758C;\n\t\t\t    float2 _Property_A1AAFDED_Out_0 = Vector2_F7669A8;\n\t\t\t   
-      float2 _Multiply_4534B203_Out_2;\n\t\t\t    Unity_Multiply_float(_Property_A1AAFDED_Out_0,
-      (IN.TimeParameters.x.xx), _Multiply_4534B203_Out_2);\n\t\t\t    float2 _Fraction_2188FC18_Out_1;\n\t\t\t   
-      Unity_Fraction_float2(_Multiply_4534B203_Out_2, _Fraction_2188FC18_Out_1);\n\t\t\t   
-      float2 _Subtract_E35057A4_Out_2;\n\t\t\t    Unity_Subtract_float2(_Property_53EDD1C7_Out_0,
-      _Fraction_2188FC18_Out_1, _Subtract_E35057A4_Out_2);\n\t\t\t    UV_1 = _Subtract_E35057A4_Out_2;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: DistortUV\n\t\t\tvoid Unity_Remap_float2(float2 In, float2 InMinMax,
-      float2 OutMinMax, out float2 Out)\n\t\t\t{\n\t\t\t    Out = OutMinMax.x + (In
-      - InMinMax.x) * (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: DistortUV\n\t\t\tstruct Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      IN, out float2 UV_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float2 _Property_53EDD1C7_Out_0
+      = Vector2_352758C;\n\t\t\t\t\t    float2 _Property_A1AAFDED_Out_0 = Vector2_F7669A8;\n\t\t\t\t\t   
+      float2 _Multiply_4534B203_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_Property_A1AAFDED_Out_0,
+      (IN.TimeParameters.x.xx), _Multiply_4534B203_Out_2);\n\t\t\t\t\t    float2
+      _Fraction_2188FC18_Out_1;\n\t\t\t\t\t    Unity_Fraction_float2(_Multiply_4534B203_Out_2,
+      _Fraction_2188FC18_Out_1);\n\t\t\t\t\t    float2 _Subtract_E35057A4_Out_2;\n\t\t\t\t\t   
+      Unity_Subtract_float2(_Property_53EDD1C7_Out_0, _Fraction_2188FC18_Out_1, _Subtract_E35057A4_Out_2);\n\t\t\t\t\t   
+      UV_1 = _Subtract_E35057A4_Out_2;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node:
+      DistortUV\n\t\t\t\t\tvoid Unity_Remap_float2(float2 In, float2 InMinMax, float2
+      OutMinMax, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = OutMinMax.x +
+      (In - InMinMax.x) * (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: DistortUV\n\t\t\t\t\tstruct Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8(float2 Vector2_1F9DD4DE, float2
       Vector2_8964FCF, float2 Vector2_2116C7F9, TEXTURE2D_PARAM(Texture2D_EE616DFF,
       samplerTexture2D_EE616DFF), float4 Texture2D_EE616DFF_TexelSize, Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8
-      IN, out float2 UV_1)\n\t\t\t{\n\t\t\t    float2 _Property_70E8EE1E_Out_0 =
-      Vector2_1F9DD4DE;\n\t\t\t    float2 _Property_4425B43B_Out_0 = Vector2_2116C7F9;\n\t\t\t   
+      IN, out float2 UV_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float2 _Property_70E8EE1E_Out_0
+      = Vector2_1F9DD4DE;\n\t\t\t\t\t    float2 _Property_4425B43B_Out_0 = Vector2_2116C7F9;\n\t\t\t\t\t   
       float4 _SampleTexture2D_78F057A0_RGBA_0 = SAMPLE_TEXTURE2D(Texture2D_EE616DFF,
-      samplerTexture2D_EE616DFF, _Property_4425B43B_Out_0);\n\t\t\t    float _SampleTexture2D_78F057A0_R_4
-      = _SampleTexture2D_78F057A0_RGBA_0.r;\n\t\t\t    float _SampleTexture2D_78F057A0_G_5
-      = _SampleTexture2D_78F057A0_RGBA_0.g;\n\t\t\t    float _SampleTexture2D_78F057A0_B_6
-      = _SampleTexture2D_78F057A0_RGBA_0.b;\n\t\t\t    float _SampleTexture2D_78F057A0_A_7
-      = _SampleTexture2D_78F057A0_RGBA_0.a;\n\t\t\t    float2 _Vector2_A3C57E04_Out_0
-      = float2(_SampleTexture2D_78F057A0_R_4, _SampleTexture2D_78F057A0_G_5);\n\t\t\t   
-      float2 _Remap_41670B4C_Out_3;\n\t\t\t    Unity_Remap_float2(_Vector2_A3C57E04_Out_0,
-      float2 (0, 1), float2 (-1, 1), _Remap_41670B4C_Out_3);\n\t\t\t    float2 _Property_67D72C91_Out_0
-      = Vector2_8964FCF;\n\t\t\t    float2 _Multiply_8F67594_Out_2;\n\t\t\t    Unity_Multiply_float(_Remap_41670B4C_Out_3,
-      _Property_67D72C91_Out_0, _Multiply_8F67594_Out_2);\n\t\t\t    float2 _Add_AF7ED82E_Out_2;\n\t\t\t   
-      Unity_Add_float2(_Property_70E8EE1E_Out_0, _Multiply_8F67594_Out_2, _Add_AF7ED82E_Out_2);\n\t\t\t   
-      UV_1 = _Add_AF7ED82E_Out_2;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Saturate\n\t\t\tvoid
-      Unity_Saturate_float2(float2 In, out float2 Out)\n\t\t\t{\n\t\t\t    Out =
-      saturate(In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: One Minus\n\t\t\tvoid Unity_OneMinus_float(float
-      In, out float Out)\n\t\t\t{\n\t\t\t    Out = 1 - In;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: SoftParticle\n\t\t\tvoid Unity_SceneDepth_Eye_float(float4 UV, out float
-      Out)\n\t\t\t{\n\t\t\t    Out = LinearEyeDepth(SHADERGRAPH_SAMPLE_SCENE_DEPTH(UV.xy),
-      _ZBufferParams);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: SoftParticle\n\t\t\tstruct
-      Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b\n\t\t\t{\n\t\t\t    float4
-      ScreenPosition;\n\t\t\t};\n\t\t\t\n\t\t\tvoid SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
-      IN, out float depth_1)\n\t\t\t{\n\t\t\t    float4 _ScreenPosition_4A338A69_Out_0
-      = IN.ScreenPosition;\n\t\t\t    float _Split_E29E317D_R_1 = _ScreenPosition_4A338A69_Out_0[0];\n\t\t\t   
-      float _Split_E29E317D_G_2 = _ScreenPosition_4A338A69_Out_0[1];\n\t\t\t    float
-      _Split_E29E317D_B_3 = _ScreenPosition_4A338A69_Out_0[2];\n\t\t\t    float _Split_E29E317D_A_4
-      = _ScreenPosition_4A338A69_Out_0[3];\n\t\t\t    depth_1 = _Split_E29E317D_A_4;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: SoftParticle, Feather Step\n\t\t\tvoid Unity_Subtract_float(float A,
-      float B, out float Out)\n\t\t\t{\n\t\t\t    Out = A - B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: SoftParticle\n\t\t\tvoid Unity_Maximum_float(float A, float B, out float
-      Out)\n\t\t\t{\n\t\t\t    Out = max(A, B);\n\t\t\t}\n\t\t\t\n\t\t\t// Node:
-      SoftParticle\n\t\t\tvoid Unity_Divide_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t   
-      Out = A / B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: SoftParticle, Feather Step\n\t\t\tvoid
-      Unity_Smoothstep_float(float Edge1, float Edge2, float In, out float Out)\n\t\t\t{\n\t\t\t   
-      Out = smoothstep(Edge1, Edge2, In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: SoftParticle\n\t\t\tstruct
-      Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1\n\t\t\t{\n\t\t\t   
-      float4 ScreenPosition;\n\t\t\t};\n\t\t\t\n\t\t\tvoid SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(float
+      samplerTexture2D_EE616DFF, _Property_4425B43B_Out_0);\n\t\t\t\t\t    float
+      _SampleTexture2D_78F057A0_R_4 = _SampleTexture2D_78F057A0_RGBA_0.r;\n\t\t\t\t\t   
+      float _SampleTexture2D_78F057A0_G_5 = _SampleTexture2D_78F057A0_RGBA_0.g;\n\t\t\t\t\t   
+      float _SampleTexture2D_78F057A0_B_6 = _SampleTexture2D_78F057A0_RGBA_0.b;\n\t\t\t\t\t   
+      float _SampleTexture2D_78F057A0_A_7 = _SampleTexture2D_78F057A0_RGBA_0.a;\n\t\t\t\t\t   
+      float2 _Vector2_A3C57E04_Out_0 = float2(_SampleTexture2D_78F057A0_R_4, _SampleTexture2D_78F057A0_G_5);\n\t\t\t\t\t   
+      float2 _Remap_41670B4C_Out_3;\n\t\t\t\t\t    Unity_Remap_float2(_Vector2_A3C57E04_Out_0,
+      float2 (0, 1), float2 (-1, 1), _Remap_41670B4C_Out_3);\n\t\t\t\t\t    float2
+      _Property_67D72C91_Out_0 = Vector2_8964FCF;\n\t\t\t\t\t    float2 _Multiply_8F67594_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Remap_41670B4C_Out_3, _Property_67D72C91_Out_0, _Multiply_8F67594_Out_2);\n\t\t\t\t\t   
+      float2 _Add_AF7ED82E_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Property_70E8EE1E_Out_0,
+      _Multiply_8F67594_Out_2, _Add_AF7ED82E_Out_2);\n\t\t\t\t\t    UV_1 = _Add_AF7ED82E_Out_2;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Saturate\n\t\t\t\t\tvoid Unity_Saturate_float2(float2 In, out float2
+      Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = saturate(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: One Minus\n\t\t\t\t\tvoid Unity_OneMinus_float(float In, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = 1 - In;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: SoftParticle\n\t\t\t\t\tvoid
+      Unity_SceneDepth_Eye_float(float4 UV, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = LinearEyeDepth(SHADERGRAPH_SAMPLE_SCENE_DEPTH(UV.xy), _ZBufferParams);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle\n\t\t\t\t\tstruct Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b\n\t\t\t\t\t{\n\t\t\t\t\t   
+      float4 ScreenPosition;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
+      IN, out float depth_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float4 _ScreenPosition_4A338A69_Out_0
+      = IN.ScreenPosition;\n\t\t\t\t\t    float _Split_E29E317D_R_1 = _ScreenPosition_4A338A69_Out_0[0];\n\t\t\t\t\t   
+      float _Split_E29E317D_G_2 = _ScreenPosition_4A338A69_Out_0[1];\n\t\t\t\t\t   
+      float _Split_E29E317D_B_3 = _ScreenPosition_4A338A69_Out_0[2];\n\t\t\t\t\t   
+      float _Split_E29E317D_A_4 = _ScreenPosition_4A338A69_Out_0[3];\n\t\t\t\t\t   
+      depth_1 = _Split_E29E317D_A_4;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node:
+      SoftParticle, Feather Step\n\t\t\t\t\tvoid Unity_Subtract_float(float A, float
+      B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A - B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle\n\t\t\t\t\tvoid Unity_Maximum_float(float A, float B, out
+      float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = max(A, B);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle\n\t\t\t\t\tvoid Unity_Divide_float(float A, float B, out
+      float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A / B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: SoftParticle, Feather Step\n\t\t\t\t\tvoid Unity_Smoothstep_float(float
+      Edge1, float Edge2, float In, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out
+      = smoothstep(Edge1, Edge2, In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node:
+      SoftParticle\n\t\t\t\t\tstruct Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1\n\t\t\t\t\t{\n\t\t\t\t\t   
+      float4 ScreenPosition;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(float
       Vector1_1E6191B, Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1 IN,
-      out float Opacity_1)\n\t\t\t{\n\t\t\t    float _SceneDepth_D8E0E50A_Out_1;\n\t\t\t   
+      out float Opacity_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float _SceneDepth_D8E0E50A_Out_1;\n\t\t\t\t\t   
       Unity_SceneDepth_Eye_float(float4(IN.ScreenPosition.xy / IN.ScreenPosition.w,
-      0, 0), _SceneDepth_D8E0E50A_Out_1);\n\t\t\t    Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
-      _PixelDepth_64AD2AD5;\n\t\t\t    _PixelDepth_64AD2AD5.ScreenPosition = IN.ScreenPosition;\n\t\t\t   
-      float _PixelDepth_64AD2AD5_depth_1;\n\t\t\t    SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(_PixelDepth_64AD2AD5,
-      _PixelDepth_64AD2AD5_depth_1);\n\t\t\t    float _Subtract_7C133200_Out_2;\n\t\t\t   
-      Unity_Subtract_float(_SceneDepth_D8E0E50A_Out_1, _PixelDepth_64AD2AD5_depth_1,
-      _Subtract_7C133200_Out_2);\n\t\t\t    float _Property_4EA7E65F_Out_0 = Vector1_1E6191B;\n\t\t\t   
-      float _Maximum_87E9B207_Out_2;\n\t\t\t    Unity_Maximum_float(_Property_4EA7E65F_Out_0,
-      0.001, _Maximum_87E9B207_Out_2);\n\t\t\t    float _Divide_A3A47144_Out_2;\n\t\t\t   
-      Unity_Divide_float(_Subtract_7C133200_Out_2, _Maximum_87E9B207_Out_2, _Divide_A3A47144_Out_2);\n\t\t\t   
-      float _Smoothstep_254B27B2_Out_3;\n\t\t\t    Unity_Smoothstep_float(0, 1, _Divide_A3A47144_Out_2,
-      _Smoothstep_254B27B2_Out_3);\n\t\t\t    float _Saturate_3A4F4D3C_Out_1;\n\t\t\t   
-      Unity_Saturate_float(_Smoothstep_254B27B2_Out_3, _Saturate_3A4F4D3C_Out_1);\n\t\t\t   
-      Opacity_1 = _Saturate_3A4F4D3C_Out_1;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Feather
-      Step\n\t\t\tvoid Unity_Add_float(float A, float B, out float Out)\n\t\t\t{\n\t\t\t   
-      Out = A + B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Feather Step\n\t\t\tstruct Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      0, 0), _SceneDepth_D8E0E50A_Out_1);\n\t\t\t\t\t    Bindings_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b
+      _PixelDepth_64AD2AD5;\n\t\t\t\t\t    _PixelDepth_64AD2AD5.ScreenPosition =
+      IN.ScreenPosition;\n\t\t\t\t\t    float _PixelDepth_64AD2AD5_depth_1;\n\t\t\t\t\t   
+      SG_PixelDepth_a4fd51fa728c5ac4692b174c7430f87b(_PixelDepth_64AD2AD5, _PixelDepth_64AD2AD5_depth_1);\n\t\t\t\t\t   
+      float _Subtract_7C133200_Out_2;\n\t\t\t\t\t    Unity_Subtract_float(_SceneDepth_D8E0E50A_Out_1,
+      _PixelDepth_64AD2AD5_depth_1, _Subtract_7C133200_Out_2);\n\t\t\t\t\t    float
+      _Property_4EA7E65F_Out_0 = Vector1_1E6191B;\n\t\t\t\t\t    float _Maximum_87E9B207_Out_2;\n\t\t\t\t\t   
+      Unity_Maximum_float(_Property_4EA7E65F_Out_0, 0.001, _Maximum_87E9B207_Out_2);\n\t\t\t\t\t   
+      float _Divide_A3A47144_Out_2;\n\t\t\t\t\t    Unity_Divide_float(_Subtract_7C133200_Out_2,
+      _Maximum_87E9B207_Out_2, _Divide_A3A47144_Out_2);\n\t\t\t\t\t    float _Smoothstep_254B27B2_Out_3;\n\t\t\t\t\t   
+      Unity_Smoothstep_float(0, 1, _Divide_A3A47144_Out_2, _Smoothstep_254B27B2_Out_3);\n\t\t\t\t\t   
+      float _Saturate_3A4F4D3C_Out_1;\n\t\t\t\t\t    Unity_Saturate_float(_Smoothstep_254B27B2_Out_3,
+      _Saturate_3A4F4D3C_Out_1);\n\t\t\t\t\t    Opacity_1 = _Saturate_3A4F4D3C_Out_1;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Feather Step\n\t\t\t\t\tvoid Unity_Add_float(float A, float B, out float
+      Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A + B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Feather Step\n\t\t\t\t\tstruct Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_FeatherStep_3fc231337476e5d4e868153ae13d3355(float Vector1_8D3A95EC, float
       Vector1_9B1ABA2C, float Vector1_78C972FB, Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
-      IN, out float OutVector4_1)\n\t\t\t{\n\t\t\t    float _Property_6AE77210_Out_0
-      = Vector1_9B1ABA2C;\n\t\t\t    float _Property_9733AD99_Out_0 = Vector1_78C972FB;\n\t\t\t   
-      float _Multiply_ABC033FF_Out_2;\n\t\t\t    Unity_Multiply_float(_Property_9733AD99_Out_0,
-      0.5, _Multiply_ABC033FF_Out_2);\n\t\t\t    float _Subtract_583838FC_Out_2;\n\t\t\t   
-      Unity_Subtract_float(_Property_6AE77210_Out_0, _Multiply_ABC033FF_Out_2, _Subtract_583838FC_Out_2);\n\t\t\t   
-      float _Add_2CD18BB_Out_2;\n\t\t\t    Unity_Add_float(_Property_6AE77210_Out_0,
-      _Multiply_ABC033FF_Out_2, _Add_2CD18BB_Out_2);\n\t\t\t    float _Property_B48290D_Out_0
-      = Vector1_8D3A95EC;\n\t\t\t    float _Smoothstep_306AAA2A_Out_3;\n\t\t\t   
+      IN, out float OutVector4_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float _Property_6AE77210_Out_0
+      = Vector1_9B1ABA2C;\n\t\t\t\t\t    float _Property_9733AD99_Out_0 = Vector1_78C972FB;\n\t\t\t\t\t   
+      float _Multiply_ABC033FF_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_Property_9733AD99_Out_0,
+      0.5, _Multiply_ABC033FF_Out_2);\n\t\t\t\t\t    float _Subtract_583838FC_Out_2;\n\t\t\t\t\t   
+      Unity_Subtract_float(_Property_6AE77210_Out_0, _Multiply_ABC033FF_Out_2, _Subtract_583838FC_Out_2);\n\t\t\t\t\t   
+      float _Add_2CD18BB_Out_2;\n\t\t\t\t\t    Unity_Add_float(_Property_6AE77210_Out_0,
+      _Multiply_ABC033FF_Out_2, _Add_2CD18BB_Out_2);\n\t\t\t\t\t    float _Property_B48290D_Out_0
+      = Vector1_8D3A95EC;\n\t\t\t\t\t    float _Smoothstep_306AAA2A_Out_3;\n\t\t\t\t\t   
       Unity_Smoothstep_float(_Subtract_583838FC_Out_2, _Add_2CD18BB_Out_2, _Property_B48290D_Out_0,
-      _Smoothstep_306AAA2A_Out_3);\n\t\t\t    OutVector4_1 = _Smoothstep_306AAA2A_Out_3;\n\t\t\t}\n\t\t\t\n\t\t\tstruct
-      SG_Input_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t{\n\t\t\t    float4 ScreenPosition;\n\t\t\t   
-      half4 uv0;\n\t\t\t    float3 TimeParameters;\n\t\t\t};\n\t\t\t\n\t\t\tstruct
-      SG_Output_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t{\n\t\t\t    float Alpha_4;\n\t\t\t};\n\t\t\t\n\t\t\tSG_Output_b0fc71eacd48a9f43947c48d630a7ca2
-      SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(\n\t\t\t    SG_Input_b0fc71eacd48a9f43947c48d630a7ca2
-      IN,\n\t\t\t    /* Property: DistortOffsetUV */ float2 DistortOffsetUV,\n\t\t\t   
-      /* Property: DeformExponent */ float DeformExponent,\n\t\t\t    /* Property:
-      DeformScale */ float DeformScale,\n\t\t\t    /* Property: ParticleAlpha */
-      float ParticleAlpha,\n\t\t\t    /* Property: FireSpeed */ float2 FireSpeed,\n\t\t\t   
-      /* Property: BaseOffsetUV */ float2 BaseOffsetUV,\n\t\t\t    /* Property: Threshold
-      */ float Threshold,\n\t\t\t    /* Property: Feather */ float Feather)\n\t\t\t{\n\t\t\t   
-      // Node: UV\n\t\t\t    float4 _UV_4279E0C7_Out_0 = IN.uv0;\n\t\t\t\n\t\t\t   
-      // Node: Split\n\t\t\t    float _Split_274EE367_R_1 = _UV_4279E0C7_Out_0[0];\n\t\t\t   
-      float _Split_274EE367_G_2 = _UV_4279E0C7_Out_0[1];\n\t\t\t    float _Split_274EE367_B_3
-      = _UV_4279E0C7_Out_0[2];\n\t\t\t    float _Split_274EE367_A_4 = _UV_4279E0C7_Out_0[3];\n\t\t\t\n\t\t\t   
-      // Node: Vector 2\n\t\t\t    float2 _Vector2_8ACD3440_Out_0 = float2(_Split_274EE367_R_1,
-      _Split_274EE367_G_2);\n\t\t\t\n\t\t\t    // Node: Property\n\t\t\t    float2
-      _Property_2E95E2D3_Out_0 = BaseOffsetUV;\n\t\t\t\n\t\t\t    // Node: Add\n\t\t\t   
-      float2 _Add_EEF91B7C_Out_2;\n\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
-      _Property_2E95E2D3_Out_0, _Add_EEF91B7C_Out_2);\n\t\t\t\n\t\t\t    // Node:
-      Property\n\t\t\t    float _Property_70B919A5_Out_0 = DeformExponent;\n\t\t\t\n\t\t\t   
-      // Node: Power\n\t\t\t    float _Power_5A7BC83_Out_2;\n\t\t\t    Unity_Power_float(_Split_274EE367_G_2,
-      _Property_70B919A5_Out_0, _Power_5A7BC83_Out_2);\n\t\t\t\n\t\t\t    // Node:
-      Property\n\t\t\t    float _Property_73BBDEB5_Out_0 = DeformScale;\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float _Multiply_38A02C91_Out_2;\n\t\t\t    Unity_Multiply_float(_Power_5A7BC83_Out_2,
-      _Property_73BBDEB5_Out_0, _Multiply_38A02C91_Out_2);\n\t\t\t\n\t\t\t    //
-      Node: Saturate\n\t\t\t    float _Saturate_85507911_Out_1;\n\t\t\t    Unity_Saturate_float(_Multiply_38A02C91_Out_2,
-      _Saturate_85507911_Out_1);\n\t\t\t\n\t\t\t    // Node: Property\n\t\t\t   
-      float2 _Property_279F561F_Out_0 = DistortOffsetUV;\n\t\t\t\n\t\t\t    // Node:
-      Add\n\t\t\t    float2 _Add_100415F0_Out_2;\n\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
-      _Property_279F561F_Out_0, _Add_100415F0_Out_2);\n\t\t\t\n\t\t\t    // Node:
-      Property\n\t\t\t    float2 _Property_A8A1AD38_Out_0 = FireSpeed;\n\t\t\t\n\t\t\t   
-      // Node: Panner\n\t\t\t    Bindings_Panner_1224b3d01b774ba44839d1987de812cf
-      _Panner_9656768F;\n\t\t\t    _Panner_9656768F.TimeParameters = IN.TimeParameters;\n\t\t\t   
-      float2 _Panner_9656768F_UV_1;\n\t\t\t    SG_Panner_1224b3d01b774ba44839d1987de812cf(_Add_100415F0_Out_2,
-      _Property_A8A1AD38_Out_0, _Panner_9656768F, _Panner_9656768F_UV_1);\n\t\t\t\n\t\t\t   
-      // Node: DistortUV\n\t\t\t    Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8
-      _DistortUV_2C72FFF1;\n\t\t\t    float2 _DistortUV_2C72FFF1_UV_1;\n\t\t\t   
+      _Smoothstep_306AAA2A_Out_3);\n\t\t\t\t\t    OutVector4_1 = _Smoothstep_306AAA2A_Out_3;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tstruct
+      SG_Input_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t\t\t{\n\t\t\t\t\t    float4
+      ScreenPosition;\n\t\t\t\t\t    half4 uv0;\n\t\t\t\t\t    float3 TimeParameters;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tstruct
+      SG_Output_b0fc71eacd48a9f43947c48d630a7ca2\n\t\t\t\t\t{\n\t\t\t\t\t    float
+      Alpha_4;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tSG_Output_b0fc71eacd48a9f43947c48d630a7ca2
+      SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(\n\t\t\t\t\t    SG_Input_b0fc71eacd48a9f43947c48d630a7ca2
+      IN,\n\t\t\t\t\t    /* Property: DistortOffsetUV */ float2 DistortOffsetUV,\n\t\t\t\t\t   
+      /* Property: DeformExponent */ float DeformExponent,\n\t\t\t\t\t    /* Property:
+      DeformScale */ float DeformScale,\n\t\t\t\t\t    /* Property: ParticleAlpha
+      */ float ParticleAlpha,\n\t\t\t\t\t    /* Property: FireSpeed */ float2 FireSpeed,\n\t\t\t\t\t   
+      /* Property: BaseOffsetUV */ float2 BaseOffsetUV,\n\t\t\t\t\t    /* Property:
+      Threshold */ float Threshold,\n\t\t\t\t\t    /* Property: Feather */ float
+      Feather)\n\t\t\t\t\t{\n\t\t\t\t\t    // Node: UV\n\t\t\t\t\t    float4 _UV_4279E0C7_Out_0
+      = IN.uv0;\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Split\n\t\t\t\t\t    float _Split_274EE367_R_1
+      = _UV_4279E0C7_Out_0[0];\n\t\t\t\t\t    float _Split_274EE367_G_2 = _UV_4279E0C7_Out_0[1];\n\t\t\t\t\t   
+      float _Split_274EE367_B_3 = _UV_4279E0C7_Out_0[2];\n\t\t\t\t\t    float _Split_274EE367_A_4
+      = _UV_4279E0C7_Out_0[3];\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Vector 2\n\t\t\t\t\t   
+      float2 _Vector2_8ACD3440_Out_0 = float2(_Split_274EE367_R_1, _Split_274EE367_G_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_2E95E2D3_Out_0 = BaseOffsetUV;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Add\n\t\t\t\t\t    float2 _Add_EEF91B7C_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
+      _Property_2E95E2D3_Out_0, _Add_EEF91B7C_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_70B919A5_Out_0 = DeformExponent;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Power\n\t\t\t\t\t    float _Power_5A7BC83_Out_2;\n\t\t\t\t\t    Unity_Power_float(_Split_274EE367_G_2,
+      _Property_70B919A5_Out_0, _Power_5A7BC83_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_73BBDEB5_Out_0 = DeformScale;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_38A02C91_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Power_5A7BC83_Out_2, _Property_73BBDEB5_Out_0, _Multiply_38A02C91_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Saturate\n\t\t\t\t\t    float _Saturate_85507911_Out_1;\n\t\t\t\t\t   
+      Unity_Saturate_float(_Multiply_38A02C91_Out_2, _Saturate_85507911_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_279F561F_Out_0 = DistortOffsetUV;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Add\n\t\t\t\t\t    float2 _Add_100415F0_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Vector2_8ACD3440_Out_0,
+      _Property_279F561F_Out_0, _Add_100415F0_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_A8A1AD38_Out_0 = FireSpeed;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Panner\n\t\t\t\t\t    Bindings_Panner_1224b3d01b774ba44839d1987de812cf
+      _Panner_9656768F;\n\t\t\t\t\t    _Panner_9656768F.TimeParameters = IN.TimeParameters;\n\t\t\t\t\t   
+      float2 _Panner_9656768F_UV_1;\n\t\t\t\t\t    SG_Panner_1224b3d01b774ba44839d1987de812cf(_Add_100415F0_Out_2,
+      _Property_A8A1AD38_Out_0, _Panner_9656768F, _Panner_9656768F_UV_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: DistortUV\n\t\t\t\t\t    Bindings_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8
+      _DistortUV_2C72FFF1;\n\t\t\t\t\t    float2 _DistortUV_2C72FFF1_UV_1;\n\t\t\t\t\t   
       SG_DistortUV_2d908599e21b6aa4b8bde168e6bb8ec8(_Add_EEF91B7C_Out_2, (_Saturate_85507911_Out_1.xx),
       _Panner_9656768F_UV_1, TEXTURE2D_ARGS(_DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232,
       sampler_DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232), _DistortUV_2C72FFF1_Texture2DEE616DFF_3994782232_TexelSize,
-      _DistortUV_2C72FFF1, _DistortUV_2C72FFF1_UV_1);\n\t\t\t\n\t\t\t    // Node:
-      Saturate\n\t\t\t    float2 _Saturate_91DC8C66_Out_1;\n\t\t\t    Unity_Saturate_float2(_DistortUV_2C72FFF1_UV_1,
-      _Saturate_91DC8C66_Out_1);\n\t\t\t\n\t\t\t    // Node: Sample Texture 2D\n\t\t\t   
-      float4 _SampleTexture2D_4A9BDF8B_RGBA_0 = SAMPLE_TEXTURE2D(_SampleTexture2D_4A9BDF8B_Texture_1,
-      sampler_SampleTexture2D_4A9BDF8B_Texture_1, _Saturate_91DC8C66_Out_1);\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_R_4 = _SampleTexture2D_4A9BDF8B_RGBA_0.r;\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_G_5 = _SampleTexture2D_4A9BDF8B_RGBA_0.g;\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_B_6 = _SampleTexture2D_4A9BDF8B_RGBA_0.b;\n\t\t\t   
-      float _SampleTexture2D_4A9BDF8B_A_7 = _SampleTexture2D_4A9BDF8B_RGBA_0.a;\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_7F03C9CB_Out_0 = ParticleAlpha;\n\t\t\t\n\t\t\t   
-      // Node: One Minus\n\t\t\t    float _OneMinus_1590AA8C_Out_1;\n\t\t\t    Unity_OneMinus_float(_Split_274EE367_G_2,
-      _OneMinus_1590AA8C_Out_1);\n\t\t\t\n\t\t\t    // Node: SoftParticle\n\t\t\t   
-      Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1 _SoftParticle_D39EB39F;\n\t\t\t   
-      _SoftParticle_D39EB39F.ScreenPosition = IN.ScreenPosition;\n\t\t\t    float
-      _SoftParticle_D39EB39F_Opacity_1;\n\t\t\t    SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(1,
-      _SoftParticle_D39EB39F, _SoftParticle_D39EB39F_Opacity_1);\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float _Multiply_4ECA24BB_Out_2;\n\t\t\t    Unity_Multiply_float(_OneMinus_1590AA8C_Out_1,
-      _SoftParticle_D39EB39F_Opacity_1, _Multiply_4ECA24BB_Out_2);\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float _Multiply_F9DB30E5_Out_2;\n\t\t\t    Unity_Multiply_float(_Property_7F03C9CB_Out_0,
-      _Multiply_4ECA24BB_Out_2, _Multiply_F9DB30E5_Out_2);\n\t\t\t\n\t\t\t    //
-      Node: Multiply\n\t\t\t    float _Multiply_93F268F9_Out_2;\n\t\t\t    Unity_Multiply_float(_SampleTexture2D_4A9BDF8B_A_7,
-      _Multiply_F9DB30E5_Out_2, _Multiply_93F268F9_Out_2);\n\t\t\t\n\t\t\t    //
-      Node: Property\n\t\t\t    float _Property_5F6A51F7_Out_0 = Threshold;\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_62A4D7A0_Out_0 = Feather;\n\t\t\t\n\t\t\t   
-      // Node: Feather Step\n\t\t\t    Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
-      _FeatherStep_5C0A75C8;\n\t\t\t    float _FeatherStep_5C0A75C8_OutVector4_1;\n\t\t\t   
+      _DistortUV_2C72FFF1, _DistortUV_2C72FFF1_UV_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Saturate\n\t\t\t\t\t    float2 _Saturate_91DC8C66_Out_1;\n\t\t\t\t\t   
+      Unity_Saturate_float2(_DistortUV_2C72FFF1_UV_1, _Saturate_91DC8C66_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Sample Texture 2D\n\t\t\t\t\t    float4 _SampleTexture2D_4A9BDF8B_RGBA_0
+      = SAMPLE_TEXTURE2D(_SampleTexture2D_4A9BDF8B_Texture_1, sampler_SampleTexture2D_4A9BDF8B_Texture_1,
+      _Saturate_91DC8C66_Out_1);\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_R_4
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.r;\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_G_5
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.g;\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_B_6
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.b;\n\t\t\t\t\t    float _SampleTexture2D_4A9BDF8B_A_7
+      = _SampleTexture2D_4A9BDF8B_RGBA_0.a;\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Property\n\t\t\t\t\t   
+      float _Property_7F03C9CB_Out_0 = ParticleAlpha;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: One Minus\n\t\t\t\t\t    float _OneMinus_1590AA8C_Out_1;\n\t\t\t\t\t   
+      Unity_OneMinus_float(_Split_274EE367_G_2, _OneMinus_1590AA8C_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: SoftParticle\n\t\t\t\t\t    Bindings_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1
+      _SoftParticle_D39EB39F;\n\t\t\t\t\t    _SoftParticle_D39EB39F.ScreenPosition
+      = IN.ScreenPosition;\n\t\t\t\t\t    float _SoftParticle_D39EB39F_Opacity_1;\n\t\t\t\t\t   
+      SG_SoftParticle_30b7e1d9500bb7e4c8d0ae6c56a9e9a1(1, _SoftParticle_D39EB39F,
+      _SoftParticle_D39EB39F_Opacity_1);\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Multiply\n\t\t\t\t\t   
+      float _Multiply_4ECA24BB_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_OneMinus_1590AA8C_Out_1,
+      _SoftParticle_D39EB39F_Opacity_1, _Multiply_4ECA24BB_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_F9DB30E5_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Property_7F03C9CB_Out_0, _Multiply_4ECA24BB_Out_2, _Multiply_F9DB30E5_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_93F268F9_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_SampleTexture2D_4A9BDF8B_A_7, _Multiply_F9DB30E5_Out_2,
+      _Multiply_93F268F9_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Property\n\t\t\t\t\t   
+      float _Property_5F6A51F7_Out_0 = Threshold;\n\t\t\t\t\t\n\t\t\t\t\t    // Node:
+      Property\n\t\t\t\t\t    float _Property_62A4D7A0_Out_0 = Feather;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Feather Step\n\t\t\t\t\t    Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
+      _FeatherStep_5C0A75C8;\n\t\t\t\t\t    float _FeatherStep_5C0A75C8_OutVector4_1;\n\t\t\t\t\t   
       SG_FeatherStep_3fc231337476e5d4e868153ae13d3355(_Multiply_93F268F9_Out_2, _Property_5F6A51F7_Out_0,
-      _Property_62A4D7A0_Out_0, _FeatherStep_5C0A75C8, _FeatherStep_5C0A75C8_OutVector4_1);\n\t\t\t\n\t\t\t   
-      // Node: One Minus\n\t\t\t    float _OneMinus_1C63F447_Out_1;\n\t\t\t    Unity_OneMinus_float(_OneMinus_1590AA8C_Out_1,
-      _OneMinus_1C63F447_Out_1);\n\t\t\t\n\t\t\t    // Node: Multiply\n\t\t\t   
-      float _Multiply_8DEC96D7_Out_2;\n\t\t\t    Unity_Multiply_float(_FeatherStep_5C0A75C8_OutVector4_1,
-      _OneMinus_1C63F447_Out_1, _Multiply_8DEC96D7_Out_2);\n\t\t\t\n\t\t\t    //
-      Visual Effect Master\n\t\t\t    SG_Output_b0fc71eacd48a9f43947c48d630a7ca2
-      OUT;\n\t\t\t    OUT.Alpha_4 = _Multiply_8DEC96D7_Out_2;\n\t\t\t    return OUT;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tfloat4 frag(ps_input i) : SV_TARGET\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t   
-      #ifdef VFX_SHADERGRAPH\n\t\t\t        float2 DistortOffsetUV = i.DistortOffsetUV;float
+      _Property_62A4D7A0_Out_0, _FeatherStep_5C0A75C8, _FeatherStep_5C0A75C8_OutVector4_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: One Minus\n\t\t\t\t\t    float _OneMinus_1C63F447_Out_1;\n\t\t\t\t\t   
+      Unity_OneMinus_float(_OneMinus_1590AA8C_Out_1, _OneMinus_1C63F447_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_8DEC96D7_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_FeatherStep_5C0A75C8_OutVector4_1, _OneMinus_1C63F447_Out_1,
+      _Multiply_8DEC96D7_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Visual Effect Master\n\t\t\t\t\t   
+      SG_Output_b0fc71eacd48a9f43947c48d630a7ca2 OUT;\n\t\t\t\t\t    OUT.Alpha_4
+      = _Multiply_8DEC96D7_Out_2;\n\t\t\t\t\t    return OUT;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t   
+      #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t    // We need the depth color as SV_Target0
+      for alpha to coverage\n\t\t\t\t\t    , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target1\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      // When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t   
+      , out float4 outMotionVector : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t    #ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t   
+      , out float4 outDepthColor : SV_Target0\n\t\t\t\t\t    #else\n\t\t\t\t\t   
+      , out float4 dummy : SV_Target0\n\t\t\t\t\t    #endif\n\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outSelection : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t   
+      #ifdef VFX_SHADERGRAPH\n\t\t\t\t\t        float2 DistortOffsetUV = i.DistortOffsetUV;float
       DeformExponent = i.DeformExponent;float DeformScale = i.DeformScale;float ParticleAlpha
       = i.ParticleAlpha;float2 FireSpeed = i.FireSpeed;float2 BaseOffsetUV = i.BaseOffsetUV;float
-      Threshold = i.Threshold;float Feather = i.Feather;\n\t\t\t        \n\t\t\t       
-      //Call Shader Graph\n\t\t\t        SG_Input_b0fc71eacd48a9f43947c48d630a7ca2
-      INSG = (SG_Input_b0fc71eacd48a9f43947c48d630a7ca2)0;\n\t\t\t        float3
-      posRelativeWS = VFXGetPositionRWS(i.VFX_VARYING_POSWS);\n\t\t\t        float3
-      posAbsoluteWS = VFXGetPositionAWS(i.VFX_VARYING_POSWS);\n\t\t\t        INSG.ScreenPosition
-      = ComputeScreenPos(VFXTransformPositionWorldToClip(i.VFX_VARYING_POSWS), _ProjectionParams.x);\n\t\t\t       
-      INSG.uv0.xy = i.uv;\n\t\t\t        INSG.TimeParameters = _TimeParameters.xyz;\n\t\t\t       
-      \n\t\t\t        SG_Output_b0fc71eacd48a9f43947c48d630a7ca2 OUTSG = SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(INSG,DistortOffsetUV,
+      Threshold = i.Threshold;float Feather = i.Feather;\n\t\t\t\t\t        //Call
+      Shader Graph\n\t\t\t\t\t        SG_Input_b0fc71eacd48a9f43947c48d630a7ca2 INSG
+      = (SG_Input_b0fc71eacd48a9f43947c48d630a7ca2)0;\n\t\t\t\t\t        float3 posRelativeWS
+      = VFXGetPositionRWS(i.VFX_VARYING_POSWS);\n\t\t\t\t\t        float3 posAbsoluteWS
+      = VFXGetPositionAWS(i.VFX_VARYING_POSWS);\n\t\t\t\t\t        INSG.ScreenPosition
+      = ComputeScreenPos(VFXTransformPositionWorldToClip(i.VFX_VARYING_POSWS), _ProjectionParams.x);\n\t\t\t\t\t       
+      INSG.uv0.xy = i.uv;\n\t\t\t\t\t        INSG.TimeParameters = _TimeParameters.xyz;\n\t\t\t\t\t       
+      \n\t\t\t\t\t        SG_Output_b0fc71eacd48a9f43947c48d630a7ca2 OUTSG = SG_Evaluate_b0fc71eacd48a9f43947c48d630a7ca2(INSG,DistortOffsetUV,
       DeformExponent, DeformScale, ParticleAlpha, FireSpeed, BaseOffsetUV, Threshold,
-      Feather);\n\t\t\t        \n\n\t\t\t        \n\t\t\t        float alpha = OUTSG.Alpha_4;\n\t\t\t   
-      #else\n\t\t\t        float alpha = VFXGetFragmentColor(i).a;\n\t\t\t       
-      alpha *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t    #endif\n\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\n\t\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2
+      Feather);\n\t\t\t\t\t        \n\t\t\t\n\t\t\t\t\t        float alpha = OUTSG.Alpha_4;\n\t\t\t\t\t   
+      #else\n\t\t\t\t\t        float alpha = VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\t#if
+      VFX_SUPPORT_MAIN_TEXTURE_SAMPLING_IN_FRAGMENT_DEPTH\n\t\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(mainTexture),i).a;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
       velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
-      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\treturn encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\treturn float4(_ObjectId,
-      _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\treturn
-      (float4)0;\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH undefined \n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\toutSelection
+      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH
+      == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t#ifndef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\t\tdummy
+      = (float4)0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined \n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t//
       Forward pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"ForwardOnly\"
       }\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t#pragma multi_compile
       _ DEBUG_DISPLAY\n\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos :
@@ -2185,8 +2256,9 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t#if
       VFX_SHADERGRAPH\n\t\t\t#define REQUIRE_DEPTH_TEXTURE\n\t\t\t\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
       SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
@@ -2428,7 +2500,7 @@ VisualEffectResource:
       VFX_USE_PARTICLEID_CURRENT 1\n#define VFX_USE_TEXINDEX_CURRENT 1\n#define VFX_USE_POSITION_CURRENT
       1\n#define VFX_USE_ALIVE_CURRENT 1\n#define VFX_USE_AGE_CURRENT 1\n#define
       VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float uniform_b;\n    float uniform_c;\n    uint2 PADDING_0;\nCBUFFER_END\n\nstruct
+      float uniform_a;\n    float uniform_b;\n    uint2 PADDING_0;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float3 velocity;\n    uint seed;\n    float angleZ;\n   
       float lifetime;\n    uint particleId;\n    float texIndex;\n    float3 position;\n   
       bool alive;\n    float age;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n\r\n#define
@@ -2453,17 +2525,20 @@ VisualEffectResource:
       Source:Slot Random:Uniform channels:Z */\n{\n    angleZ = lerp(A.x,B.x,RAND);\n}\nvoid
       SetAttribute_F01429A3(inout float lifetime, inout uint seed, float A, float
       B) /*attribute:lifetime Composition:Overwrite Source:Slot Random:Uniform channels:XYZ
-      */\n{\n    lifetime = lerp(A,B,RAND);\n}\n\n\r\n\r\n#if HAS_STRIPS\r\nbool
-      GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
+      */\n{\n    lifetime = lerp(A,B,RAND);\n}\n\n\r\n\r\n// Due to a bug in HLSL
+      compiler, disable spurious \"unitialized variable\" due to mid function return
+      statement\r\n#pragma warning(push)\r\n#pragma warning(disable : 4000)\r\n#if
+      HAS_STRIPS\r\nbool GetParticleIndex(inout uint particleIndex, uint stripIndex)\r\n{\r\n\tuint
       relativeIndex;\r\n\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
       1, relativeIndex);\r\n\tif (relativeIndex >= PARTICLE_PER_STRIP_COUNT) // strip
       is full\r\n\t{\r\n\t\tInterlockedAdd(STRIP_DATA(STRIP_NEXT_INDEX, stripIndex),
       -1); // Remove previous increment\r\n\t\treturn false;\r\n\t}\r\n\r\n\tparticleIndex
       = stripIndex * PARTICLE_PER_STRIP_COUNT + ((STRIP_DATA(STRIP_FIRST_INDEX, stripIndex)
-      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid
-      CSMain(uint3 groupId          : SV_GroupID,\r\n            uint3 groupThreadId   
-      : SV_GroupThreadID)\r\n{\r\n    uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n    id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
+      + relativeIndex) % PARTICLE_PER_STRIP_COUNT);\r\n    return true;\r\n}\r\n#endif\r\n#pragma
+      warning(pop)\r\n\r\n[numthreads(NB_THREADS_PER_GROUP,1,1)]\r\nvoid CSMain(uint3
+      groupId          : SV_GroupID,\r\n            uint3 groupThreadId    : SV_GroupThreadID)\r\n{\r\n   
+      uint id = groupThreadId.x + groupId.x * NB_THREADS_PER_GROUP;\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n   
+      id += groupId.y * dispatchWidth * NB_THREADS_PER_GROUP;\r\n#endif\r\n\r\n#if
       VFX_USE_SPAWNER_FROM_GPU\r\n    uint maxThreadId = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 0) << 2);\r\n    uint currentSpawnIndex = inputAdditional.Load((offsetInAdditionalOutput
       * 2 + 1) << 2) - maxThreadId;\r\n#else\r\n    uint maxThreadId = nbSpawned;\r\n   
@@ -2496,8 +2571,8 @@ VisualEffectResource:
       with strip\r\n#endif\r\n        \r\n        {\n            SetAttribute_E6295C0(
       /*inout */attributes.velocity,  /*inout */attributes.seed, float3(-0.100000001,
       1, -0.100000001), float3(0.100000001, 1.5, 0.100000001));\n        }\n       
-      {\n            uint tmp_bb = attributes.particleId ^ asuint(uniform_c);\n           
-      float tmp_bc = FixedRand(tmp_bb);\n            float tmp_bd = uniform_b + tmp_bc;\n           
+      {\n            uint tmp_bb = attributes.particleId ^ asuint(uniform_b);\n           
+      float tmp_bc = FixedRand(tmp_bb);\n            float tmp_bd = uniform_a + tmp_bc;\n           
       float2 tmp_bg = GeneratePerlinNoise(tmp_bd, float3(0.25, 0.5, 2).x, (int)3,
       float3(0.25, 0.5, 2).y, float3(0.25, 0.5, 2).z);\n            float tmp_bh
       = tmp_bg[0];\n            float tmp_bj = tmp_bh - (float)-1;\n            float
@@ -2530,7 +2605,7 @@ VisualEffectResource:
       VFX_USE_TEXINDEX_CURRENT 1\n#define VFX_USE_POSITION_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT
       1\n#define VFX_USE_AGE_CURRENT 1\n#define VFX_HAS_INDIRECT_DRAW 1\n#define
       VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float4x4 uniform_b;\n    float uniform_c;\n    float uniform_d;\n    float
+      float4x4 uniform_a;\n    float uniform_b;\n    float uniform_c;\n    float
       deltaTime_a;\n    uint PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       float3 velocity;\n    float lifetime;\n    uint particleId;\n    float mass;\n   
       float texIndex;\n    float3 position;\n    bool alive;\n    float age;\n};\n\nstruct
@@ -2567,13 +2642,13 @@ VisualEffectResource:
       HAS_STRIPS\r\n            const StripData stripData = GetStripDataFromParticleIndex(index,
       PARTICLE_PER_STRIP_COUNT);\r\n            InitStripAttributes(index, attributes,
       stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t    uint tmp_bd = attributes.particleId
-      ^ asuint(uniform_d);\n\t\t\t    float tmp_be = FixedRand(tmp_bd);\n\t\t\t   
-      float tmp_bf = uniform_c + tmp_be;\n\t\t\t    float2 tmp_bi = GeneratePerlinNoise(tmp_bf,
+      ^ asuint(uniform_c);\n\t\t\t    float tmp_be = FixedRand(tmp_bd);\n\t\t\t   
+      float tmp_bf = uniform_b + tmp_be;\n\t\t\t    float2 tmp_bi = GeneratePerlinNoise(tmp_bf,
       float3(0.25, 0.5, 2).x, (int)3, float3(0.25, 0.5, 2).y, float3(0.25, 0.5, 2).z);\n\t\t\t   
       float tmp_bj = tmp_bi[0];\n\t\t\t    float tmp_bl = tmp_bj - (float)-1;\n\t\t\t   
       float tmp_bn = tmp_bl / (float)2;\n\t\t\t    float3 tmp_bo = float3(tmp_bn,
       tmp_bn, tmp_bn);\n\t\t\t    float3 tmp_bq = tmp_bo * float3(2, -1, 0);\n\t\t\t   
-      float3 tmp_br = float3(1, 1, 0) + tmp_bq;\n\t\t\t    float3 tmp_bs = mul((float3x3)uniform_b,
+      float3 tmp_br = float3(1, 1, 0) + tmp_bq;\n\t\t\t    float3 tmp_bs = mul((float3x3)uniform_a,
       tmp_br);\n\t\t\t    Force_1( /*inout */attributes.velocity, attributes.mass,
       tmp_bs, (float)0.200000003, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t    FlipbookPlay_0(
       /*inout */attributes.texIndex, (float)18, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
@@ -2608,14 +2683,14 @@ VisualEffectResource:
       = attributes.position;\r\n#endif\r\n#if HAS_STRIPS\r\n        const StripData
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
-      uint tmp_bd = attributes.particleId ^ asuint(uniform_d);\n\t\t    float tmp_be
-      = FixedRand(tmp_bd);\n\t\t    float tmp_bf = uniform_c + tmp_be;\n\t\t    float2
+      uint tmp_bd = attributes.particleId ^ asuint(uniform_c);\n\t\t    float tmp_be
+      = FixedRand(tmp_bd);\n\t\t    float tmp_bf = uniform_b + tmp_be;\n\t\t    float2
       tmp_bi = GeneratePerlinNoise(tmp_bf, float3(0.25, 0.5, 2).x, (int)3, float3(0.25,
       0.5, 2).y, float3(0.25, 0.5, 2).z);\n\t\t    float tmp_bj = tmp_bi[0];\n\t\t   
       float tmp_bl = tmp_bj - (float)-1;\n\t\t    float tmp_bn = tmp_bl / (float)2;\n\t\t   
       float3 tmp_bo = float3(tmp_bn, tmp_bn, tmp_bn);\n\t\t    float3 tmp_bq = tmp_bo
       * float3(2, -1, 0);\n\t\t    float3 tmp_br = float3(1, 1, 0) + tmp_bq;\n\t\t   
-      float3 tmp_bs = mul((float3x3)uniform_b, tmp_br);\n\t\t    Force_1( /*inout
+      float3 tmp_bs = mul((float3x3)uniform_a, tmp_br);\n\t\t    Force_1( /*inout
       */attributes.velocity, attributes.mass, tmp_bs, (float)0.200000003, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
       FlipbookPlay_0( /*inout */attributes.texIndex, (float)18, deltaTime_a);\n\t\t}\n\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\tAge(
@@ -2632,7 +2707,7 @@ VisualEffectResource:
     name: '[Smoke]Output Particle Lit Octagon'
     source: "Shader \"Hidden/VFX/BonFire/Smoke/Output Particle Lit Octagon\"\n{\r\n\tSubShader\r\n\t{\t\r\n\t\tCull
       Off\r\n\t\t\r\n\t\tTags { \"Queue\"=\"Transparent+0\" \"IgnoreProjector\"=\"True\"
-      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
+      \"RenderType\"=\"Transparent\" }\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\tBlend
       One OneMinusSrcAlpha \n\t\tZTest LEqual\n\t\tZWrite Off\n\t\tCull Off\n\t\t\n\t\n\t\t\t\n\t\tHLSLINCLUDE\n\t\t\n\t\t#define
       NB_THREADS_PER_GROUP 64\n\t\t#define HAS_ATTRIBUTES 1\n\t\t#define VFX_PASSDEPTH_ACTUAL
       (0)\n\t\t#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n\t\t#define VFX_PASSDEPTH_SELECTION
@@ -2655,10 +2730,10 @@ VisualEffectResource:
       1\n\t\t#define SHADERGRAPH_NEEDS_TANGENT_FORWARD 1\n\t\t#define SHADERGRAPH_NEEDS_NORMAL_DEPTHONLY
       1\n\t\t#define SHADERGRAPH_NEEDS_TANGENT_DEPTHONLY 1\n\t\t#define HDRP_LIT
       1\n\t\t#define USE_NORMAL_BENDING 1\n\t\t#define FORCE_NORMAL_VARYING 1\n\t\t#define
-      VFX_PRIMITIVE_OCTAGON 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      VFX_PRIMITIVE_OCTAGON 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
-      float4 Size_b;\n\t\t    float4 uniform_d;\n\t\t    float4 uniform_e;\n\t\t   
-      float4 uniform_f;\n\t\t    float Color_c;\n\t\t    uint3 PADDING_0;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct
+      float4 Size_b;\n\t\t    float4 uniform_a;\n\t\t    float4 uniform_b;\n\t\t   
+      float4 uniform_c;\n\t\t    float Color_c;\n\t\t    uint3 PADDING_0;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct
       Attributes\n\t\t{\n\t\t    float angleZ;\n\t\t    float lifetime;\n\t\t   
       float texIndex;\n\t\t    float3 position;\n\t\t    float3 color;\n\t\t    float
       alpha;\n\t\t    bool alive;\n\t\t    float3 axisX;\n\t\t    float3 axisY;\n\t\t   
@@ -2666,17 +2741,18 @@ VisualEffectResource:
       pivotX;\n\t\t    float pivotY;\n\t\t    float pivotZ;\n\t\t    float size;\n\t\t   
       float scaleX;\n\t\t    float scaleY;\n\t\t    float scaleZ;\n\t\t    float
       age;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
-      SmokeTexture;\n\t\tSamplerState samplerSmokeTexture;\n\t\tfloat4 SmokeTexture_TexelSize;\n\t\tTexture2D
-      SmokeNormal;\n\t\tSamplerState samplerSmokeNormal;\n\t\tfloat4 SmokeNormal_TexelSize;\n\t\tTexture2D
+      SmokeTexture;\n\t\tSamplerState samplerSmokeTexture;\n\t\tfloat4 SmokeTexture_TexelSize;\n\t\t\n\t\tTexture2D
+      SmokeNormal;\n\t\tSamplerState samplerSmokeNormal;\n\t\tfloat4 SmokeNormal_TexelSize;\n\t\t\n\t\tTexture2D
       _SampleTexture2D_E155AE1_Texture_1;\n\t\tSamplerState sampler_SampleTexture2D_E155AE1_Texture_1;\n\t\tfloat4
-      _SampleTexture2D_E155AE1_Texture_1_TexelSize;\n\t\t\n\n\t\t\n\t\t#define VFX_NEEDS_COLOR_INTERPOLATOR
-      (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if HAS_STRIPS\n\t\t#define
-      VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define VFX_OPTIONAL_INTERPOLATION
-      nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer attributeBuffer;\t\n\t\t\n\t\t#if
-      VFX_HAS_INDIRECT_DRAW\n\t\tStructuredBuffer<uint> indirectBuffer;\t\n\t\t#endif\t\n\t\t\n\t\t#if
-      USE_DEAD_LIST_COUNT\n\t\tByteAddressBuffer deadListCount;\n\t\t#endif\n\t\t\n\t\t#if
-      HAS_STRIPS\n\t\tBuffer<uint> stripDataBuffer;\n\t\t#endif\n\t\t\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD
-      || USE_MOTION_VECTORS_PASS\n\t\tByteAddressBuffer elementToVFXBufferPrevious;\n\t\t#endif\n\t\t\n\t\tCBUFFER_START(outputParams)\n\t\t\tfloat
+      _SampleTexture2D_E155AE1_Texture_1_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
+      VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
+      HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
+      VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
+      attributeBuffer;\t\n\t\t\n\t\t#if VFX_HAS_INDIRECT_DRAW\n\t\tStructuredBuffer<uint>
+      indirectBuffer;\t\n\t\t#endif\t\n\t\t\n\t\t#if USE_DEAD_LIST_COUNT\n\t\tByteAddressBuffer
+      deadListCount;\n\t\t#endif\n\t\t\n\t\t#if HAS_STRIPS\n\t\tBuffer<uint> stripDataBuffer;\n\t\t#endif\n\t\t\n\t\t#if
+      WRITE_MOTION_VECTOR_IN_FORWARD || USE_MOTION_VECTORS_PASS\n\t\tByteAddressBuffer
+      elementToVFXBufferPrevious;\n\t\t#endif\n\t\t\n\t\tCBUFFER_START(outputParams)\n\t\t\tfloat
       nbMax;\n\t\t\tfloat systemSeed;\n\t\tCBUFFER_END\n\t\t\n\t\t// Helper macros
       to always use a valid instanceID\n\t\t#if defined(UNITY_STEREO_INSTANCING_ENABLED)\n\t\t\t#define
       VFX_DECLARE_INSTANCE_ID     UNITY_VERTEX_INPUT_INSTANCE_ID\n\t\t\t#define VFX_GET_INSTANCE_ID(i)     
@@ -2684,8 +2760,7 @@ VisualEffectResource:
       instanceID : SV_InstanceID;\n\t\t\t#define VFX_GET_INSTANCE_ID(i)      i.instanceID\n\t\t#endif\n\t\t\n\t\tENDHLSL\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"SceneSelectionPass\" }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend
       Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH VFX_PASSDEPTH_SELECTION\n\t\t\t#pragma
-      target 4.5\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t#pragma multi_compile _
-      WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\t#define NEEDS_NORMAL\tdefined(WRITE_NORMAL_BUFFER)
+      target 4.5\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t\n\t\t\t#define NEEDS_NORMAL\tdefined(WRITE_NORMAL_BUFFER)
       || FORCE_NORMAL_VARYING || SHADERGRAPH_NEEDS_NORMAL_DEPTHONLY\n\t\t\t#define
       NEEDS_TANGENT\tUSE_NORMAL_MAP || USE_NORMAL_BENDING || SHADERGRAPH_NEEDS_TANGENT_DEPTHONLY\n\t\t\t\n\t\t\tstruct
       ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t#if USE_FLIPBOOK_INTERPOLATION\n\t\t\t\tfloat4
@@ -2886,15 +2961,15 @@ VisualEffectResource:
       = uvData.blend;\n\t\t\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS && defined(VFX_VARYING_MOTIONVECTORSCALE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_MOTIONVECTORSCALE
       = motionVectorScale * invFlipBookSize;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\n\t\t\t   
       \n\t\t\t    float Distort__ = (float)0;{\n\t\t\t        float tmp_bg = attributes.age
-      / attributes.lifetime;\n\t\t\t        float tmp_bh = SampleCurve(uniform_d,tmp_bg);\n\t\t\t       
+      / attributes.lifetime;\n\t\t\t        float tmp_bh = SampleCurve(uniform_a,tmp_bg);\n\t\t\t       
       \n\t\t\t        Distort__ = tmp_bh;\n\t\t\t    }\n\t\t\t    o.Distort = Distort__;float
       texIndex__ = (float)0;{\n\t\t\t        texIndex__ = attributes.texIndex;\n\t\t\t   
       }\n\t\t\t    o.texIndex = texIndex__;float Threshold__ = (float)0;{\n\t\t\t       
       float tmp_bg = attributes.age / attributes.lifetime;\n\t\t\t        float tmp_bh
-      = SampleCurve(uniform_e,tmp_bg);\n\t\t\t        \n\t\t\t        Threshold__
+      = SampleCurve(uniform_b,tmp_bg);\n\t\t\t        \n\t\t\t        Threshold__
       = tmp_bh;\n\t\t\t    }\n\t\t\t    o.Threshold = Threshold__;float Feather__
       = (float)0;{\n\t\t\t        float tmp_bg = attributes.age / attributes.lifetime;\n\t\t\t       
-      float tmp_bh = SampleCurve(uniform_f,tmp_bg);\n\t\t\t        \n\t\t\t       
+      float tmp_bh = SampleCurve(uniform_c,tmp_bg);\n\t\t\t        \n\t\t\t       
       Feather__ = tmp_bh;\n\t\t\t    }\n\t\t\t    o.Feather = Feather__;float particleAlpha__
       = (float)0;{\n\t\t\t        particleAlpha__ = attributes.alpha;\n\t\t\t   
       }\n\t\t\t    o.particleAlpha = particleAlpha__;float3 particleColor__ = (float3)0;{\n\t\t\t       
@@ -2904,271 +2979,291 @@ VisualEffectResource:
       Flipbook_Count__;float NormalMapStrength__ = (float)0;{\n\t\t\t        \n\t\t\t       
       NormalMapStrength__ = (float)0.146143496;\n\t\t\t    }\n\t\t\t    o.NormalMapStrength
       = NormalMapStrength__;\n\n\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define
-      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\n\t\t\t#ifndef
-      VFX_SHADERGRAPH\n\t\t\t\n\t\t\tvoid VFXGetHDRPLitData(out SurfaceData surfaceData,
-      out BuiltinData builtinData, out BSDFData bsdfData, out PreLightData preLightData,
-      VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
-      HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\t // Loads diffusion profile\n\t\t\t\t#else\n\t\t\t\tconst
-      uint diffusionProfileHash = 0;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\tfloat3 posRWS
-      = VFXGetPositionRWS(i);\n\t\t\t\tfloat4 posSS = i.VFX_VARYING_POSCS;\n\t\t\t\tPositionInputs
-      posInput = GetPositionInput(posSS.xy, _ScreenSize.zw, posSS.z, posSS.w, posRWS,
-      tileIndex);\n\t\t\t\t\n\t\t\t\tfloat alpha;\n\t\t\t\tsurfaceData = VFXGetSurfaceData(i,normalWS,uvData,diffusionProfileHash,alpha);\t\n\t\t\t\tbsdfData
-      = ConvertSurfaceDataToBSDFData(posSS.xy, surfaceData);\n\t\t\t\n\t\t\t\tpreLightData
-      = GetPreLightData(GetWorldSpaceNormalizeViewDir(posRWS),posInput,bsdfData);\n\t\t\t\t\n\t\t\t\tpreLightData.diffuseFGD
-      = 1.0f;\n\t\t\t    //TODO: investigate why this is needed\n\t\t\t    preLightData.coatPartLambdaV
-      = 0;\n\t\t\t    preLightData.coatIblR = 0;\n\t\t\t    preLightData.coatIblF
-      = 0;\n\t\t\t    \n\t\t\t\tbuiltinData = VFXGetBuiltinData(i,posInput,surfaceData,uvData,alpha);\n\t\t\t}\n\t\t\t\n\t\t\tvoid
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t#define SHADERPASS
+      SHADERPASS_MOTION_VECTORS\n\t\t\t\t\t#else\n\t\t\t\t\t#define SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\t\t\n\t\t\t\t\t#ifndef
+      VFX_SHADERGRAPH\n\t\t\t\t\t\n\t\t\t\t\tvoid VFXGetHDRPLitData(out SurfaceData
+      surfaceData, out BuiltinData builtinData, out BSDFData bsdfData, out PreLightData
+      preLightData, VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData,
+      uint2 tileIndex)\n\t\t\t\t\t{\t\n\t\t\t\t\t\t#if HDRP_MATERIAL_TYPE_TRANSLUCENT\n\t\t\t\t\t\t
+      // Loads diffusion profile\n\t\t\t\t\t\t#else\n\t\t\t\t\t\tconst uint diffusionProfileHash
+      = 0;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\tfloat3 posRWS = VFXGetPositionRWS(i);\n\t\t\t\t\t\tfloat4
+      posSS = i.VFX_VARYING_POSCS;\n\t\t\t\t\t\tPositionInputs posInput = GetPositionInput(posSS.xy,
+      _ScreenSize.zw, posSS.z, posSS.w, posRWS, tileIndex);\n\t\t\t\t\t\t\n\t\t\t\t\t\tfloat
+      alpha;\n\t\t\t\t\t\tsurfaceData = VFXGetSurfaceData(i,normalWS,uvData,diffusionProfileHash,alpha);\t\n\t\t\t\t\t\tbsdfData
+      = ConvertSurfaceDataToBSDFData(posSS.xy, surfaceData);\n\t\t\t\t\t\n\t\t\t\t\t\tpreLightData
+      = GetPreLightData(GetWorldSpaceNormalizeViewDir(posRWS),posInput,bsdfData);\n\t\t\t\t\t\t\n\t\t\t\t\t\tpreLightData.diffuseFGD
+      = 1.0f;\n\t\t\t\t\t    //TODO: investigate why this is needed\n\t\t\t\t\t   
+      preLightData.coatPartLambdaV = 0;\n\t\t\t\t\t    preLightData.coatIblR = 0;\n\t\t\t\t\t   
+      preLightData.coatIblF = 0;\n\t\t\t\t\t    \n\t\t\t\t\t\tbuiltinData = VFXGetBuiltinData(i,posInput,surfaceData,uvData,alpha);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tvoid
       VFXGetHDRPLitData(out SurfaceData surfaceData, out BuiltinData builtinData,
-      VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData)\n\t\t\t{\n\t\t\t\tBSDFData
-      bsdfData = (BSDFData)0;\n\t\t\t\tPreLightData preLightData = (PreLightData)0;\n\t\t\t\tpreLightData.diffuseFGD
-      = 1.0f;\n\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t}\n\t\t\t\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
-      SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\t//
-      Node: Multiply, Sample Flipbook Blend\n\t\t\tvoid Unity_Multiply_float(float2
-      A, float2 B, out float2 Out)\n\t\t\t{\n\t\t\t    Out = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Add, Sample Flipbook Blend\n\t\t\tvoid Unity_Add_float2(float2 A, float2
-      B, out float2 Out)\n\t\t\t{\n\t\t\t    Out = A + B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Sample Flipbook Blend\n\t\t\tvoid Unity_Reciprocal_float2(float2 In,
-      out float2 Out)\n\t\t\t{\n\t\t\t    Out = 1.0/In;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Sample Flipbook Blend\n\t\t\tvoid Unity_Floor_float(float In, out float
-      Out)\n\t\t\t{\n\t\t\t    Out = floor(In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node:
-      Sample Flipbook Blend\n\t\t\tvoid Unity_Modulo_float(float A, float B, out
-      float Out)\n\t\t\t{\n\t\t\t    Out = fmod(A, B);\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Sample Flipbook Blend, Feather Step\n\t\t\tvoid Unity_Subtract_float(float
-      A, float B, out float Out)\n\t\t\t{\n\t\t\t    Out = A - B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Sample Flipbook Blend, Multiply, Feather Step\n\t\t\tvoid Unity_Multiply_float(float
-      A, float B, out float Out)\n\t\t\t{\n\t\t\t    Out = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Sample Flipbook Blend\n\t\t\tstruct Bindings_FlipbookUV_6104e63c66918e946897cb428a5fe38b\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData)\n\t\t\t\t\t{\n\t\t\t\t\t\tBSDFData
+      bsdfData = (BSDFData)0;\n\t\t\t\t\t\tPreLightData preLightData = (PreLightData)0;\n\t\t\t\t\t\tpreLightData.diffuseFGD
+      = 1.0f;\n\t\t\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t\t\t#ifndef
+      SHADERPASS\n\t\t\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\t\t\t//
+      Node: Multiply, Sample Flipbook Blend\n\t\t\t\t\tvoid Unity_Multiply_float(float2
+      A, float2 B, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A * B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Add, Sample Flipbook Blend\n\t\t\t\t\tvoid Unity_Add_float2(float2 A,
+      float2 B, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A + B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tvoid Unity_Reciprocal_float2(float2
+      In, out float2 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = 1.0/In;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tvoid Unity_Floor_float(float In, out
+      float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = floor(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tvoid Unity_Modulo_float(float A, float
+      B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = fmod(A, B);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend, Feather Step\n\t\t\t\t\tvoid Unity_Subtract_float(float
+      A, float B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A - B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend, Multiply, Feather Step\n\t\t\t\t\tvoid Unity_Multiply_float(float
+      A, float B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A * B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tstruct Bindings_FlipbookUV_6104e63c66918e946897cb428a5fe38b\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_FlipbookUV_6104e63c66918e946897cb428a5fe38b(float2 Vector2_8147371F, float2
       Vector2_DFA28278, float Vector1_7E741A5C, Bindings_FlipbookUV_6104e63c66918e946897cb428a5fe38b
-      IN, out float2 OutVector4_1)\n\t\t\t{\n\t\t\t    float2 _Property_3F7539D_Out_0
-      = Vector2_DFA28278;\n\t\t\t    float2 _Reciprocal_218DA11F_Out_1;\n\t\t\t   
-      Unity_Reciprocal_float2(_Property_3F7539D_Out_0, _Reciprocal_218DA11F_Out_1);\n\t\t\t   
-      float2 _Property_594FCCED_Out_0 = Vector2_8147371F;\n\t\t\t    float _Property_527CA209_Out_0
-      = Vector1_7E741A5C;\n\t\t\t    float _Floor_4A6D8762_Out_1;\n\t\t\t    Unity_Floor_float(_Property_527CA209_Out_0,
-      _Floor_4A6D8762_Out_1);\n\t\t\t    float _Split_69C2FC7B_R_1 = _Property_3F7539D_Out_0[0];\n\t\t\t   
-      float _Split_69C2FC7B_G_2 = _Property_3F7539D_Out_0[1];\n\t\t\t    float _Split_69C2FC7B_B_3
-      = 0;\n\t\t\t    float _Split_69C2FC7B_A_4 = 0;\n\t\t\t    float _Modulo_3CD9E2E1_Out_2;\n\t\t\t   
-      Unity_Modulo_float(_Floor_4A6D8762_Out_1, _Split_69C2FC7B_R_1, _Modulo_3CD9E2E1_Out_2);\n\t\t\t   
-      float _Subtract_605FBB6_Out_2;\n\t\t\t    Unity_Subtract_float(_Split_69C2FC7B_G_2,
-      1, _Subtract_605FBB6_Out_2);\n\t\t\t    float _Split_4F35479F_R_1 = _Reciprocal_218DA11F_Out_1[0];\n\t\t\t   
-      float _Split_4F35479F_G_2 = _Reciprocal_218DA11F_Out_1[1];\n\t\t\t    float
-      _Split_4F35479F_B_3 = 0;\n\t\t\t    float _Split_4F35479F_A_4 = 0;\n\t\t\t   
-      float _Multiply_BA5EC8F9_Out_2;\n\t\t\t    Unity_Multiply_float(_Floor_4A6D8762_Out_1,
-      _Split_4F35479F_R_1, _Multiply_BA5EC8F9_Out_2);\n\t\t\t    float _Floor_1F4056C9_Out_1;\n\t\t\t   
-      Unity_Floor_float(_Multiply_BA5EC8F9_Out_2, _Floor_1F4056C9_Out_1);\n\t\t\t   
-      float _Subtract_3C08BEF7_Out_2;\n\t\t\t    Unity_Subtract_float(_Subtract_605FBB6_Out_2,
-      _Floor_1F4056C9_Out_1, _Subtract_3C08BEF7_Out_2);\n\t\t\t    float2 _Vector2_900E9BA2_Out_0
-      = float2(_Modulo_3CD9E2E1_Out_2, _Subtract_3C08BEF7_Out_2);\n\t\t\t    float2
-      _Add_96211191_Out_2;\n\t\t\t    Unity_Add_float2(_Property_594FCCED_Out_0,
-      _Vector2_900E9BA2_Out_0, _Add_96211191_Out_2);\n\t\t\t    float2 _Multiply_12ADA773_Out_2;\n\t\t\t   
-      Unity_Multiply_float(_Reciprocal_218DA11F_Out_1, _Add_96211191_Out_2, _Multiply_12ADA773_Out_2);\n\t\t\t   
-      OutVector4_1 = _Multiply_12ADA773_Out_2;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Sample
-      Flipbook Blend\n\t\t\tstruct Bindings_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      IN, out float2 OutVector4_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float2 _Property_3F7539D_Out_0
+      = Vector2_DFA28278;\n\t\t\t\t\t    float2 _Reciprocal_218DA11F_Out_1;\n\t\t\t\t\t   
+      Unity_Reciprocal_float2(_Property_3F7539D_Out_0, _Reciprocal_218DA11F_Out_1);\n\t\t\t\t\t   
+      float2 _Property_594FCCED_Out_0 = Vector2_8147371F;\n\t\t\t\t\t    float _Property_527CA209_Out_0
+      = Vector1_7E741A5C;\n\t\t\t\t\t    float _Floor_4A6D8762_Out_1;\n\t\t\t\t\t   
+      Unity_Floor_float(_Property_527CA209_Out_0, _Floor_4A6D8762_Out_1);\n\t\t\t\t\t   
+      float _Split_69C2FC7B_R_1 = _Property_3F7539D_Out_0[0];\n\t\t\t\t\t    float
+      _Split_69C2FC7B_G_2 = _Property_3F7539D_Out_0[1];\n\t\t\t\t\t    float _Split_69C2FC7B_B_3
+      = 0;\n\t\t\t\t\t    float _Split_69C2FC7B_A_4 = 0;\n\t\t\t\t\t    float _Modulo_3CD9E2E1_Out_2;\n\t\t\t\t\t   
+      Unity_Modulo_float(_Floor_4A6D8762_Out_1, _Split_69C2FC7B_R_1, _Modulo_3CD9E2E1_Out_2);\n\t\t\t\t\t   
+      float _Subtract_605FBB6_Out_2;\n\t\t\t\t\t    Unity_Subtract_float(_Split_69C2FC7B_G_2,
+      1, _Subtract_605FBB6_Out_2);\n\t\t\t\t\t    float _Split_4F35479F_R_1 = _Reciprocal_218DA11F_Out_1[0];\n\t\t\t\t\t   
+      float _Split_4F35479F_G_2 = _Reciprocal_218DA11F_Out_1[1];\n\t\t\t\t\t    float
+      _Split_4F35479F_B_3 = 0;\n\t\t\t\t\t    float _Split_4F35479F_A_4 = 0;\n\t\t\t\t\t   
+      float _Multiply_BA5EC8F9_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_Floor_4A6D8762_Out_1,
+      _Split_4F35479F_R_1, _Multiply_BA5EC8F9_Out_2);\n\t\t\t\t\t    float _Floor_1F4056C9_Out_1;\n\t\t\t\t\t   
+      Unity_Floor_float(_Multiply_BA5EC8F9_Out_2, _Floor_1F4056C9_Out_1);\n\t\t\t\t\t   
+      float _Subtract_3C08BEF7_Out_2;\n\t\t\t\t\t    Unity_Subtract_float(_Subtract_605FBB6_Out_2,
+      _Floor_1F4056C9_Out_1, _Subtract_3C08BEF7_Out_2);\n\t\t\t\t\t    float2 _Vector2_900E9BA2_Out_0
+      = float2(_Modulo_3CD9E2E1_Out_2, _Subtract_3C08BEF7_Out_2);\n\t\t\t\t\t   
+      float2 _Add_96211191_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Property_594FCCED_Out_0,
+      _Vector2_900E9BA2_Out_0, _Add_96211191_Out_2);\n\t\t\t\t\t    float2 _Multiply_12ADA773_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Reciprocal_218DA11F_Out_1, _Add_96211191_Out_2, _Multiply_12ADA773_Out_2);\n\t\t\t\t\t   
+      OutVector4_1 = _Multiply_12ADA773_Out_2;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tstruct Bindings_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7(float2 Vector2_97894EFB,
       TEXTURE2D_PARAM(Texture2D_ED6436C5, samplerTexture2D_ED6436C5), float4 Texture2D_ED6436C5_TexelSize,
       float2 Vector2_BE1CAE85, float Vector1_90929CDE, Bindings_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7
-      IN, out float4 Value_1)\n\t\t\t{\n\t\t\t    float2 _Property_2F68E8FA_Out_0
-      = Vector2_97894EFB;\n\t\t\t    float2 _Property_779EE0E0_Out_0 = Vector2_BE1CAE85;\n\t\t\t   
-      float _Property_188EA6CC_Out_0 = Vector1_90929CDE;\n\t\t\t    Bindings_FlipbookUV_6104e63c66918e946897cb428a5fe38b
-      _FlipbookUV_BC436865;\n\t\t\t    float2 _FlipbookUV_BC436865_OutVector4_1;\n\t\t\t   
+      IN, out float4 Value_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float2 _Property_2F68E8FA_Out_0
+      = Vector2_97894EFB;\n\t\t\t\t\t    float2 _Property_779EE0E0_Out_0 = Vector2_BE1CAE85;\n\t\t\t\t\t   
+      float _Property_188EA6CC_Out_0 = Vector1_90929CDE;\n\t\t\t\t\t    Bindings_FlipbookUV_6104e63c66918e946897cb428a5fe38b
+      _FlipbookUV_BC436865;\n\t\t\t\t\t    float2 _FlipbookUV_BC436865_OutVector4_1;\n\t\t\t\t\t   
       SG_FlipbookUV_6104e63c66918e946897cb428a5fe38b(_Property_2F68E8FA_Out_0, _Property_779EE0E0_Out_0,
-      _Property_188EA6CC_Out_0, _FlipbookUV_BC436865, _FlipbookUV_BC436865_OutVector4_1);\n\t\t\t   
+      _Property_188EA6CC_Out_0, _FlipbookUV_BC436865, _FlipbookUV_BC436865_OutVector4_1);\n\t\t\t\t\t   
       float4 _SampleTexture2D_CAA38CD7_RGBA_0 = SAMPLE_TEXTURE2D(Texture2D_ED6436C5,
-      samplerTexture2D_ED6436C5, _FlipbookUV_BC436865_OutVector4_1);\n\t\t\t    float
-      _SampleTexture2D_CAA38CD7_R_4 = _SampleTexture2D_CAA38CD7_RGBA_0.r;\n\t\t\t   
-      float _SampleTexture2D_CAA38CD7_G_5 = _SampleTexture2D_CAA38CD7_RGBA_0.g;\n\t\t\t   
-      float _SampleTexture2D_CAA38CD7_B_6 = _SampleTexture2D_CAA38CD7_RGBA_0.b;\n\t\t\t   
-      float _SampleTexture2D_CAA38CD7_A_7 = _SampleTexture2D_CAA38CD7_RGBA_0.a;\n\t\t\t   
-      Value_1 = _SampleTexture2D_CAA38CD7_RGBA_0;\n\t\t\t}\n\t\t\t\n\t\t\t// Node:
-      Sample Flipbook Blend, Feather Step\n\t\t\tvoid Unity_Add_float(float A, float
-      B, out float Out)\n\t\t\t{\n\t\t\t    Out = A + B;\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Sample Flipbook Blend\n\t\t\tvoid Unity_Fraction_float(float In, out
-      float Out)\n\t\t\t{\n\t\t\t    Out = frac(In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node:
-      Sample Flipbook Blend\n\t\t\tvoid Unity_Lerp_float4(float4 A, float4 B, float4
-      T, out float4 Out)\n\t\t\t{\n\t\t\t    Out = lerp(A, B, T);\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Sample Flipbook Blend\n\t\t\tstruct Bindings_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      samplerTexture2D_ED6436C5, _FlipbookUV_BC436865_OutVector4_1);\n\t\t\t\t\t   
+      float _SampleTexture2D_CAA38CD7_R_4 = _SampleTexture2D_CAA38CD7_RGBA_0.r;\n\t\t\t\t\t   
+      float _SampleTexture2D_CAA38CD7_G_5 = _SampleTexture2D_CAA38CD7_RGBA_0.g;\n\t\t\t\t\t   
+      float _SampleTexture2D_CAA38CD7_B_6 = _SampleTexture2D_CAA38CD7_RGBA_0.b;\n\t\t\t\t\t   
+      float _SampleTexture2D_CAA38CD7_A_7 = _SampleTexture2D_CAA38CD7_RGBA_0.a;\n\t\t\t\t\t   
+      Value_1 = _SampleTexture2D_CAA38CD7_RGBA_0;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend, Feather Step\n\t\t\t\t\tvoid Unity_Add_float(float
+      A, float B, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = A + B;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tvoid Unity_Fraction_float(float In,
+      out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = frac(In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tvoid Unity_Lerp_float4(float4 A, float4
+      B, float4 T, out float4 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = lerp(A, B, T);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Sample Flipbook Blend\n\t\t\t\t\tstruct Bindings_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7(float2 Vector2_97894EFB,
       TEXTURE2D_PARAM(Texture2D_ED6436C5, samplerTexture2D_ED6436C5), float4 Texture2D_ED6436C5_TexelSize,
       float2 Vector2_BE1CAE85, float Vector1_90929CDE, Bindings_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7
-      IN, out float4 Value_1)\n\t\t\t{\n\t\t\t    float2 _Property_EAC0489F_Out_0
-      = Vector2_97894EFB;\n\t\t\t    float2 _Property_81895880_Out_0 = Vector2_BE1CAE85;\n\t\t\t   
-      float _Property_1DA8B43A_Out_0 = Vector1_90929CDE;\n\t\t\t    Bindings_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7
-      _SampleFlipbook_A8FA3D24;\n\t\t\t    float4 _SampleFlipbook_A8FA3D24_Value_1;\n\t\t\t   
+      IN, out float4 Value_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float2 _Property_EAC0489F_Out_0
+      = Vector2_97894EFB;\n\t\t\t\t\t    float2 _Property_81895880_Out_0 = Vector2_BE1CAE85;\n\t\t\t\t\t   
+      float _Property_1DA8B43A_Out_0 = Vector1_90929CDE;\n\t\t\t\t\t    Bindings_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7
+      _SampleFlipbook_A8FA3D24;\n\t\t\t\t\t    float4 _SampleFlipbook_A8FA3D24_Value_1;\n\t\t\t\t\t   
       SG_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7(_Property_EAC0489F_Out_0,
       TEXTURE2D_ARGS(Texture2D_ED6436C5, samplerTexture2D_ED6436C5), Texture2D_ED6436C5_TexelSize,
       _Property_81895880_Out_0, _Property_1DA8B43A_Out_0, _SampleFlipbook_A8FA3D24,
-      _SampleFlipbook_A8FA3D24_Value_1);\n\t\t\t    float2 _Property_1D567C6C_Out_0
-      = Vector2_97894EFB;\n\t\t\t    float2 _Property_59A93DB7_Out_0 = Vector2_BE1CAE85;\n\t\t\t   
-      float _Property_4EFD8C20_Out_0 = Vector1_90929CDE;\n\t\t\t    float _Add_B5E1F222_Out_2;\n\t\t\t   
-      Unity_Add_float(_Property_4EFD8C20_Out_0, 1, _Add_B5E1F222_Out_2);\n\t\t\t   
-      Bindings_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7 _SampleFlipbook_FDE394E2;\n\t\t\t   
-      float4 _SampleFlipbook_FDE394E2_Value_1;\n\t\t\t    SG_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7(_Property_1D567C6C_Out_0,
+      _SampleFlipbook_A8FA3D24_Value_1);\n\t\t\t\t\t    float2 _Property_1D567C6C_Out_0
+      = Vector2_97894EFB;\n\t\t\t\t\t    float2 _Property_59A93DB7_Out_0 = Vector2_BE1CAE85;\n\t\t\t\t\t   
+      float _Property_4EFD8C20_Out_0 = Vector1_90929CDE;\n\t\t\t\t\t    float _Add_B5E1F222_Out_2;\n\t\t\t\t\t   
+      Unity_Add_float(_Property_4EFD8C20_Out_0, 1, _Add_B5E1F222_Out_2);\n\t\t\t\t\t   
+      Bindings_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7 _SampleFlipbook_FDE394E2;\n\t\t\t\t\t   
+      float4 _SampleFlipbook_FDE394E2_Value_1;\n\t\t\t\t\t    SG_SampleFlipbook_3dfb0d3601745784da8bb664d435f2e7(_Property_1D567C6C_Out_0,
       TEXTURE2D_ARGS(Texture2D_ED6436C5, samplerTexture2D_ED6436C5), Texture2D_ED6436C5_TexelSize,
-      _Property_59A93DB7_Out_0, _Add_B5E1F222_Out_2, _SampleFlipbook_FDE394E2, _SampleFlipbook_FDE394E2_Value_1);\n\t\t\t   
-      float _Property_38331797_Out_0 = Vector1_90929CDE;\n\t\t\t    float _Fraction_7636432D_Out_1;\n\t\t\t   
-      Unity_Fraction_float(_Property_38331797_Out_0, _Fraction_7636432D_Out_1);\n\t\t\t   
-      float4 _Lerp_295F59F1_Out_3;\n\t\t\t    Unity_Lerp_float4(_SampleFlipbook_A8FA3D24_Value_1,
-      _SampleFlipbook_FDE394E2_Value_1, (_Fraction_7636432D_Out_1.xxxx), _Lerp_295F59F1_Out_3);\n\t\t\t   
-      Value_1 = _Lerp_295F59F1_Out_3;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Normal Unpack\n\t\t\tvoid
-      Unity_NormalUnpack_float(float4 In, out float3 Out)\n\t\t\t{\n\t\t\t               
-      Out = UnpackNormal(In);\n\t\t\t            }\n\t\t\t\n\t\t\t// Node: Lerp\n\t\t\tvoid
-      Unity_Lerp_float3(float3 A, float3 B, float3 T, out float3 Out)\n\t\t\t{\n\t\t\t   
-      Out = lerp(A, B, T);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Feather Step\n\t\t\tvoid
-      Unity_Smoothstep_float(float Edge1, float Edge2, float In, out float Out)\n\t\t\t{\n\t\t\t   
-      Out = smoothstep(Edge1, Edge2, In);\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Feather
-      Step\n\t\t\tstruct Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tvoid
+      _Property_59A93DB7_Out_0, _Add_B5E1F222_Out_2, _SampleFlipbook_FDE394E2, _SampleFlipbook_FDE394E2_Value_1);\n\t\t\t\t\t   
+      float _Property_38331797_Out_0 = Vector1_90929CDE;\n\t\t\t\t\t    float _Fraction_7636432D_Out_1;\n\t\t\t\t\t   
+      Unity_Fraction_float(_Property_38331797_Out_0, _Fraction_7636432D_Out_1);\n\t\t\t\t\t   
+      float4 _Lerp_295F59F1_Out_3;\n\t\t\t\t\t    Unity_Lerp_float4(_SampleFlipbook_A8FA3D24_Value_1,
+      _SampleFlipbook_FDE394E2_Value_1, (_Fraction_7636432D_Out_1.xxxx), _Lerp_295F59F1_Out_3);\n\t\t\t\t\t   
+      Value_1 = _Lerp_295F59F1_Out_3;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node:
+      Normal Unpack\n\t\t\t\t\tvoid Unity_NormalUnpack_float(float4 In, out float3
+      Out)\n\t\t\t\t\t{\n\t\t\t\t\t                Out = UnpackNormal(In);\n\t\t\t\t\t           
+      }\n\t\t\t\t\t\n\t\t\t\t\t// Node: Lerp\n\t\t\t\t\tvoid Unity_Lerp_float3(float3
+      A, float3 B, float3 T, out float3 Out)\n\t\t\t\t\t{\n\t\t\t\t\t    Out = lerp(A,
+      B, T);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t// Node: Feather Step\n\t\t\t\t\tvoid
+      Unity_Smoothstep_float(float Edge1, float Edge2, float In, out float Out)\n\t\t\t\t\t{\n\t\t\t\t\t   
+      Out = smoothstep(Edge1, Edge2, In);\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\t//
+      Node: Feather Step\n\t\t\t\t\tstruct Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355\n\t\t\t\t\t{\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tvoid
       SG_FeatherStep_3fc231337476e5d4e868153ae13d3355(float Vector1_8D3A95EC, float
       Vector1_9B1ABA2C, float Vector1_78C972FB, Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
-      IN, out float OutVector4_1)\n\t\t\t{\n\t\t\t    float _Property_6AE77210_Out_0
-      = Vector1_9B1ABA2C;\n\t\t\t    float _Property_9733AD99_Out_0 = Vector1_78C972FB;\n\t\t\t   
-      float _Multiply_ABC033FF_Out_2;\n\t\t\t    Unity_Multiply_float(_Property_9733AD99_Out_0,
-      0.5, _Multiply_ABC033FF_Out_2);\n\t\t\t    float _Subtract_583838FC_Out_2;\n\t\t\t   
-      Unity_Subtract_float(_Property_6AE77210_Out_0, _Multiply_ABC033FF_Out_2, _Subtract_583838FC_Out_2);\n\t\t\t   
-      float _Add_2CD18BB_Out_2;\n\t\t\t    Unity_Add_float(_Property_6AE77210_Out_0,
-      _Multiply_ABC033FF_Out_2, _Add_2CD18BB_Out_2);\n\t\t\t    float _Property_B48290D_Out_0
-      = Vector1_8D3A95EC;\n\t\t\t    float _Smoothstep_306AAA2A_Out_3;\n\t\t\t   
+      IN, out float OutVector4_1)\n\t\t\t\t\t{\n\t\t\t\t\t    float _Property_6AE77210_Out_0
+      = Vector1_9B1ABA2C;\n\t\t\t\t\t    float _Property_9733AD99_Out_0 = Vector1_78C972FB;\n\t\t\t\t\t   
+      float _Multiply_ABC033FF_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_Property_9733AD99_Out_0,
+      0.5, _Multiply_ABC033FF_Out_2);\n\t\t\t\t\t    float _Subtract_583838FC_Out_2;\n\t\t\t\t\t   
+      Unity_Subtract_float(_Property_6AE77210_Out_0, _Multiply_ABC033FF_Out_2, _Subtract_583838FC_Out_2);\n\t\t\t\t\t   
+      float _Add_2CD18BB_Out_2;\n\t\t\t\t\t    Unity_Add_float(_Property_6AE77210_Out_0,
+      _Multiply_ABC033FF_Out_2, _Add_2CD18BB_Out_2);\n\t\t\t\t\t    float _Property_B48290D_Out_0
+      = Vector1_8D3A95EC;\n\t\t\t\t\t    float _Smoothstep_306AAA2A_Out_3;\n\t\t\t\t\t   
       Unity_Smoothstep_float(_Subtract_583838FC_Out_2, _Add_2CD18BB_Out_2, _Property_B48290D_Out_0,
-      _Smoothstep_306AAA2A_Out_3);\n\t\t\t    OutVector4_1 = _Smoothstep_306AAA2A_Out_3;\n\t\t\t}\n\t\t\t\n\t\t\tstruct
-      SG_Input_238ecfa957ba12648bd9f3493bc32e86\n\t\t\t{\n\t\t\t    half4 uv0;\n\t\t\t};\n\t\t\t\n\t\t\tstruct
-      SG_Output_238ecfa957ba12648bd9f3493bc32e86\n\t\t\t{\n\t\t\t    float3 Normal_8;\n\t\t\t   
-      float Alpha_4;\n\t\t\t};\n\t\t\t\n\t\t\tSG_Output_238ecfa957ba12648bd9f3493bc32e86
-      SG_Evaluate_238ecfa957ba12648bd9f3493bc32e86(\n\t\t\t    SG_Input_238ecfa957ba12648bd9f3493bc32e86
-      IN,\n\t\t\t    /* Property: Distort */ float Distort,\n\t\t\t    /* Property:
-      texIndex */ float texIndex,\n\t\t\t    /* Property: Threshold */ float Threshold,\n\t\t\t   
-      /* Property: Feather */ float Feather,\n\t\t\t    /* Property: particleAlpha
-      */ float particleAlpha,\n\t\t\t    /* Property: Flipbook Count */ float2 Flipbook_Count,\n\t\t\t   
-      /* Property: SmokeTexture */ TEXTURE2D_PARAM(SmokeTexture, samplerSmokeTexture),
-      float4 SmokeTexture_TexelSize,\n\t\t\t    /* Property: SmokeNormal */ TEXTURE2D_PARAM(SmokeNormal,
-      samplerSmokeNormal), float4 SmokeNormal_TexelSize,\n\t\t\t    /* Property:
-      NormalMapStrength */ float NormalMapStrength)\n\t\t\t{\n\t\t\t    // Node:
-      UV\n\t\t\t    float4 _UV_DBDC7B51_Out_0 = IN.uv0;\n\t\t\t\n\t\t\t    // Node:
-      Split\n\t\t\t    float _Split_6ADD3C96_R_1 = _UV_DBDC7B51_Out_0[0];\n\t\t\t   
-      float _Split_6ADD3C96_G_2 = _UV_DBDC7B51_Out_0[1];\n\t\t\t    float _Split_6ADD3C96_B_3
-      = _UV_DBDC7B51_Out_0[2];\n\t\t\t    float _Split_6ADD3C96_A_4 = _UV_DBDC7B51_Out_0[3];\n\t\t\t\n\t\t\t   
-      // Node: Vector 2\n\t\t\t    float2 _Vector2_B7645211_Out_0 = float2(_Split_6ADD3C96_R_1,
-      _Split_6ADD3C96_G_2);\n\t\t\t\n\t\t\t    // Node: Multiply\n\t\t\t    float2
-      _Multiply_9285D695_Out_2;\n\t\t\t    Unity_Multiply_float(_Vector2_B7645211_Out_0,
-      float2(1, 1), _Multiply_9285D695_Out_2);\n\t\t\t\n\t\t\t    // Node: Sample
-      Texture 2D\n\t\t\t    float4 _SampleTexture2D_E155AE1_RGBA_0 = SAMPLE_TEXTURE2D(_SampleTexture2D_E155AE1_Texture_1,
-      sampler_SampleTexture2D_E155AE1_Texture_1, _Multiply_9285D695_Out_2);\n\t\t\t   
-      float _SampleTexture2D_E155AE1_R_4 = _SampleTexture2D_E155AE1_RGBA_0.r;\n\t\t\t   
-      float _SampleTexture2D_E155AE1_G_5 = _SampleTexture2D_E155AE1_RGBA_0.g;\n\t\t\t   
-      float _SampleTexture2D_E155AE1_B_6 = _SampleTexture2D_E155AE1_RGBA_0.b;\n\t\t\t   
-      float _SampleTexture2D_E155AE1_A_7 = _SampleTexture2D_E155AE1_RGBA_0.a;\n\t\t\t\n\t\t\t   
-      // Node: Split\n\t\t\t    float _Split_E746D6D4_R_1 = _SampleTexture2D_E155AE1_RGBA_0[0];\n\t\t\t   
-      float _Split_E746D6D4_G_2 = _SampleTexture2D_E155AE1_RGBA_0[1];\n\t\t\t   
-      float _Split_E746D6D4_B_3 = _SampleTexture2D_E155AE1_RGBA_0[2];\n\t\t\t   
-      float _Split_E746D6D4_A_4 = _SampleTexture2D_E155AE1_RGBA_0[3];\n\t\t\t\n\t\t\t   
-      // Node: Vector 2\n\t\t\t    float2 _Vector2_9E9068EF_Out_0 = float2(_Split_E746D6D4_R_1,
-      _Split_E746D6D4_G_2);\n\t\t\t\n\t\t\t    // Node: Add\n\t\t\t    float2 _Add_FFFF60D5_Out_2;\n\t\t\t   
-      Unity_Add_float2(_Vector2_9E9068EF_Out_0, float2(-0.5, -0.5), _Add_FFFF60D5_Out_2);\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_24EB9D02_Out_0 = Distort;\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float2 _Multiply_94450A2B_Out_2;\n\t\t\t    Unity_Multiply_float(_Add_FFFF60D5_Out_2,
-      (_Property_24EB9D02_Out_0.xx), _Multiply_94450A2B_Out_2);\n\t\t\t\n\t\t\t   
-      // Node: Add\n\t\t\t    float2 _Add_EE3331B4_Out_2;\n\t\t\t    Unity_Add_float2(_Vector2_B7645211_Out_0,
-      _Multiply_94450A2B_Out_2, _Add_EE3331B4_Out_2);\n\t\t\t\n\t\t\t    // Node:
-      Property\n\t\t\t    float2 _Property_95BDAAE7_Out_0 = Flipbook_Count;\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_84D3479A_Out_0 = texIndex;\n\t\t\t\n\t\t\t   
-      // Node: Sample Flipbook Blend\n\t\t\t    Bindings_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7
-      _SampleFlipbookBlend_31846DA9;\n\t\t\t    float4 _SampleFlipbookBlend_31846DA9_Value_1;\n\t\t\t   
+      _Smoothstep_306AAA2A_Out_3);\n\t\t\t\t\t    OutVector4_1 = _Smoothstep_306AAA2A_Out_3;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tstruct
+      SG_Input_238ecfa957ba12648bd9f3493bc32e86\n\t\t\t\t\t{\n\t\t\t\t\t    half4
+      uv0;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tstruct SG_Output_238ecfa957ba12648bd9f3493bc32e86\n\t\t\t\t\t{\n\t\t\t\t\t   
+      float3 Normal_8;\n\t\t\t\t\t    float Alpha_4;\n\t\t\t\t\t};\n\t\t\t\t\t\n\t\t\t\t\tSG_Output_238ecfa957ba12648bd9f3493bc32e86
+      SG_Evaluate_238ecfa957ba12648bd9f3493bc32e86(\n\t\t\t\t\t    SG_Input_238ecfa957ba12648bd9f3493bc32e86
+      IN,\n\t\t\t\t\t    /* Property: Distort */ float Distort,\n\t\t\t\t\t    /*
+      Property: texIndex */ float texIndex,\n\t\t\t\t\t    /* Property: Threshold
+      */ float Threshold,\n\t\t\t\t\t    /* Property: Feather */ float Feather,\n\t\t\t\t\t   
+      /* Property: particleAlpha */ float particleAlpha,\n\t\t\t\t\t    /* Property:
+      Flipbook Count */ float2 Flipbook_Count,\n\t\t\t\t\t    /* Property: SmokeTexture
+      */ TEXTURE2D_PARAM(SmokeTexture, samplerSmokeTexture), float4 SmokeTexture_TexelSize,\n\t\t\t\t\t   
+      /* Property: SmokeNormal */ TEXTURE2D_PARAM(SmokeNormal, samplerSmokeNormal),
+      float4 SmokeNormal_TexelSize,\n\t\t\t\t\t    /* Property: NormalMapStrength
+      */ float NormalMapStrength)\n\t\t\t\t\t{\n\t\t\t\t\t    // Node: UV\n\t\t\t\t\t   
+      float4 _UV_DBDC7B51_Out_0 = IN.uv0;\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Split\n\t\t\t\t\t   
+      float _Split_6ADD3C96_R_1 = _UV_DBDC7B51_Out_0[0];\n\t\t\t\t\t    float _Split_6ADD3C96_G_2
+      = _UV_DBDC7B51_Out_0[1];\n\t\t\t\t\t    float _Split_6ADD3C96_B_3 = _UV_DBDC7B51_Out_0[2];\n\t\t\t\t\t   
+      float _Split_6ADD3C96_A_4 = _UV_DBDC7B51_Out_0[3];\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Vector 2\n\t\t\t\t\t    float2 _Vector2_B7645211_Out_0 = float2(_Split_6ADD3C96_R_1,
+      _Split_6ADD3C96_G_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Multiply\n\t\t\t\t\t   
+      float2 _Multiply_9285D695_Out_2;\n\t\t\t\t\t    Unity_Multiply_float(_Vector2_B7645211_Out_0,
+      float2(1, 1), _Multiply_9285D695_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Node:
+      Sample Texture 2D\n\t\t\t\t\t    float4 _SampleTexture2D_E155AE1_RGBA_0 = SAMPLE_TEXTURE2D(_SampleTexture2D_E155AE1_Texture_1,
+      sampler_SampleTexture2D_E155AE1_Texture_1, _Multiply_9285D695_Out_2);\n\t\t\t\t\t   
+      float _SampleTexture2D_E155AE1_R_4 = _SampleTexture2D_E155AE1_RGBA_0.r;\n\t\t\t\t\t   
+      float _SampleTexture2D_E155AE1_G_5 = _SampleTexture2D_E155AE1_RGBA_0.g;\n\t\t\t\t\t   
+      float _SampleTexture2D_E155AE1_B_6 = _SampleTexture2D_E155AE1_RGBA_0.b;\n\t\t\t\t\t   
+      float _SampleTexture2D_E155AE1_A_7 = _SampleTexture2D_E155AE1_RGBA_0.a;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Split\n\t\t\t\t\t    float _Split_E746D6D4_R_1 = _SampleTexture2D_E155AE1_RGBA_0[0];\n\t\t\t\t\t   
+      float _Split_E746D6D4_G_2 = _SampleTexture2D_E155AE1_RGBA_0[1];\n\t\t\t\t\t   
+      float _Split_E746D6D4_B_3 = _SampleTexture2D_E155AE1_RGBA_0[2];\n\t\t\t\t\t   
+      float _Split_E746D6D4_A_4 = _SampleTexture2D_E155AE1_RGBA_0[3];\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Vector 2\n\t\t\t\t\t    float2 _Vector2_9E9068EF_Out_0 = float2(_Split_E746D6D4_R_1,
+      _Split_E746D6D4_G_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Node: Add\n\t\t\t\t\t   
+      float2 _Add_FFFF60D5_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Vector2_9E9068EF_Out_0,
+      float2(-0.5, -0.5), _Add_FFFF60D5_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t    // Node:
+      Property\n\t\t\t\t\t    float _Property_24EB9D02_Out_0 = Distort;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float2 _Multiply_94450A2B_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Add_FFFF60D5_Out_2, (_Property_24EB9D02_Out_0.xx), _Multiply_94450A2B_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Add\n\t\t\t\t\t    float2 _Add_EE3331B4_Out_2;\n\t\t\t\t\t    Unity_Add_float2(_Vector2_B7645211_Out_0,
+      _Multiply_94450A2B_Out_2, _Add_EE3331B4_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_95BDAAE7_Out_0 = Flipbook_Count;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_84D3479A_Out_0 = texIndex;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Sample Flipbook Blend\n\t\t\t\t\t    Bindings_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7
+      _SampleFlipbookBlend_31846DA9;\n\t\t\t\t\t    float4 _SampleFlipbookBlend_31846DA9_Value_1;\n\t\t\t\t\t   
       SG_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7(_Add_EE3331B4_Out_2,
       TEXTURE2D_ARGS(SmokeTexture, samplerSmokeTexture), SmokeTexture_TexelSize,
       _Property_95BDAAE7_Out_0, _Property_84D3479A_Out_0, _SampleFlipbookBlend_31846DA9,
-      _SampleFlipbookBlend_31846DA9_Value_1);\n\t\t\t\n\t\t\t    // Node: Split\n\t\t\t   
-      float _Split_DD659164_R_1 = _SampleFlipbookBlend_31846DA9_Value_1[0];\n\t\t\t   
-      float _Split_DD659164_G_2 = _SampleFlipbookBlend_31846DA9_Value_1[1];\n\t\t\t   
-      float _Split_DD659164_B_3 = _SampleFlipbookBlend_31846DA9_Value_1[2];\n\t\t\t   
-      float _Split_DD659164_A_4 = _SampleFlipbookBlend_31846DA9_Value_1[3];\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float2 _Property_9BEFEF21_Out_0 = Flipbook_Count;\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_633E5CAE_Out_0 = texIndex;\n\t\t\t\n\t\t\t   
-      // Node: Sample Flipbook Blend\n\t\t\t    Bindings_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7
-      _SampleFlipbookBlend_654DF743;\n\t\t\t    float4 _SampleFlipbookBlend_654DF743_Value_1;\n\t\t\t   
+      _SampleFlipbookBlend_31846DA9_Value_1);\n\t\t\t\t\t\n\t\t\t\t\t    // Node:
+      Split\n\t\t\t\t\t    float _Split_DD659164_R_1 = _SampleFlipbookBlend_31846DA9_Value_1[0];\n\t\t\t\t\t   
+      float _Split_DD659164_G_2 = _SampleFlipbookBlend_31846DA9_Value_1[1];\n\t\t\t\t\t   
+      float _Split_DD659164_B_3 = _SampleFlipbookBlend_31846DA9_Value_1[2];\n\t\t\t\t\t   
+      float _Split_DD659164_A_4 = _SampleFlipbookBlend_31846DA9_Value_1[3];\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float2 _Property_9BEFEF21_Out_0 = Flipbook_Count;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_633E5CAE_Out_0 = texIndex;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Sample Flipbook Blend\n\t\t\t\t\t    Bindings_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7
+      _SampleFlipbookBlend_654DF743;\n\t\t\t\t\t    float4 _SampleFlipbookBlend_654DF743_Value_1;\n\t\t\t\t\t   
       SG_SampleFlipbookBlend_4fceaac5ec1b58c4c964bfbbbc2e0ee7(_Add_EE3331B4_Out_2,
       TEXTURE2D_ARGS(SmokeNormal, samplerSmokeNormal), SmokeNormal_TexelSize, _Property_9BEFEF21_Out_0,
-      _Property_633E5CAE_Out_0, _SampleFlipbookBlend_654DF743, _SampleFlipbookBlend_654DF743_Value_1);\n\t\t\t\n\t\t\t   
-      // Node: Normal Unpack\n\t\t\t    float3 _NormalUnpack_894A44BB_Out_1;\n\t\t\t   
-      Unity_NormalUnpack_float(_SampleFlipbookBlend_654DF743_Value_1, _NormalUnpack_894A44BB_Out_1);\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_FC1650BB_Out_0 = NormalMapStrength;\n\t\t\t\n\t\t\t   
-      // Node: Lerp\n\t\t\t    float3 _Lerp_6CDF97F0_Out_3;\n\t\t\t    Unity_Lerp_float3(float3(0,
-      0, 1), _NormalUnpack_894A44BB_Out_1, (_Property_FC1650BB_Out_0.xxx), _Lerp_6CDF97F0_Out_3);\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_27ADCB98_Out_0 = particleAlpha;\n\t\t\t\n\t\t\t   
-      // Node: Multiply\n\t\t\t    float _Multiply_1A7871C6_Out_2;\n\t\t\t    Unity_Multiply_float(_Split_DD659164_A_4,
-      _Property_27ADCB98_Out_0, _Multiply_1A7871C6_Out_2);\n\t\t\t\n\t\t\t    //
-      Node: Property\n\t\t\t    float _Property_AEDCD1B_Out_0 = Threshold;\n\t\t\t\n\t\t\t   
-      // Node: Property\n\t\t\t    float _Property_616798BC_Out_0 = Feather;\n\t\t\t\n\t\t\t   
-      // Node: Feather Step\n\t\t\t    Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
-      _FeatherStep_C25FAC35;\n\t\t\t    float _FeatherStep_C25FAC35_OutVector4_1;\n\t\t\t   
+      _Property_633E5CAE_Out_0, _SampleFlipbookBlend_654DF743, _SampleFlipbookBlend_654DF743_Value_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Normal Unpack\n\t\t\t\t\t    float3 _NormalUnpack_894A44BB_Out_1;\n\t\t\t\t\t   
+      Unity_NormalUnpack_float(_SampleFlipbookBlend_654DF743_Value_1, _NormalUnpack_894A44BB_Out_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_FC1650BB_Out_0 = NormalMapStrength;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Lerp\n\t\t\t\t\t    float3 _Lerp_6CDF97F0_Out_3;\n\t\t\t\t\t    Unity_Lerp_float3(float3(0,
+      0, 1), _NormalUnpack_894A44BB_Out_1, (_Property_FC1650BB_Out_0.xxx), _Lerp_6CDF97F0_Out_3);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_27ADCB98_Out_0 = particleAlpha;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Multiply\n\t\t\t\t\t    float _Multiply_1A7871C6_Out_2;\n\t\t\t\t\t   
+      Unity_Multiply_float(_Split_DD659164_A_4, _Property_27ADCB98_Out_0, _Multiply_1A7871C6_Out_2);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_AEDCD1B_Out_0 = Threshold;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Property\n\t\t\t\t\t    float _Property_616798BC_Out_0 = Feather;\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Node: Feather Step\n\t\t\t\t\t    Bindings_FeatherStep_3fc231337476e5d4e868153ae13d3355
+      _FeatherStep_C25FAC35;\n\t\t\t\t\t    float _FeatherStep_C25FAC35_OutVector4_1;\n\t\t\t\t\t   
       SG_FeatherStep_3fc231337476e5d4e868153ae13d3355(_Multiply_1A7871C6_Out_2, _Property_AEDCD1B_Out_0,
-      _Property_616798BC_Out_0, _FeatherStep_C25FAC35, _FeatherStep_C25FAC35_OutVector4_1);\n\t\t\t\n\t\t\t   
-      // Visual Effect Master\n\t\t\t    SG_Output_238ecfa957ba12648bd9f3493bc32e86
-      OUT;\n\t\t\t    OUT.Normal_8 = _Lerp_6CDF97F0_Out_3;\n\t\t\t    OUT.Alpha_4
-      = _FeatherStep_C25FAC35_OutVector4_1;\n\t\t\t    return OUT;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\tint _ObjectId;\n\t\t\tint _PassValue;\n\t\t\t#endif\n\t\t\t 
-      \n\t\t\t#pragma fragment frag\n\t\t\tvoid frag(ps_input i\n\t\t\t#if USE_DOUBLE_SIDED\n\t\t\t\t,
-      bool frontFace : SV_IsFrontFace\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH
-      == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t, out float4 outMotionVector : SV_Target0\n\t\t\t\t#ifdef
-      WRITE_NORMAL_BUFFER\n\t\t\t\t\t, out float4 outNormalBuffer : SV_Target1\n\t\t\t\t#endif\n\t\t\t#else\n\t\t\t\t#ifdef
-      WRITE_NORMAL_BUFFER\n\t\t\t\t\t, out float4 outNormalBuffer : SV_Target0\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t, out float4 outColor :
-      SV_Target0\n\t\t\t\t#endif\n\t\t\t#endif\n\t\t\t\t)\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\n\t\t\t\t\t\t\t#ifdef
-      VFX_VARYING_NORMAL\n\t\t\t\t\t\t\t#if USE_DOUBLE_SIDED\n\t\t\t\t\t\t\tconst
-      float faceMul = frontFace ? 1.0f : -1.0f;\n\t\t\t\t\t\t\t#else\n\t\t\t\t\t\t\tconst
-      float faceMul = 1.0f;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tfloat3
-      normalWS = i.VFX_VARYING_NORMAL * faceMul;\n\t\t\t\t\t\t\tconst VFXUVData uvData
-      = GetUVData(i);\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t#ifdef VFX_VARYING_TANGENT\n\t\t\t\t\t\t\tfloat3
-      tangentWS = i.VFX_VARYING_TANGENT;\n\t\t\t\t\t\t\tfloat3 bitangentWS = cross(i.VFX_VARYING_TANGENT,i.VFX_VARYING_NORMAL);\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t#if
-      defined(VFX_VARYING_BENTFACTORS) && USE_NORMAL_BENDING\t\n\t\t\t\t\t\t\tfloat3
-      bentFactors = float3(i.VFX_VARYING_BENTFACTORS.xy,sqrt(1.0f - dot(i.VFX_VARYING_BENTFACTORS,i.VFX_VARYING_BENTFACTORS)));\n\t\t\t\t\t\t\tnormalWS
-      = tangentWS * bentFactors.x + bitangentWS * bentFactors.y + normalWS * bentFactors.z;\n\t\t\t\t\t\t\ttangentWS
-      = normalize(cross(normalWS,bitangentWS));\n\t\t\t\t\t\t\tbitangentWS = cross(tangentWS,normalWS);\n\t\t\t\t\t\t\ttangentWS
-      *= faceMul;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tfloat3x3 tbn
-      = float3x3(tangentWS,bitangentWS,normalWS);\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t#if
-      USE_NORMAL_MAP\n\t\t\t\t\t\t\tfloat3 n = SampleNormalMap(VFX_SAMPLER(normalMap),uvData);\n\t\t\t\t\t\t\tfloat
-      normalScale = 1.0f;\n\t\t\t\t\t\t\t#ifdef VFX_VARYING_NORMALSCALE\n\t\t\t\t\t\t\tnormalScale
-      = i.VFX_VARYING_NORMALSCALE;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tnormalWS
-      = normalize(lerp(normalWS,mul(n,tbn),normalScale));\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t#ifdef
-      VFX_SHADERGRAPH\n\t\t\t    \n\t\t\t        float Distort = i.Distort;float
-      texIndex = i.texIndex;float Threshold = i.Threshold;float Feather = i.Feather;float
+      _Property_616798BC_Out_0, _FeatherStep_C25FAC35, _FeatherStep_C25FAC35_OutVector4_1);\n\t\t\t\t\t\n\t\t\t\t\t   
+      // Visual Effect Master\n\t\t\t\t\t    SG_Output_238ecfa957ba12648bd9f3493bc32e86
+      OUT;\n\t\t\t\t\t    OUT.Normal_8 = _Lerp_6CDF97F0_Out_3;\n\t\t\t\t\t    OUT.Alpha_4
+      = _FeatherStep_C25FAC35_OutVector4_1;\n\t\t\t\t\t    return OUT;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\tint _ObjectId;\n\t\t\t\t\tint
+      _PassValue;\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#pragma fragment frag\n\t\t\t\t\tvoid
+      frag(ps_input i\n\t\t\t\t\t#if USE_DOUBLE_SIDED\n\t\t\t\t\t\t, bool frontFace
+      : SV_IsFrontFace\n\t\t\t\t\t#endif\n\t\t\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t// We need the depth color as SV_Target0 for
+      alpha to coverage\n\t\t\t\t\t\t, out float4 outDepthColor : SV_Target0\n\t\t\t\t\t\t,
+      out float4 outMotionVector : SV_Target1\n\t\t\t\t\t\t\t#ifdef WRITE_NORMAL_BUFFER\n\t\t\t\t\t\t\t,
+      out float4 outNormalBuffer : SV_Target2\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t//
+      When no MSAA, the motion vector is always the first buffer\n\t\t\t\t\t\t, out
+      float4 outMotionVector : SV_Target0\n\t\t\t\t\t\t\t#ifdef WRITE_NORMAL_BUFFER\n\t\t\t\t\t\t\t,
+      out float4 outNormalBuffer : SV_Target1\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t#ifdef WRITE_MSAA_DEPTH\n\t\t\t\t\t\t//
+      We need the depth color as SV_Target0 for alpha to coverage\n\t\t\t\t\t\t,
+      out float4 outDepthColor : SV_Target0\n\t\t\t\t\t\t\t#ifdef WRITE_NORMAL_BUFFER\n\t\t\t\t\t\t\t,
+      out float4 outNormalBuffer : SV_Target1\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#elif
+      defined(WRITE_NORMAL_BUFFER)\n\t\t\t\t\t\t, out float4 outNormalBuffer : SV_Target0\n\t\t\t\t\t\t#endif\n\t\t\t\t\t#elif
+      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t    , out float4 outColor
+      : SV_Target0\n\t\t\t\t\t#endif\n\t\t\t\t\t)\n\t\t\t\t\t{\n\t\t\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t#ifdef
+      VFX_VARYING_NORMAL\n\t\t\t\t\t\t\t\t\t#if USE_DOUBLE_SIDED\n\t\t\t\t\t\t\t\t\tconst
+      float faceMul = frontFace ? 1.0f : -1.0f;\n\t\t\t\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t\t\tconst
+      float faceMul = 1.0f;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat3
+      normalWS = i.VFX_VARYING_NORMAL * faceMul;\n\t\t\t\t\t\t\t\t\tconst VFXUVData
+      uvData = GetUVData(i);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t#ifdef VFX_VARYING_TANGENT\n\t\t\t\t\t\t\t\t\tfloat3
+      tangentWS = i.VFX_VARYING_TANGENT;\n\t\t\t\t\t\t\t\t\tfloat3 bitangentWS =
+      cross(i.VFX_VARYING_TANGENT,i.VFX_VARYING_NORMAL);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t#if
+      defined(VFX_VARYING_BENTFACTORS) && USE_NORMAL_BENDING\t\n\t\t\t\t\t\t\t\t\tfloat3
+      bentFactors = float3(i.VFX_VARYING_BENTFACTORS.xy,sqrt(1.0f - dot(i.VFX_VARYING_BENTFACTORS,i.VFX_VARYING_BENTFACTORS)));\n\t\t\t\t\t\t\t\t\tnormalWS
+      = tangentWS * bentFactors.x + bitangentWS * bentFactors.y + normalWS * bentFactors.z;\n\t\t\t\t\t\t\t\t\ttangentWS
+      = normalize(cross(normalWS,bitangentWS));\n\t\t\t\t\t\t\t\t\tbitangentWS =
+      cross(tangentWS,normalWS);\n\t\t\t\t\t\t\t\t\ttangentWS *= faceMul;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat3x3
+      tbn = float3x3(tangentWS,bitangentWS,normalWS);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t#if
+      USE_NORMAL_MAP\n\t\t\t\t\t\t\t\t\tfloat3 n = SampleNormalMap(VFX_SAMPLER(normalMap),uvData);\n\t\t\t\t\t\t\t\t\tfloat
+      normalScale = 1.0f;\n\t\t\t\t\t\t\t\t\t#ifdef VFX_VARYING_NORMALSCALE\n\t\t\t\t\t\t\t\t\tnormalScale
+      = i.VFX_VARYING_NORMALSCALE;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tnormalWS
+      = normalize(lerp(normalWS,mul(n,tbn),normalScale));\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      VFX_SHADERGRAPH\n\t\t\t\t\t        float Distort = i.Distort;float texIndex
+      = i.texIndex;float Threshold = i.Threshold;float Feather = i.Feather;float
       particleAlpha = i.particleAlpha;float3 particleColor = i.particleColor;float2
-      Flipbook_Count = i.Flipbook_Count;float NormalMapStrength = i.NormalMapStrength;\n\t\t\t       
-      \n\t\t\t        //Call Shader Graph\n\t\t\t        SG_Input_238ecfa957ba12648bd9f3493bc32e86
-      INSG = (SG_Input_238ecfa957ba12648bd9f3493bc32e86)0;\n\t\t\t        INSG.uv0.xy
-      = i.uv;\n\t\t\t        \n\t\t\t        SG_Output_238ecfa957ba12648bd9f3493bc32e86
+      Flipbook_Count = i.Flipbook_Count;float NormalMapStrength = i.NormalMapStrength;\n\t\t\t\t\t       
+      //Call Shader Graph\n\t\t\t\t\t        SG_Input_238ecfa957ba12648bd9f3493bc32e86
+      INSG = (SG_Input_238ecfa957ba12648bd9f3493bc32e86)0;\n\t\t\t\t\t        INSG.uv0.xy
+      = i.uv;\n\t\t\t\t\t        \n\t\t\t\t\t        SG_Output_238ecfa957ba12648bd9f3493bc32e86
       OUTSG = SG_Evaluate_238ecfa957ba12648bd9f3493bc32e86(INSG,Distort, texIndex,
       Threshold, Feather, particleAlpha, Flipbook_Count, SmokeTexture, samplerSmokeTexture,
       SmokeTexture_TexelSize, SmokeNormal, samplerSmokeNormal, SmokeNormal_TexelSize,
-      NormalMapStrength);\n\t\t\t        \n\n\t\t\t        \n\t\t\t        float
-      alpha = OUTSG.Alpha_4;\n\t\t\t    #else\n\t\t\t        float alpha = VFXGetFragmentColor(i).a;\n\t\t\t       
-      #if HDRP_USE_BASE_COLOR_MAP_ALPHA\n\t\t\t            alpha *= VFXGetTextureColor(VFX_SAMPLER(baseColorMap),i).a;\n\t\t\t       
-      #endif\n\t\t\t    #endif\n\t\t\t        VFXClipFragmentColor(alpha,i);\n\t\t\t\t\n\t\t\t\t#ifdef
-      WRITE_NORMAL_BUFFER\n\t\t\t        #ifndef VFX_SHADERGRAPH\n\t\t\t           
-      VFXComputePixelOutputToNormalBuffer(i,normalWS,uvData,outNormalBuffer);\n\t\t\t       
-      #else\n\t\t\t           #if HAS_SHADERGRAPH_PARAM_NORMAL\n\t\t\t              
-      float3 n =  OUTSG.Normal_8;\n\t\t\t               normalWS = mul(n,tbn);\n\t\t\t          
-      #endif\n\t\t\t           SurfaceData surface = (SurfaceData)0;\n\t\t\t          
-      \n\t\t\t           surface.normalWS = normalWS;\n\t\t\t           \n\t\t\t          
-      EncodeIntoNormalBuffer(ConvertSurfaceDataToNormalData(surface), i.VFX_VARYING_POSCS.xy,
-      outNormalBuffer);\n\t\t\t        #endif\n\t\t\t\t#endif\n\t\t\t\n\t\t\t\t#if
-      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2
+      NormalMapStrength);\n\t\t\t\t\t        \n\t\t\t\n\t\t\t\t\t        float alpha
+      = OUTSG.Alpha_4;\n\t\t\t\t\t    #else\n\t\t\t\t\t\t\n\t\t\t\t\t\tfloat alpha
+      = VFXGetFragmentColor(i).a;\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if HDRP_USE_BASE_COLOR_MAP_ALPHA\n\t\t\t\t\t\t\talpha
+      *= VFXGetTextureColor(VFX_SAMPLER(baseColorMap),i).a;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t   
+      #endif\n\t\t\t\t\t\tVFXClipFragmentColor(alpha,i);\n\t\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_NORMAL_BUFFER\n\t\t\t\t\t        #ifndef VFX_SHADERGRAPH\n\t\t\t\t\t           
+      VFXComputePixelOutputToNormalBuffer(i,normalWS,uvData,outNormalBuffer);\n\t\t\t\t\t       
+      #else\n\t\t\t\t\t           #if HAS_SHADERGRAPH_PARAM_NORMAL\n\t\t\t\t\t              
+      float3 n =  OUTSG.Normal_8;\n\t\t\t\t\t               normalWS = mul(n,tbn);\n\t\t\t\t\t          
+      #endif\n\t\t\t\t\t           SurfaceData surface = (SurfaceData)0;\n\t\t\t\t\t          
+      surface.normalWS = normalWS;\n\t\t\t\t\t           EncodeIntoNormalBuffer(ConvertSurfaceDataToNormalData(surface),
+      i.VFX_VARYING_POSCS.xy, outNormalBuffer);\n\t\t\t\t\t        #endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#ifdef
+      WRITE_MSAA_DEPTH\n\t\t\t\t\t\t\toutDepthColor = i.VFX_VARYING_POSCS.z;\n\t\t\t\t\t\t\t#if
+      VFX_USE_ALPHA_TO_MASK\n\t\t\t\t\t\t\t\toutDepthColor.a = alpha;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tfloat2
       velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
-      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
-      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\toutMotionVector = encodedMotionVector;\n\t\t\t\t#elif
-      VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t// We use depth prepass
-      for scene selection in the editor, this code allow to output the outline correctly\n\t\t\t\t\toutColor
-      = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
-      VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
-      undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t\r\n\t\t//
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
+      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\toutMotionVector
+      = encodedMotionVector;\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_SELECTION\n\t\t\t\t\t\t\t//
+      We use depth prepass for scene selection in the editor, this code allow to
+      output the outline correctly\n\t\t\t\t\t\t\toutColor = float4(_ObjectId, _PassValue,
+      1.0, 1.0);\n\t\t\t\t\t\t#elif VFX_PASSDEPTH == VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t\t\t//void\n\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t#error
+      VFX_PASSDEPTH undefined\n\t\t\t\t\t\t#endif\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t\t\r\n\t\t\r\n\t\t//
       Forward pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"Forward\"}\n\t\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
       target 4.5\n\t\t\t\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t#define LIGHTLOOP_TILE_PASS\n\t\t\t#define
       _ENABLE_FOG_ON_TRANSPARENT\n\t\t\t#define _DISABLE_DECALS\n\t\t\t#define _BLENDMODE_ALPHA\n\t\t\t\n\n\t\t\t#pragma
@@ -3411,15 +3506,15 @@ VisualEffectResource:
       HDRP_USE_ADDITIONAL_BASE_COLOR\n\t\t\t\t\t\t\t\t\t#ifdef VFX_VARYING_COLOR\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\to.VFX_VARYING_COLOR
       = baseColor;\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t   
       \n\t\t\t    float Distort__ = (float)0;{\n\t\t\t        float tmp_bg = attributes.age
-      / attributes.lifetime;\n\t\t\t        float tmp_bh = SampleCurve(uniform_d,tmp_bg);\n\t\t\t       
+      / attributes.lifetime;\n\t\t\t        float tmp_bh = SampleCurve(uniform_a,tmp_bg);\n\t\t\t       
       \n\t\t\t        Distort__ = tmp_bh;\n\t\t\t    }\n\t\t\t    o.Distort = Distort__;float
       texIndex__ = (float)0;{\n\t\t\t        texIndex__ = attributes.texIndex;\n\t\t\t   
       }\n\t\t\t    o.texIndex = texIndex__;float Threshold__ = (float)0;{\n\t\t\t       
       float tmp_bg = attributes.age / attributes.lifetime;\n\t\t\t        float tmp_bh
-      = SampleCurve(uniform_e,tmp_bg);\n\t\t\t        \n\t\t\t        Threshold__
+      = SampleCurve(uniform_b,tmp_bg);\n\t\t\t        \n\t\t\t        Threshold__
       = tmp_bh;\n\t\t\t    }\n\t\t\t    o.Threshold = Threshold__;float Feather__
       = (float)0;{\n\t\t\t        float tmp_bg = attributes.age / attributes.lifetime;\n\t\t\t       
-      float tmp_bh = SampleCurve(uniform_f,tmp_bg);\n\t\t\t        \n\t\t\t       
+      float tmp_bh = SampleCurve(uniform_c,tmp_bg);\n\t\t\t        \n\t\t\t       
       Feather__ = tmp_bh;\n\t\t\t    }\n\t\t\t    o.Feather = Feather__;float particleAlpha__
       = (float)0;{\n\t\t\t        particleAlpha__ = attributes.alpha;\n\t\t\t   
       }\n\t\t\t    o.particleAlpha = particleAlpha__;float3 particleColor__ = (float3)0;{\n\t\t\t       
@@ -3450,8 +3545,9 @@ VisualEffectResource:
       = 1.0f;\n\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t}\n\t\t\t\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\n\t\t\t\t\t\t\t\n\t\t   
       \n\t\t    \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t   
-      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t   
       \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t   
       \t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t   
       \t\t#ifndef SHADERPASS\n\t\t    \t\t#error Shaderpass should be defined at
       this stage.\n\t\t    \t\t#endif\n\t\t    \t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t   
@@ -5224,9 +5320,9 @@ VisualEffectResource:
         index: 6
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 5
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 3
       - nameId: Blend_a
         index: 70
@@ -5335,11 +5431,11 @@ VisualEffectResource:
         index: 12
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 28
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 5
-      - nameId: uniform_d
+      - nameId: uniform_c
         index: 3
       - nameId: deltaTime_a
         index: 38
@@ -5433,9 +5529,9 @@ VisualEffectResource:
         index: 15
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 5
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 3
       params:
       - nameId: bounds_center
@@ -5454,11 +5550,11 @@ VisualEffectResource:
         index: 18
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 28
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 5
-      - nameId: uniform_d
+      - nameId: uniform_c
         index: 3
       - nameId: deltaTime_a
         index: 38
@@ -5494,11 +5590,11 @@ VisualEffectResource:
         index: 54
       - nameId: Color_c
         index: 59
-      - nameId: uniform_d
+      - nameId: uniform_a
         index: 35
-      - nameId: uniform_e
+      - nameId: uniform_b
         index: 37
-      - nameId: uniform_f
+      - nameId: uniform_c
         index: 24
       - nameId: SmokeTexture
         index: 56
