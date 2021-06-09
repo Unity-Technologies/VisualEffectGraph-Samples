@@ -6,6 +6,13 @@ There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
+- #### 2020.2 Release 1 : (10.2.2 rev1 2020-12-15)
+
+  - **Updated HD Render Pipeline / Visual Effect Graph to 10.2.2**
+  - **Notable Changes : **
+    - Rebuilt all Visual Effects
+    - Fixed Portal Sample (Re-authored distortion as shader graph)
+  
 - #### 2019.4 Release 1 : (7.5.2 rev1 2020-12-15)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 7.5.2**
