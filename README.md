@@ -6,6 +6,13 @@ There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
+- #### 2020.3 Release 1 : (10.5.0 rev1 2021-08-04)
+
+  - **Updated HD Render Pipeline / Visual Effect Graph to 10.5.0**
+  - **Notable Changes : **
+    - Added Meteorite Sample
+    - Rebuilt all Visual Effects
+
 - #### 2020.2 Release 1 : (10.2.2 rev1 2020-12-15)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 10.2.2**
