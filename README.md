@@ -6,7 +6,7 @@ There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
-- #### 2020.3 Release 1 : (10.5.0 rev1 2021-08-04)
+- #### 2020.3 Release 1 : (10.5.0 rev1 2021-08-09)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 10.5.0**
   - **Notable Changes : **
