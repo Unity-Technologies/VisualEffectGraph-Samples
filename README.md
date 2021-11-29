@@ -6,6 +6,12 @@ There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
+- ####  2021.2 Release 1 : (12.1.1 rev1 2021-11-29)
+
+  - **Updated HD Render Pipeline / Visual Effect Graph to 12.1.1**
+  - **Notable Changes : **
+    - Added Ellen Skinned Mesh Sample
+
 - #### 2020.3 Release 1 : (10.5.0 rev1 2021-08-09)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 10.5.0**
@@ -19,13 +25,13 @@ There are also pre-built binaries for Windows and/or macOS available.
   - **Notable Changes : **
     - Rebuilt all Visual Effects
     - Fixed Portal Sample (Re-authored distortion as shader graph)
-  
+
 - #### 2019.4 Release 1 : (7.5.2 rev1 2020-12-15)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 7.5.2**
   - **Notable Changes : **
     - Rebuilt all Visual Effects
-  
+
 - #### 2019.3 Release 2 : (7.2.1 rev1 2020-03-10)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 7.2.1**
@@ -33,7 +39,7 @@ There are also pre-built binaries for Windows and/or macOS available.
     - Rebuilt all Visual Effects
     - Upgraded all HDRP materials to 7.2.1
     - Added **Magic Book** Sample
-  
+
 - #### 2019.3 Update: (7.2.0 rev1 2020-02-12)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 7.2.0**
@@ -45,7 +51,7 @@ There are also pre-built binaries for Windows and/or macOS available.
     - Fixed UI Labels in Voxelized Terrain that disappeared in 1440p
     - Fixed Bonfire Fire Shader : was using a texture that was removed from HD Render Pipeline Package
     - Removed unused Custom Render Texture + Shaders in SpaceshipHoloTable
-  
+
 - #### 2019.3.0 Release : (7.1.8 rev1 2020-01-30)
 
   - **New Samples**

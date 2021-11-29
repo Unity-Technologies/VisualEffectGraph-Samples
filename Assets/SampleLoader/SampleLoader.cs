@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -39,6 +38,7 @@ public class SampleLoader : MonoBehaviour
     [Header("FPS Counter")]
     public GameObject DebugRoot;
     public Text FramerateText;
+    public Text MillisecondText;
     public Toggle FPSCounterToggle;
 
     [Header("Screenshot")]
@@ -74,7 +74,14 @@ public class SampleLoader : MonoBehaviour
         if (FramerateText == null)
             return;
 
-        FramerateText.text =  (1.0f / GetSmoothDeltaTime()).ToString("F1");
+        float s = GetSmoothDeltaTime();
+
+        FramerateText.text =  (1.0f / s).ToString("F1");
+
+        if (MillisecondText == null)
+            return;
+
+        MillisecondText.text =  (s * 1000).ToString("F2");
     }
 
     Queue<float> deltaTimeSamples = new Queue<float>();
