@@ -6,6 +6,13 @@ There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
+
+- ####  2021.2 Release 2 : (12.1.1 rev1 2021-12-10)
+  - **Updated HD Render Pipeline / Visual Effect Graph to 12.1.1**
+  - **Notable Changes : **
+    - Added GooBall Sample
+    - Jacob's ladder effect excluded from TAA for better rendering (MagicBook Sample)
+
 - ####  2021.2 Release 1 : (12.1.1 rev1 2021-11-29)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 12.1.1**
