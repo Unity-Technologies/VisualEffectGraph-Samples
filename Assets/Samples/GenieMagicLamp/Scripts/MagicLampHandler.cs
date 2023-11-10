@@ -6,7 +6,7 @@ public class MagicLampHandler : MonoBehaviour
 {
     public PlayableDirector TimelineDirector;
 
-    private bool isActivated = false;
+    //private bool isActivated = false;
 
     float m_Interp = 0.0f;
     bool m_Reverse = true;

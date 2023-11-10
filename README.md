@@ -6,16 +6,28 @@ There are also pre-built binaries for Windows and/or macOS available.
 
 ### Changelog
 
+- ####  2022.3 Release 1 : (14.0.8 rev1 2023-11-10)
+  - **Updated HD Render Pipeline / Visual Effect Graph to 14.0.8**
+  
+  - **Notable Changes**:
+    - Added **SmokePortal** Sample
+    
+    - File size improvement pass
+
+    - updated visual studio editor and added profiler analyzer packages
+    
+![gif](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbjNtem53MmVhc2p3MXg1MGhtZzRtbDRiMXZqNW4xamZybDY0ZmU2dSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/rvCwU5g2yWvRkKbj9I/giphy.gif)
+
 
 - ####  2021.2 Release 2 : (12.1.1 rev1 2021-12-10)
   - **Updated HD Render Pipeline / Visual Effect Graph to 12.1.1**
   
-  - **Notable Changes : **
+  - **Notable Changes**: 
     - Added **GooBall** Sample
     
     - Jacob's ladder effect excluded from TAA for better rendering (MagicBook Sample)
     
-  - **Known Issues **
+  - **Known Issues**
       - Prewarm delta time consideration (fixed in 2021.2.10f1)
       - Mac M1 build: scene flickering issue 
       - Linux build: "Vulkan - out of memory" issue
@@ -25,7 +37,7 @@ There are also pre-built binaries for Windows and/or macOS available.
 - ####  2021.2 Release 1 : (12.1.1 rev1 2021-11-29)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 12.1.1**
-  - **Notable Changes : **
+  - **Notable Changes**: 
     - Added **Ellen Skinned Mesh** Sample
 
 ![gif](https://media2.giphy.com/media/Gtd18yGr8VDXTlkXrp/giphy.gif?cid=790b76115e1d6c810a6be3cbc2b008adf5b3b02722dc9115&rid=giphy.gif&ct=g) ![gif](https://media2.giphy.com/media/4b5yl3UUwezYfIxXcD/giphy.gif?cid=790b76111b77bd82988378d68a829ee3b50e5a71642435f9&rid=giphy.gif&ct=g)
@@ -34,7 +46,7 @@ There are also pre-built binaries for Windows and/or macOS available.
 - #### 2020.3 Release 1 : (10.5.0 rev1 2021-08-09)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 10.5.0**
-  - **Notable Changes : **
+  - **Notable Changes**
     - Added **Meteorite** Sample
     - Rebuilt all Visual Effects
 
@@ -43,20 +55,20 @@ There are also pre-built binaries for Windows and/or macOS available.
 - #### 2020.2 Release 1 : (10.2.2 rev1 2020-12-15)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 10.2.2**
-  - **Notable Changes : **
+  - **Notable Changes**: 
     - Rebuilt all Visual Effects
     - Fixed Portal Sample (Re-authored distortion as shader graph)
 
 - #### 2019.4 Release 1 : (7.5.2 rev1 2020-12-15)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 7.5.2**
-  - **Notable Changes : **
+  - **Notable Changes**:
     - Rebuilt all Visual Effects
 
 - #### 2019.3 Release 2 : (7.2.1 rev1 2020-03-10)
 
   - **Updated HD Render Pipeline / Visual Effect Graph to 7.2.1**
-  - **Notable Changes : **
+  - **Notable Changes**:
     - Rebuilt all Visual Effects
     - Upgraded all HDRP materials to 7.2.1
     - Added **Magic Book** Sample
