@@ -50,8 +50,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 15
   enableVolumetricFog:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 1
   albedo:
     m_OverrideState: 0
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -70,6 +70,9 @@ MonoBehaviour:
   sliceDistributionUniformity:
     m_OverrideState: 0
     m_Value: 0.75
+  multipleScatteringIntensity:
+    m_OverrideState: 0
+    m_Value: 0
   m_FogControlMode:
     m_OverrideState: 0
     m_Value: 0
@@ -104,7 +107,6 @@ MonoBehaviour:
   - {fileID: 114619592826059120}
   - {fileID: 114353633421338042}
   - {fileID: 114074945682868866}
-  - {fileID: 114276889211517414}
   - {fileID: -9170219552287960727}
 --- !u!114 &114074945682868866
 MonoBehaviour:
@@ -161,52 +163,6 @@ MonoBehaviour:
   gradientDiffusion:
     m_OverrideState: 0
     m_Value: 1
---- !u!114 &114276889211517414
-MonoBehaviour:
-  m_ObjectHideFlags: 3
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2150ee00179b2f4418ea8b21a7e98eea, type: 3}
-  m_Name: ExponentialFog
-  m_EditorClassIdentifier: 
-  active: 1
-  colorMode:
-    m_OverrideState: 1
-    m_Value: 0
-  color:
-    m_OverrideState: 1
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
-  tint:
-    m_OverrideState: 0
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
-  density:
-    m_OverrideState: 1
-    m_Value: 1
-  maxFogDistance:
-    m_OverrideState: 0
-    m_Value: 5000
-  mipFogMaxMip:
-    m_OverrideState: 0
-    m_Value: 0.5
-  mipFogNear:
-    m_OverrideState: 0
-    m_Value: 0
-  mipFogFar:
-    m_OverrideState: 0
-    m_Value: 1000
-  fogDistance:
-    m_OverrideState: 1
-    m_Value: 15
-  fogBaseHeight:
-    m_OverrideState: 0
-    m_Value: 0
-  fogHeightAttenuation:
-    m_OverrideState: 0
-    m_Value: 0.2
 --- !u!114 &114353633421338042
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -229,6 +185,18 @@ MonoBehaviour:
   skyAmbientMode:
     m_OverrideState: 0
     m_Value: 0
+  planetRadius:
+    m_OverrideState: 0
+    m_Value: 6378.1
+  renderingSpace:
+    m_OverrideState: 0
+    m_Value: 1
+  centerMode:
+    m_OverrideState: 0
+    m_Value: 0
+  planetCenter:
+    m_OverrideState: 0
+    m_Value: {x: 0, y: -6378.1, z: 0}
   windOrientation:
     m_OverrideState: 0
     m_Value: 0
@@ -238,6 +206,7 @@ MonoBehaviour:
   fogType:
     m_OverrideState: 1
     m_Value: 2
+  m_Version: 1
 --- !u!114 &114619592826059120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -251,6 +220,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   active: 1
+  interCascadeBorders: 1
   maxShadowDistance:
     m_OverrideState: 1
     m_Value: 500
